@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モンテカルロ法ベッティングツール</title>
+    <!--
+        This page implements a simple interactive version of the so‑called
+        Monte‑Carlo (Labouchère) betting system, often used with games that
+        pay even money (2×).  Users provide an initial sequence of numbers
+        representing the desired profit in units and the monetary value of
+        one unit.  At each step the program sums the first and last numbers
+        to determine the next bet (in units and currency).  When the user
+        records a win, the first and last numbers are removed; when they
+        record a loss, the bet is appended to the end of the sequence.  The
+        process repeats until the sequence is empty, which means the target
+        profit has been achieved.  The running profit and betting history
+        are displayed.  This page works offline and is designed to be
+        mobile friendly.
+    -->
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 1rem;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        button.success {
+            background-color: #28a745;
+            color: white;
+        }
+        button.danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        button.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .col {
+            flex: 1;
+            min-width: 200px;
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            background-color: white;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        table th, table td {
+            border: 1px solid #dee2e6;
+            padding: 0.4rem;
+            text-align: center;
+        }
+        table th {
+            background-color: #f1f3f5;
+        }
+        @media (max-width: 600px) {
+            .row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>モンテカルロ法ベッティングツール</h1>
+    <p>
+        初期の数列と単位あたりのベット金額を指定し、「開始」を押すと
+        モンテカルロ法（キャンセレーション法）に基づいて次のベット額を表示します。
+        勝敗ボタンで結果を入力すると数列が更新され、目標額に達するまで続きます。
+    </p>
+    <div id="setupForm">
+        <label for="sequence">初期数列（カンマまたは空白区切り、例：1 2 3 4）</label>
+        <input type="text" id="sequence" placeholder="1 2 3 4">
+        <label for="unit">1単位あたりの金額（円または任意の通貨）</label>
+        <input type="number" id="unit" value="100" min="0" step="1">
+        <button id="startBtn" class="primary">開始</button>
+    </div>
+
+    <div id="bettingArea" style="display:none;">
+        <div class="result">
+            <p><strong>現在の数列:</strong> <span id="currentSequence"></span></p>
+            <p><strong>次のベット（単位）:</strong> <span id="nextBetUnits"></span></p>
+            <p><strong>次のベット金額:</strong> <span id="nextBetAmount"></span></p>
+            <p><strong>累計損益:</strong> <span id="totalProfit"></span></p>
+            <button id="winBtn" class="success">勝ち</button>
+            <button id="loseBtn" class="danger">負け</button>
+            <button id="resetBtn" class="secondary">リセット</button>
+        </div>
+        <div id="historyArea" class="result">
+            <h3>履歴</h3>
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>回</th>
+                        <th>ベット単位</th>
+                        <th>ベット金額</th>
+                        <th>勝敗</th>
+                        <th>損益（累計）</th>
+                        <th>数列</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        var sequence = [];
+        var unitValue = 1;
+        var totalProfit = 0;
+        var stepCount = 0;
+
+        var sequenceInput = document.getElementById('sequence');
+        var unitInput = document.getElementById('unit');
+        var startBtn = document.getElementById('startBtn');
+        var bettingArea = document.getElementById('bettingArea');
+        var currentSequenceSpan = document.getElementById('currentSequence');
+        var nextBetUnitsSpan = document.getElementById('nextBetUnits');
+        var nextBetAmountSpan = document.getElementById('nextBetAmount');
+        var totalProfitSpan = document.getElementById('totalProfit');
+        var winBtn = document.getElementById('winBtn');
+        var loseBtn = document.getElementById('loseBtn');
+        var resetBtn = document.getElementById('resetBtn');
+        var historyBody = document.getElementById('historyBody');
+
+        function parseSequence(str) {
+            return str
+                .split(/[,\s]+/)
+                .map(function(x) { return parseInt(x.trim(), 10); })
+                .filter(function(n) { return !isNaN(n) && n > 0; });
+        }
+
+        function getNextBetUnits() {
+            if (sequence.length === 0) return 0;
+            if (sequence.length === 1) return sequence[0];
+            return sequence[0] + sequence[sequence.length - 1];
+        }
+
+        function updateDisplay() {
+            currentSequenceSpan.textContent = sequence.join(', ');
+            var betUnits = getNextBetUnits();
+            nextBetUnitsSpan.textContent = betUnits;
+            nextBetAmountSpan.textContent = (betUnits * unitValue).toLocaleString();
+            totalProfitSpan.textContent = (totalProfit).toLocaleString();
+            // Disable buttons if sequence complete
+            var finished = sequence.length === 0;
+            winBtn.disabled = finished;
+            loseBtn.disabled = finished;
+        }
+
+        function recordHistory(betUnits, outcome) {
+            stepCount++;
+            var row = document.createElement('tr');
+            var betAmount = betUnits * unitValue;
+            var profitChange = outcome === '勝ち' ? betAmount : -betAmount;
+            totalProfit += profitChange;
+            var cells = [
+                stepCount,
+                betUnits,
+                betAmount.toLocaleString(),
+                outcome,
+                totalProfit.toLocaleString(),
+                sequence.join(' ')
+            ];
+            cells.forEach(function(cell) {
+                var td = document.createElement('td');
+                td.textContent = cell;
+                row.appendChild(td);
+            });
+            historyBody.appendChild(row);
+        }
+
+        winBtn.addEventListener('click', function() {
+            var betUnits = getNextBetUnits();
+            // Remove first and last numbers
+            if (sequence.length > 0) {
+                if (sequence.length === 1) {
+                    sequence.shift();
+                } else {
+                    sequence.shift();
+                    sequence.pop();
+                }
+            }
+            recordHistory(betUnits, '勝ち');
+            updateDisplay();
+        });
+
+        loseBtn.addEventListener('click', function() {
+            var betUnits = getNextBetUnits();
+            // Append bet to sequence
+            sequence.push(betUnits);
+            recordHistory(betUnits, '負け');
+            updateDisplay();
+        });
+
+        resetBtn.addEventListener('click', function() {
+            // Reset all variables
+            sequence = [];
+            unitValue = 1;
+            totalProfit = 0;
+            stepCount = 0;
+            bettingArea.style.display = 'none';
+            document.getElementById('setupForm').style.display = 'block';
+            historyBody.innerHTML = '';
+        });
+
+        startBtn.addEventListener('click', function() {
+            var seqStr = sequenceInput.value.trim();
+            var units = parseSequence(seqStr);
+            if (units.length === 0) {
+                alert('有効な数列を入力してください。');
+                return;
+            }
+            var unitVal = parseFloat(unitInput.value);
+            if (isNaN(unitVal) || unitVal <= 0) {
+                alert('単位あたりの金額は正の数で入力してください。');
+                return;
+            }
+            sequence = units;
+            unitValue = unitVal;
+            totalProfit = 0;
+            stepCount = 0;
+            historyBody.innerHTML = '';
+            // Hide setup, show betting area
+            document.getElementById('setupForm').style.display = 'none';
+            bettingArea.style.display = 'block';
+            updateDisplay();
+        });
+    })();
+</script>
+</body>
+</html>
