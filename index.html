@@ -88,7 +88,7 @@ body > form {
 }
 
 body > [selected="true"] {
-  display: block;
+  display: block !important;
 }
 
 ul {
@@ -437,8 +437,12 @@ td:first-child {
     if (current === target) return true;
 
     if (pushCurrent && current) stack.push(current);
-    if (current) current.removeAttribute("selected");
+    if (current) {
+      current.removeAttribute("selected");
+      current.style.display = "none";
+    }
     target.setAttribute("selected", "true");
+    target.style.display = "block";
 
     window.scrollTo(0, 0);
     refreshToolbar();
@@ -483,6 +487,8 @@ td:first-child {
       };
     }
 
+    var initialPage = selectedPage();
+    if (initialPage) initialPage.style.display = "block";
     refreshToolbar();
 
     window.iui = {
@@ -500,7 +506,7 @@ td:first-child {
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v1.0
+   DEPA FX SYSTEM — ENTRY CONSOLE v1.01
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -1275,7 +1281,7 @@ td:first-child {
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v1.0 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v1.01 — 建玉設計コンソール。</p>
       <p>これはシグナル発生器ではありません。入力された相場・口座・ブローカー条件から、ゲート判定、建玉サイズ、管理価格を計算します。</p>
       <p>この配布物は、2007〜2009年頃の classic iUI のHTML構造・画面遷移・Settings風UIを再現するための、オフライン動作用互換レイヤーを同梱しています。元のiUIライブラリ本体は同梱していません。</p>
       <p class="muted">実運用前に、使用ブローカーの契約サイズ、tick/pip、証拠金計算、手数料、最小ロット、ロット刻み、ストップ制約を確認してください。</p>
