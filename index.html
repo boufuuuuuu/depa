@@ -628,6 +628,60 @@ textarea.journalNotes{
 .watchCheckRow{min-height:44px;}
 .watchCheckRow input[type="checkbox"]{float:right;margin-top:3px;width:24px;height:24px;}
 
+
+.miniChartShell{
+  margin:16px 18px 22px;
+  border:1px solid #929ca5;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.12);
+}
+.miniChartHeader{
+  min-height:34px;
+  padding:8px 11px;
+  box-sizing:border-box;
+  border-bottom:1px solid #bcc4ca;
+  background:linear-gradient(#f9fafb,#e1e5e9);
+  color:#4d5d6d;
+  font-size:11px;
+  font-weight:bold;
+  text-shadow:0 1px 0 #fff;
+}
+.miniChartMeta{
+  float:right;
+  color:#79838d;
+  font-weight:normal;
+}
+.miniChartCanvas{
+  width:100%;
+  min-height:210px;
+  background:#fff;
+}
+.miniChartCanvas svg{
+  display:block;
+  width:100%;
+  height:auto;
+  min-height:210px;
+}
+.miniChartPlaceholder{
+  padding:68px 14px;
+  text-align:center;
+  color:#78828c;
+  font-size:12px;
+  line-height:1.55;
+}
+.miniChartFooter{
+  min-height:32px;
+  padding:7px 10px;
+  box-sizing:border-box;
+  border-top:1px solid #d2d7dc;
+  background:#f5f6f7;
+  color:#66717c;
+  font-size:10px;
+  line-height:1.45;
+}
+
 </style>
 
   <script>
@@ -761,7 +815,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v2.7-P8
+   DEPA FX SYSTEM — ENTRY CONSOLE v2.10-P8.3
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -1467,6 +1521,7 @@ textarea.journalNotes{
     renderGates(R);
     renderModeVisibility(R);
     renderPositionMap(R);
+    renderStrategyMiniChart();
 
     if (R.state === "INVALID") {
       el("positionList").innerHTML = '<li><span>状態</span><strong>判定不能</strong></li>';
@@ -1679,8 +1734,6 @@ textarea.journalNotes{
     "minLot", "maxLot", "lotStep", "marginCapPct",
     "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
     "customPip", "customContract", "customDigits",
-    "usdjpy", "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv",
-    "usdcadConv", "usdchfConv",
     "swingHigh", "swingLow", "slAnchor",
     "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
   ];
@@ -2211,6 +2264,7 @@ textarea.journalNotes{
   var MARKET_DATA_SETTINGS_KEY = "depaFX.marketDataSettings.v7";
   var MARKET_DATA_API_KEY = "depaFX.twelveDataApiKey.v7";
   var marketDataTimer = null;
+  var marketContextFetchTimer = null;
   var marketDataBusy = false;
   var applyingMarketData = false;
   var marketDataMode = "MANUAL";
@@ -2249,16 +2303,170 @@ textarea.journalNotes{
     var d = storageRead(MARKET_DATA_SETTINGS_KEY, null);
     if (!d || typeof d !== "object") {
       d = {
-        schema:7,
+        schema:9,
         atrPeriod:14,
         autoRefreshSec:0,
         symbolOverrides:{},
+        conversionMeta:{},
         lastMeta:null
       };
     }
     if (!d.symbolOverrides) d.symbolOverrides = {};
+    if (!d.conversionMeta) d.conversionMeta = {};
+    d.schema = 9;
     return d;
   }
+
+
+  var CONVERSION_SPECS = {
+    usdjpy:     { field:"usdjpy",     pair:"USD/JPY", label:"USDJPY" },
+    eurusdConv: { field:"eurusdConv", pair:"EUR/USD", label:"EURUSD" },
+    gbpusdConv: { field:"gbpusdConv", pair:"GBP/USD", label:"GBPUSD" },
+    audusdConv: { field:"audusdConv", pair:"AUD/USD", label:"AUDUSD" },
+    nzdusdConv: { field:"nzdusdConv", pair:"NZD/USD", label:"NZDUSD" },
+    usdcadConv: { field:"usdcadConv", pair:"USD/CAD", label:"USDCAD" },
+    usdchfConv: { field:"usdchfConv", pair:"USD/CHF", label:"USDCHF" }
+  };
+
+  var QUOTE_CONVERSION_FIELD = {
+    EUR:"eurusdConv",
+    GBP:"gbpusdConv",
+    AUD:"audusdConv",
+    NZD:"nzdusdConv",
+    CAD:"usdcadConv",
+    CHF:"usdchfConv"
+  };
+
+  function pushUniqueField(out, field) {
+    var i;
+    for (i = 0; i < out.length; i++) {
+      if (out[i] === field) return;
+    }
+    out.push(field);
+  }
+
+  function requiredConversionFields(localSymbol, accountCurrency) {
+    var out = [];
+    var S = SYMBOLS[localSymbol];
+    if (!S) return out;
+
+    var quote = S.quote;
+
+    // Quote already equals account currency: no conversion is needed.
+    if (quote === accountCurrency) return out;
+
+    if (accountCurrency === "USD") {
+      if (quote === "JPY") {
+        pushUniqueField(out, "usdjpy");
+      } else if (QUOTE_CONVERSION_FIELD[quote]) {
+        pushUniqueField(out, QUOTE_CONVERSION_FIELD[quote]);
+      }
+      return out;
+    }
+
+    if (accountCurrency === "JPY") {
+      if (quote === "USD") {
+        pushUniqueField(out, "usdjpy");
+        return out;
+      }
+
+      if (quote === "JPY") return out;
+
+      if (QUOTE_CONVERSION_FIELD[quote]) {
+        pushUniqueField(out, QUOTE_CONVERSION_FIELD[quote]);
+        pushUniqueField(out, "usdjpy");
+      }
+    }
+
+    return out;
+  }
+
+  function conversionRateText(v) {
+    v = Number(v);
+    if (!isFinite(v) || v <= 0) return "";
+    return v.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  }
+
+  function conversionInputMode(field, settings) {
+    settings = settings || getMarketDataSettings();
+    var meta = settings.conversionMeta[field];
+    var current = n(field);
+
+    if (meta && meta.adjusted && current != null && current > 0) return "ADJUSTED";
+
+    if (meta && meta.apiValue != null && current != null && current > 0) {
+      var a = Number(meta.apiValue);
+      var b = Number(current);
+      if (isFinite(a) && isFinite(b) &&
+          Math.abs(a - b) <= Math.max(1e-12, Math.abs(a) * 1e-10)) {
+        return "API";
+      }
+    }
+
+    if (current != null && current > 0) return "MANUAL";
+    return "MISSING";
+  }
+
+  function requiredConversionSummary() {
+    var fields = requiredConversionFields(value("symbol"), value("acctCcy"));
+    if (fields.length === 0) return "換算不要";
+
+    var labels = [], i;
+    for (i = 0; i < fields.length; i++) {
+      labels.push(CONVERSION_SPECS[fields[i]].label);
+    }
+    return labels.join(" + ");
+  }
+
+  function renderConversionStatus() {
+    var fields = requiredConversionFields(value("symbol"), value("acctCcy"));
+    var settings = getMarketDataSettings();
+    var lines = [];
+    var compact = [];
+    var i, field, spec, meta, current, mode, apiText;
+
+    if (fields.length === 0) {
+      lines.push("<strong>換算不要</strong><br>選択銘柄のQuote通貨と口座通貨が同じです。");
+      compact.push("換算不要");
+    } else {
+      lines.push("<strong>必要換算: " + esc(requiredConversionSummary()) + "</strong>");
+
+      for (i = 0; i < fields.length; i++) {
+        field = fields[i];
+        spec = CONVERSION_SPECS[field];
+        meta = settings.conversionMeta[field] || null;
+        current = n(field);
+        mode = conversionInputMode(field, settings);
+        apiText = meta && meta.apiValue != null
+          ? conversionRateText(meta.apiValue)
+          : "—";
+
+        if (mode === "ADJUSTED") {
+          lines.push(
+            "<br>" + esc(spec.label) + ": " +
+            esc(current == null ? "—" : conversionRateText(current)) +
+            " [BROKER ADJUSTED / API " + esc(apiText) + "]"
+          );
+        } else {
+          lines.push(
+            "<br>" + esc(spec.label) + ": " +
+            esc(current == null ? "—" : conversionRateText(current)) +
+            " [" + esc(mode) + "]"
+          );
+        }
+
+        compact.push(spec.label + " " + mode);
+      }
+    }
+
+    var marketNode = el("conversionDataStatus");
+    var inputNode = el("conversionInputStatus");
+    if (marketNode) marketNode.innerHTML = lines.join("");
+    if (inputNode) inputNode.innerHTML = lines.join("");
+
+    return compact.join(" / ");
+  }
+
 
   function saveMarketDataSettings(d) {
     return storageWrite(MARKET_DATA_SETTINGS_KEY, d);
@@ -2312,15 +2520,28 @@ textarea.journalNotes{
     var meta = settings.lastMeta;
     var priceNow = n("price");
     var atrNow = n("atr");
+    var swingHighNow = n("swingHigh");
+    var swingLowNow = n("swingLow");
+    var sameContext = meta &&
+      meta.localSymbol === value("symbol") &&
+      meta.timeframe === value("tf");
 
-    if (meta &&
-        meta.localSymbol === value("symbol") &&
-        meta.timeframe === value("tf") &&
-        priceNow != null &&
-        atrNow != null &&
-        Math.abs(priceNow - Number(meta.price)) <= Math.max(1e-12, Math.abs(priceNow) * 1e-12) &&
-        Math.abs(atrNow - Number(meta.atr)) <= Math.max(1e-12, Math.abs(atrNow) * 1e-12)) {
+    function nearStored(a, b) {
+      if (a == null || b == null) return false;
+      a = Number(a);
+      b = Number(b);
+      if (!isFinite(a) || !isFinite(b)) return false;
+      return Math.abs(a - b) <= Math.max(1e-12, Math.abs(a) * 1e-12);
+    }
+
+    if (sameContext &&
+        nearStored(priceNow, meta.price) &&
+        nearStored(atrNow, meta.atr) &&
+        nearStored(swingHighNow, meta.swingHigh) &&
+        nearStored(swingLowNow, meta.swingLow)) {
       marketDataMode = "API";
+    } else if (sameContext && meta.swingHigh != null && meta.swingLow != null) {
+      marketDataMode = "ADJUSTED";
     } else {
       marketDataMode = "MANUAL";
     }
@@ -2377,13 +2598,15 @@ textarea.journalNotes{
   }
 
   function marketDataInterval(tf) {
-    if (tf === "M1") return { api:"1min", aggregate:1, output:100 };
-    if (tf === "M3") return { api:"1min", aggregate:3, output:240 };
-    if (tf === "M5") return { api:"5min", aggregate:1, output:100 };
-    if (tf === "M15") return { api:"15min", aggregate:1, output:100 };
-    if (tf === "H1") return { api:"1h", aggregate:1, output:100 };
-    if (tf === "H4") return { api:"4h", aggregate:1, output:100 };
-    if (tf === "D1") return { api:"1day", aggregate:1, output:100 };
+    // Fetch more than 100 bars so ATR14 has warm-up history.
+    if (tf === "M1") return { api:"1min", aggregate:1, output:150 };
+    if (tf === "M3") return { api:"1min", aggregate:3, output:450 };
+    if (tf === "M5") return { api:"5min", aggregate:1, output:150 };
+    if (tf === "M15") return { api:"15min", aggregate:1, output:150 };
+    if (tf === "M30") return { api:"30min", aggregate:1, output:150 };
+    if (tf === "H1") return { api:"1h", aggregate:1, output:150 };
+    if (tf === "H4") return { api:"4h", aggregate:1, output:150 };
+    if (tf === "D1") return { api:"1day", aggregate:1, output:150 };
     return null;
   }
 
@@ -2476,6 +2699,32 @@ textarea.journalNotes{
     return out;
   }
 
+  function swingWindowStats(bars, count) {
+    if (!bars || bars.length < count || count <= 0) return null;
+
+    var start = bars.length - count;
+    var high = -Infinity;
+    var low = Infinity;
+    var i, b;
+
+    for (i = start; i < bars.length; i++) {
+      b = bars[i];
+      if (!isFinite(Number(b.high)) || !isFinite(Number(b.low))) return null;
+      if (Number(b.high) > high) high = Number(b.high);
+      if (Number(b.low) < low) low = Number(b.low);
+    }
+
+    if (!isFinite(high) || !isFinite(low) || high <= low) return null;
+
+    return {
+      count:count,
+      high:high,
+      low:low,
+      from:bars[start].datetime,
+      to:bars[bars.length - 1].datetime
+    };
+  }
+
   function wilderAtr(bars, period) {
     if (!bars || bars.length < period + 1) return null;
 
@@ -2544,6 +2793,183 @@ textarea.journalNotes{
     return isFinite(v) ? v : null;
   }
 
+
+  function getMarketApiKey() {
+    var key = el("tdApiKey")
+      ? String(el("tdApiKey").value || "").replace(/^\s+|\s+$/g, "")
+      : "";
+
+    if (!key) key = storageRead(MARKET_DATA_API_KEY, "");
+    return key;
+  }
+
+  function fetchRequiredConversions(options) {
+    options = options || {};
+    var force = !!options.force;
+    var source = options.source || "AUTO";
+    var fields = requiredConversionFields(value("symbol"), value("acctCcy"));
+    var settings = getMarketDataSettings();
+    var key = getMarketApiKey();
+
+    if (fields.length === 0) {
+      renderConversionStatus();
+      return Promise.resolve({ ok:true, fetched:0, preserved:0, source:source });
+    }
+
+    if (!key) {
+      renderConversionStatus();
+      return Promise.resolve({ ok:false, reason:"NO_KEY", fetched:0, preserved:0 });
+    }
+
+    if (navigator.onLine === false) {
+      renderConversionStatus();
+      return Promise.resolve({ ok:false, reason:"OFFLINE", fetched:0, preserved:0 });
+    }
+
+    var toFetch = [];
+    var preserved = 0;
+    var i, field, meta, current;
+
+    for (i = 0; i < fields.length; i++) {
+      field = fields[i];
+      meta = settings.conversionMeta[field];
+      current = n(field);
+
+      // Broker-adjusted values are sticky until the user explicitly forces a refresh.
+      if (!force && meta && meta.adjusted && current != null && current > 0) {
+        preserved++;
+      } else {
+        toFetch.push(field);
+      }
+    }
+
+    if (toFetch.length === 0) {
+      renderConversionStatus();
+      return Promise.resolve({ ok:true, fetched:0, preserved:preserved, source:source });
+    }
+
+    var base = "https://api.twelvedata.com";
+    var requests = [];
+
+    for (i = 0; i < toFetch.length; i++) {
+      field = toFetch[i];
+      var spec = CONVERSION_SPECS[field];
+      var url = base + "/price?symbol=" + encodeURIComponent(spec.pair) +
+        "&apikey=" + encodeURIComponent(key);
+
+      requests.push(
+        fetchTwelveJson(url).then((function (fieldCopy) {
+          return function (res) {
+            var rate = extractTwelvePrice(res.data);
+            if (rate == null || rate <= 0) {
+              throw new Error(CONVERSION_SPECS[fieldCopy].label + " を解釈できません。");
+            }
+            return {
+              field:fieldCopy,
+              rate:rate,
+              creditsUsed:res.creditsUsed,
+              creditsLeft:res.creditsLeft
+            };
+          };
+        }(field)))
+      );
+    }
+
+    return Promise.all(requests).then(function (results) {
+      // Atomic apply for all required API-fetched conversion rates.
+      applyingMarketData = true;
+
+      var freshSettings = getMarketDataSettings();
+      var j, r, text;
+
+      for (j = 0; j < results.length; j++) {
+        r = results[j];
+        text = conversionRateText(r.rate);
+
+        if (el(r.field)) el(r.field).value = text;
+
+        freshSettings.conversionMeta[r.field] = {
+          pair:CONVERSION_SPECS[r.field].pair,
+          label:CONVERSION_SPECS[r.field].label,
+          apiValue:r.rate,
+          apiText:text,
+          adjusted:false,
+          fetchedAt:new Date().getTime(),
+          source:source,
+          creditsUsed:r.creditsUsed || null,
+          creditsLeft:r.creditsLeft || null
+        };
+      }
+
+      applyingMarketData = false;
+      saveMarketDataSettings(freshSettings);
+
+      render();
+      renderPortfolio();
+      scheduleWorkspaceSave();
+      renderConversionStatus();
+
+      if (typeof renderWatchPanel === "function") renderWatchPanel();
+      if (typeof evaluateActiveWatch === "function") {
+        evaluateActiveWatch("CONVERSION " + source);
+      }
+
+      return {
+        ok:true,
+        fetched:results.length,
+        preserved:preserved,
+        source:source
+      };
+    }).catch(function (err) {
+      applyingMarketData = false;
+      renderConversionStatus();
+
+      var node = el("conversionDataStatus");
+      if (node) {
+        node.innerHTML =
+          "<strong>換算取得失敗</strong><br>" +
+          esc(err && err.message ? err.message : "不明なエラー") +
+          "<br>既存の換算入力値は上書きしていません。";
+      }
+
+      return {
+        ok:false,
+        reason:"FETCH_ERROR",
+        error:err && err.message ? err.message : String(err),
+        fetched:0,
+        preserved:preserved
+      };
+    });
+  }
+
+  function markConversionAdjusted(e) {
+    if (applyingMarketData) return;
+
+    var node = e ? (e.target || e.srcElement) : null;
+    var field = node && node.id ? node.id : "";
+    if (!CONVERSION_SPECS[field]) return;
+
+    var settings = getMarketDataSettings();
+    var meta = settings.conversionMeta[field] || {
+      pair:CONVERSION_SPECS[field].pair,
+      label:CONVERSION_SPECS[field].label,
+      apiValue:null,
+      apiText:null
+    };
+
+    var current = n(field);
+    meta.adjusted = current != null && current > 0;
+    meta.manualValue = current;
+    meta.adjustedAt = new Date().getTime();
+
+    settings.conversionMeta[field] = meta;
+    saveMarketDataSettings(settings);
+
+    renderConversionStatus();
+    renderMarketDataStatus();
+  }
+
+
   function setMarketDataMessage(message, cls) {
     var node = el("marketDataStatus");
     if (!node) return;
@@ -2568,20 +2994,29 @@ textarea.journalNotes{
 
     if (!result) return;
 
+    var sameMeta = meta && meta.localSymbol === localSymbol && meta.timeframe === tf;
     var html = "";
     html += resultRow("銘柄", SYMBOLS[localSymbol].label + " → " + providerSymbol);
     html += resultRow("Timeframe", tf + (interval ? " / " + interval.api : ""));
+    html += resultRow("必要換算", requiredConversionSummary());
+    html += resultRow("換算状態", renderConversionStatus());
+    html += resultRow("入力モード",
+      marketDataMode === "ADJUSTED" ? "BROKER ADJUSTED" : marketDataMode);
     html += resultRow("API Price",
-      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
-        ? meta.priceText
-        : "—");
+      sameMeta ? meta.priceText : "—");
     html += resultRow("ATR",
-      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
-        ? meta.atrText
+      sameMeta ? meta.atrText : "—");
+    html += resultRow("Swing High 100",
+      sameMeta && meta.swingHighText ? meta.swingHighText : "—");
+    html += resultRow("Swing Low 100",
+      sameMeta && meta.swingLowText ? meta.swingLowText : "—");
+    html += resultRow("100-Bar Window",
+      sameMeta && meta.swingFrom && meta.swingTo
+        ? meta.swingFrom + " → " + meta.swingTo
         : "—");
     html += resultRow("ATR方式", "Wilder(" + (settings.atrPeriod || 14) + ")");
     html += resultRow("Bar Time",
-      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
+      sameMeta
         ? meta.barTime
         : "—");
     html += resultRow("取得時刻",
@@ -2596,26 +3031,43 @@ textarea.journalNotes{
     result.innerHTML = html;
 
     if (!marketDataBusy) {
-      if (marketDataMode === "API" &&
-          meta && meta.localSymbol === localSymbol && meta.timeframe === tf) {
+      if (marketDataMode === "API" && sameMeta) {
         setMarketDataMessage(
-          "API取得値を使用中。Bar Time " + meta.barTime + " / 取得 " + formatLocalStamp(meta.fetchedAt),
+          "API基準値を使用中。Price / ATR / Swing High-Low 100 を自動反映済み。Bar Time " +
+          meta.barTime + " / 取得 " + formatLocalStamp(meta.fetchedAt),
           "ok"
         );
+      } else if (marketDataMode === "ADJUSTED" && sameMeta) {
+        var node = el("marketDataStatus");
+        if (node) {
+          node.className = "marketDataStatus ok";
+          node.innerHTML =
+            "<strong>BROKER ADJUSTED</strong><br>" +
+            "API基準値を取得後、入力値が手修正されています。Market Data欄にはAPI基準値を保持しています。";
+        }
       } else if (marketDataMode === "ERROR") {
         // Keep the error message already shown.
       } else {
         setMarketDataMessage(
-          "API未適用。現在値とATRは手入力/保存済み値を使用します。",
+          "API未適用。現在値 / ATR / Swing High-Low は手入力または保存済み値を使用します。",
           ""
         );
       }
     }
   }
 
-  function markMarketDataManual() {
+  function markMarketDataAdjusted() {
     if (applyingMarketData) return;
-    marketDataMode = "MANUAL";
+
+    var settings = getMarketDataSettings();
+    var meta = settings.lastMeta;
+    var sameContext = meta &&
+      meta.localSymbol === value("symbol") &&
+      meta.timeframe === value("tf") &&
+      meta.swingHigh != null &&
+      meta.swingLow != null;
+
+    marketDataMode = sameContext ? "ADJUSTED" : "MANUAL";
     renderMarketDataStatus();
   }
 
@@ -2681,17 +3133,23 @@ textarea.journalNotes{
 
       var rawBars = parseTwelveBars(responses[1].data.values);
       var bars = interval.aggregate === 3 ? aggregateThreeMinuteBars(rawBars) : rawBars;
+      var requiredBars = Math.max(period + 1, 100);
 
-      if (bars.length < period + 1) {
+      if (bars.length < requiredBars) {
         throw new Error(
-          "ATR計算に必要なOHLC本数が不足しています。取得 " + bars.length +
-          " / 必要 " + (period + 1)
+          "計算に必要なOHLC本数が不足しています。取得 " + bars.length +
+          " / 必要 " + requiredBars
         );
       }
 
       var atrValue = wilderAtr(bars, period);
       if (atrValue == null || !isFinite(atrValue) || atrValue <= 0) {
         throw new Error("ATRを計算できません。");
+      }
+
+      var swing100 = swingWindowStats(bars, 100);
+      if (!swing100) {
+        throw new Error("直近100本のSwing High/Lowを計算できません。");
       }
 
       var lastBar = bars[bars.length - 1];
@@ -2701,10 +3159,12 @@ textarea.journalNotes{
         : S.digits;
       var atrDigits = Math.min(8, Math.max(digits, 4));
 
-      // Atomic apply: only after price and ATR both validate.
+      // Atomic apply: update all four baseline inputs only after every calculation validates.
       applyingMarketData = true;
       el("price").value = price.toFixed(digits);
       el("atr").value = atrValue.toFixed(atrDigits);
+      el("swingHigh").value = swing100.high.toFixed(digits);
+      el("swingLow").value = swing100.low.toFixed(digits);
       applyingMarketData = false;
 
       settings = getMarketDataSettings();
@@ -2714,10 +3174,21 @@ textarea.journalNotes{
         providerSymbol:providerSymbol,
         fetchedAt:new Date().getTime(),
         barTime:lastBar.datetime,
+        sourceBars:bars.length,
         price:price,
         atr:atrValue,
+        swingHigh:swing100.high,
+        swingLow:swing100.low,
+        swingCount:swing100.count,
+        swingFrom:swing100.from,
+        swingTo:swing100.to,
         priceText:price.toFixed(digits),
         atrText:atrValue.toFixed(atrDigits),
+        swingHighText:swing100.high.toFixed(digits),
+        swingLowText:swing100.low.toFixed(digits),
+        bars100:bars.slice(Math.max(0, bars.length - 100)).map(function (b) {
+          return [b.datetime, b.open, b.high, b.low, b.close];
+        }),
         creditsUsed:responses[0].creditsUsed || responses[1].creditsUsed || null,
         creditsLeft:responses[1].creditsLeft || responses[0].creditsLeft || null
       };
@@ -2730,7 +3201,15 @@ textarea.journalNotes{
       renderPortfolio();
       scheduleWorkspaceSave();
       renderMarketDataStatus();
+      renderStrategyMiniChart();
       evaluateActiveWatch(fromTimer ? "API AUTO" : "API");
+
+      fetchRequiredConversions({
+        force:false,
+        source:fromTimer ? "API AUTO" : "API"
+      }).then(function () {
+        renderMarketDataStatus();
+      });
 
       if (!fromTimer) restartMarketAutoRefresh();
     }).catch(function (err) {
@@ -2738,7 +3217,7 @@ textarea.journalNotes{
       marketDataMode = "ERROR";
       setMarketDataMessage(
         "取得失敗: " + (err && err.message ? err.message : "不明なエラー") +
-        "。現在値/ATRは上書きしていません。",
+        "。現在値 / ATR / Swing High-Low は上書きしていません。",
         "error"
       );
       var nav = el("navData");
@@ -2766,12 +3245,32 @@ textarea.journalNotes{
     }, sec * 1000);
   }
 
+  function hasMarketDataKey() {
+    return !!getMarketApiKey();
+  }
+
+  function scheduleMarketContextAutoFetch() {
+    if (marketContextFetchTimer) {
+      window.clearTimeout(marketContextFetchTimer);
+      marketContextFetchTimer = null;
+    }
+
+    if (!hasMarketDataKey() || navigator.onLine === false) return;
+
+    marketContextFetchTimer = window.setTimeout(function () {
+      marketContextFetchTimer = null;
+      fetchMarketDataNow(false);
+    }, 550);
+  }
+
   function marketContextChanged() {
     marketDataMode = "MANUAL";
     syncProviderSymbolField();
     renderMarketDataStatus();
+    renderStrategyMiniChart();
     restartMarketAutoRefresh();
     renderWatchPanel();
+    scheduleMarketContextAutoFetch();
   }
 
   function openMarketDataPage() {
@@ -2790,8 +3289,19 @@ textarea.journalNotes{
     var tfNode = el("tf");
     var priceNode = el("price");
     var atrNode = el("atr");
+    var swingHighNode = el("swingHigh");
+    var swingLowNode = el("swingLow");
+    var acctCcyNode = el("acctCcy");
+    var conversionIds = [
+      "usdjpy", "eurusdConv", "gbpusdConv",
+      "audusdConv", "nzdusdConv", "usdcadConv", "usdchfConv"
+    ];
 
-    if (fetchBtn) fetchBtn.onclick = function () { fetchMarketDataNow(false); };
+    if (fetchBtn) fetchBtn.onclick = function () {
+      fetchMarketDataNow(false);
+      fetchRequiredConversions({ force:true, source:"MANUAL FETCH" })
+        .then(function () { renderMarketDataStatus(); });
+    };
     if (saveKeyBtn) saveKeyBtn.onclick = saveTwelveDataKey;
     if (clearKeyBtn) clearKeyBtn.onclick = clearTwelveDataKey;
     if (openBtn) openBtn.onclick = openMarketDataPage;
@@ -2807,10 +3317,32 @@ textarea.journalNotes{
       tfNode.addEventListener("change", marketContextChanged, false);
     }
     if (priceNode && priceNode.addEventListener) {
-      priceNode.addEventListener("input", markMarketDataManual, false);
+      priceNode.addEventListener("input", markMarketDataAdjusted, false);
     }
     if (atrNode && atrNode.addEventListener) {
-      atrNode.addEventListener("input", markMarketDataManual, false);
+      atrNode.addEventListener("input", markMarketDataAdjusted, false);
+    }
+    if (swingHighNode && swingHighNode.addEventListener) {
+      swingHighNode.addEventListener("input", markMarketDataAdjusted, false);
+    }
+    if (swingLowNode && swingLowNode.addEventListener) {
+      swingLowNode.addEventListener("input", markMarketDataAdjusted, false);
+    }
+
+    if (acctCcyNode && acctCcyNode.addEventListener) {
+      acctCcyNode.addEventListener("change", function () {
+        renderConversionStatus();
+        fetchRequiredConversions({ force:false, source:"ACCOUNT" })
+          .then(function () { renderMarketDataStatus(); });
+      }, false);
+    }
+
+    var ci, conversionNode;
+    for (ci = 0; ci < conversionIds.length; ci++) {
+      conversionNode = el(conversionIds[ci]);
+      if (conversionNode && conversionNode.addEventListener) {
+        conversionNode.addEventListener("input", markConversionAdjusted, false);
+      }
     }
 
     if (document.addEventListener) {
@@ -2827,6 +3359,186 @@ textarea.journalNotes{
         renderMarketDataStatus();
       }, false);
     }
+  }
+
+
+
+  /* ================= v2.10-P8.3: STRATEGY MINI CHART ================= */
+
+  function miniChartBarsFromMeta(meta) {
+    var out = [];
+    var i, r;
+    if (!meta || !meta.bars100 || typeof meta.bars100.length !== "number") return out;
+
+    for (i = 0; i < meta.bars100.length; i++) {
+      r = meta.bars100[i];
+      if (!r || r.length < 5) continue;
+      if (!isFinite(Number(r[1])) || !isFinite(Number(r[2])) ||
+          !isFinite(Number(r[3])) || !isFinite(Number(r[4]))) continue;
+
+      out.push({
+        datetime:String(r[0]),
+        open:Number(r[1]),
+        high:Number(r[2]),
+        low:Number(r[3]),
+        close:Number(r[4])
+      });
+    }
+    return out;
+  }
+
+  function miniChartRange(bars, currentPrice, swingHigh, swingLow) {
+    var min = Infinity, max = -Infinity;
+    var i, b;
+
+    for (i = 0; i < bars.length; i++) {
+      b = bars[i];
+      if (b.low < min) min = b.low;
+      if (b.high > max) max = b.high;
+    }
+
+    if (currentPrice != null && isFinite(Number(currentPrice))) {
+      if (Number(currentPrice) < min) min = Number(currentPrice);
+      if (Number(currentPrice) > max) max = Number(currentPrice);
+    }
+    if (swingHigh != null && isFinite(Number(swingHigh)) && Number(swingHigh) > max) max = Number(swingHigh);
+    if (swingLow != null && isFinite(Number(swingLow)) && Number(swingLow) < min) min = Number(swingLow);
+
+    if (!isFinite(min) || !isFinite(max)) return null;
+
+    var span = max - min;
+    if (span <= 0) span = Math.max(Math.abs(max) * 0.01, 1);
+    var pad = span * 0.07;
+    return { min:min - pad, max:max + pad, span:(max - min) + pad * 2 };
+  }
+
+  function miniChartSvg(R, bars, meta) {
+    if (!bars || bars.length === 0) return "";
+
+    var currentPrice = n("price");
+    var swingHigh = n("swingHigh");
+    var swingLow = n("swingLow");
+    var range = miniChartRange(bars, currentPrice, swingHigh, swingLow);
+    if (!range) return "";
+
+    var W = 390, H = 218;
+    var left = 8, right = 56, top = 12, bottom = 192;
+    var plotW = W - left - right;
+    var plotH = bottom - top;
+    var count = bars.length;
+    var slot = plotW / count;
+    var bodyW = Math.max(1.1, Math.min(3.4, slot * 0.62));
+
+    function y(v) {
+      return top + ((range.max - Number(v)) / range.span) * plotH;
+    }
+
+    var svg = '';
+    svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Mini candlestick chart">';
+    svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#ffffff"/>';
+
+    // Grid and price scale
+    var t, tv, ty;
+    for (t = 0; t <= 4; t++) {
+      tv = range.max - (range.span * t / 4);
+      ty = top + (plotH * t / 4);
+      svg += '<line x1="' + left + '" y1="' + ty.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ty.toFixed(1) + '" stroke="#edf0f2" stroke-width="1"/>';
+      svg += '<text x="' + (W-4) + '" y="' + (ty+3).toFixed(1) + '" text-anchor="end" fill="#89939c" font-size="8.5" font-family="Helvetica,Arial,sans-serif">' + esc(R.fmt(tv)) + '</text>';
+    }
+
+    // Candles
+    var i, b, x, yo, yc, yh, yl, up, stroke, fill, by, bh;
+    for (i = 0; i < count; i++) {
+      b = bars[i];
+      x = left + slot * i + slot * 0.5;
+      yo = y(b.open);
+      yc = y(b.close);
+      yh = y(b.high);
+      yl = y(b.low);
+      up = b.close >= b.open;
+      stroke = up ? '#2f7b49' : '#a64039';
+      fill = up ? '#dfeee4' : '#f2dfdd';
+      by = Math.min(yo, yc);
+      bh = Math.max(1.2, Math.abs(yo - yc));
+
+      svg += '<line x1="' + x.toFixed(2) + '" y1="' + yh.toFixed(1) + '" x2="' + x.toFixed(2) + '" y2="' + yl.toFixed(1) + '" stroke="' + stroke + '" stroke-width="0.8"/>';
+      svg += '<rect x="' + (x-bodyW/2).toFixed(2) + '" y="' + by.toFixed(1) + '" width="' + bodyW.toFixed(2) + '" height="' + bh.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="0.7"/>';
+    }
+
+    // Swing high / low lines
+    if (swingHigh != null && isFinite(Number(swingHigh))) {
+      var ySh = y(swingHigh);
+      svg += '<line x1="' + left + '" y1="' + ySh.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySh.toFixed(1) + '" stroke="#6b5d91" stroke-width="1" stroke-dasharray="4 3"/>';
+      svg += '<text x="' + (W-right) + '" y="' + (ySh-3).toFixed(1) + '" text-anchor="end" fill="#6b5d91" font-size="8.5" font-family="Helvetica,Arial,sans-serif">H100</text>';
+    }
+    if (swingLow != null && isFinite(Number(swingLow))) {
+      var ySl = y(swingLow);
+      svg += '<line x1="' + left + '" y1="' + ySl.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySl.toFixed(1) + '" stroke="#6b5d91" stroke-width="1" stroke-dasharray="4 3"/>';
+      svg += '<text x="' + (W-right) + '" y="' + (ySl+10).toFixed(1) + '" text-anchor="end" fill="#6b5d91" font-size="8.5" font-family="Helvetica,Arial,sans-serif">L100</text>';
+    }
+
+    // Current price line
+    if (currentPrice != null && isFinite(Number(currentPrice))) {
+      var yPx = y(currentPrice);
+      svg += '<line x1="' + left + '" y1="' + yPx.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + yPx.toFixed(1) + '" stroke="#325f87" stroke-width="1.2"/>';
+      svg += '<rect x="' + (W-right+6) + '" y="' + (yPx-8).toFixed(1) + '" width="' + (right-10) + '" height="16" rx="3" fill="#325f87"/>';
+      svg += '<text x="' + (W-5) + '" y="' + (yPx+3).toFixed(1) + '" text-anchor="end" fill="#fff" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">' + esc(R.fmt(currentPrice)) + '</text>';
+    }
+
+    // Bottom labels: oldest / latest
+    var first = bars[0].datetime || '';
+    var last = bars[bars.length-1].datetime || '';
+    svg += '<text x="' + left + '" y="210" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(first) + '</text>';
+    svg += '<text x="' + (W-right+4) + '" y="210" text-anchor="end" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(last) + '</text>';
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderStrategyMiniChart() {
+    var canvas = el("strategyMiniChart");
+    var header = el("strategyMiniChartHeader");
+    var metaNode = el("strategyMiniChartMeta");
+    var footer = el("strategyMiniChartFooter");
+    if (!canvas || !header || !metaNode || !footer) return;
+
+    var settings = getMarketDataSettings();
+    var meta = settings.lastMeta;
+    var localSymbol = value("symbol");
+    var tf = value("tf");
+    var S = SYMBOLS[localSymbol];
+
+    header.childNodes[0].nodeValue = "MINI CHART ";
+    metaNode.innerHTML = esc(S.label + " / " + tf);
+
+    if (!meta || meta.localSymbol !== localSymbol || meta.timeframe !== tf) {
+      canvas.innerHTML = '<div class="miniChartPlaceholder">この銘柄・時間足のOHLCデータはまだありません。<br>Market Data取得後に表示します。</div>';
+      footer.innerHTML = "直近100本 / API取得待ち";
+      return;
+    }
+
+    var bars = miniChartBarsFromMeta(meta);
+    if (bars.length < 2) {
+      canvas.innerHTML = '<div class="miniChartPlaceholder">保存済みOHLCがありません。<br>Market Dataを一度取得してください。</div>';
+      footer.innerHTML = "直近100本 / 再取得が必要";
+      return;
+    }
+
+    var R = lastResult;
+    if (!R || R.state === "INVALID") {
+      // Build a minimal formatter using the selected symbol digits.
+      var digits = S.customSpec
+        ? (n("customDigits") == null ? S.digits : Math.max(0, Math.round(n("customDigits"))))
+        : S.digits;
+      R = { fmt:function(v){ return Number(v).toFixed(digits); } };
+    }
+
+    canvas.innerHTML = miniChartSvg(R, bars, meta);
+
+    var footerText = "OHLC " + bars.length + "本";
+    if (meta.barTime) footerText += " / latest " + meta.barTime;
+    if (meta.fetchedAt) footerText += " / fetched " + formatLocalStamp(meta.fetchedAt);
+    footer.innerHTML = esc(footerText);
   }
 
 
@@ -4439,6 +5151,11 @@ textarea.journalNotes{
     renderWatchPanel();
     restartMarketAutoRefresh();
 
+    if (hasMarketDataKey()) {
+      fetchRequiredConversions({ force:false, source:"INIT" })
+        .then(function () { renderMarketDataStatus(); });
+    }
+
     if (window.addEventListener) {
       window.addEventListener("pagehide", saveWorkspaceNow, false);
     } else if (window.attachEvent) {
@@ -4468,7 +5185,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v2.7-P8</li>
+    <li class="group">ENTRY CONSOLE v2.10-P8.3</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -4558,6 +5275,7 @@ textarea.journalNotes{
           <option value="M3">M3</option>
           <option value="M5">M5</option>
           <option value="M15">M15</option>
+          <option value="M30">M30</option>
           <option value="H1" selected>H1</option>
           <option value="H4">H4</option>
           <option value="D1">D1</option>
@@ -4590,6 +5308,19 @@ textarea.journalNotes{
       </div>
     </fieldset>
     <div class="panelNote">順張りでは深い押し目・戻りほど、他条件が同じならエントリー価格が変わりRRも変化します。</div>
+
+    <div class="miniChartShell">
+      <div id="strategyMiniChartHeader" class="miniChartHeader">
+        MINI CHART
+        <span id="strategyMiniChartMeta" class="miniChartMeta">—</span>
+      </div>
+      <div id="strategyMiniChart" class="miniChartCanvas">
+        <div class="miniChartPlaceholder">Market Data取得後、選択中の銘柄・時間足の直近100本を表示します。</div>
+      </div>
+      <div id="strategyMiniChartFooter" class="miniChartFooter">
+        実OHLCのみ表示。データ未取得時はチャートを生成しません。
+      </div>
+    </div>
   </div>
 
   <!-- ACCOUNT -->
@@ -4639,14 +5370,17 @@ textarea.journalNotes{
     <fieldset>
       <div class="row"><label for="price">現在値</label><input id="price" type="number" step="any" placeholder="—"></div>
       <div class="row"><label for="atr">ATR（価格単位）</label><input id="atr" type="number" step="any" placeholder="—"></div>
-      <div class="row"><label for="usdjpy">換算 USDJPY</label><input id="usdjpy" type="number" step="any" placeholder="例 150.00"></div>
+      <div class="row"><label for="usdjpy">換算 USDJPY</label><input id="usdjpy" type="number" step="any" placeholder="API自動 / 手修正可"></div>
       <div id="extraFxConversion">
-        <div class="row"><label for="eurusdConv">換算 EURUSD</label><input id="eurusdConv" type="number" step="any" placeholder="必要時のみ"></div>
-        <div class="row"><label for="gbpusdConv">換算 GBPUSD</label><input id="gbpusdConv" type="number" step="any" placeholder="必要時のみ"></div>
-        <div class="row"><label for="audusdConv">換算 AUDUSD</label><input id="audusdConv" type="number" step="any" placeholder="必要時のみ"></div>
-        <div class="row"><label for="nzdusdConv">換算 NZDUSD</label><input id="nzdusdConv" type="number" step="any" placeholder="必要時のみ"></div>
-        <div class="row"><label for="usdcadConv">換算 USDCAD</label><input id="usdcadConv" type="number" step="any" placeholder="必要時のみ"></div>
-        <div class="row"><label for="usdchfConv">換算 USDCHF</label><input id="usdchfConv" type="number" step="any" placeholder="必要時のみ"></div>
+        <div class="row"><label for="eurusdConv">換算 EURUSD</label><input id="eurusdConv" type="number" step="any" placeholder="API自動 / 必要時"></div>
+        <div class="row"><label for="gbpusdConv">換算 GBPUSD</label><input id="gbpusdConv" type="number" step="any" placeholder="API自動 / 必要時"></div>
+        <div class="row"><label for="audusdConv">換算 AUDUSD</label><input id="audusdConv" type="number" step="any" placeholder="API自動 / 必要時"></div>
+        <div class="row"><label for="nzdusdConv">換算 NZDUSD</label><input id="nzdusdConv" type="number" step="any" placeholder="API自動 / 必要時"></div>
+        <div class="row"><label for="usdcadConv">換算 USDCAD</label><input id="usdcadConv" type="number" step="any" placeholder="API自動 / 必要時"></div>
+        <div class="row"><label for="usdchfConv">換算 USDCHF</label><input id="usdchfConv" type="number" step="any" placeholder="API自動 / 必要時"></div>
+      </div>
+      <div id="conversionInputStatus" class="statusBox">
+        銘柄と口座通貨から必要な換算レートだけ自動判定します。
       </div>
 
       <div id="swingFields">
@@ -4663,8 +5397,9 @@ textarea.journalNotes{
       </div>
     </fieldset>
     <div class="panelNote">
-      現在値とATRは手入力のまま利用できます。Market Data画面からAPI取得した場合だけ、この2項目を同時更新します。
-      API取得に失敗した場合は既存の手入力値を上書きしません。<br>
+      銘柄または時間足を変更すると、API Keyが設定済みなら「現在値・ATR14・直近100本High/Low」を自動取得して基準値として入力します。
+      取得後の現在値 / ATR / Swing High / Swing Low は、そのまま手入力でブローカー値へ修正できます。
+      手修正後はMarket Dataに <strong>BROKER ADJUSTED</strong> と表示します。API取得に失敗した場合は既存入力を上書きしません。<br>
       クロス通貨では、口座通貨へpip価値を換算するために必要な換算レートだけ入力してください。
       例：EUR/GBPなら GBPUSD、USD/CADなら USDCAD。JPY口座では必要に応じてUSDJPYも使用します。
     </div>
@@ -4712,8 +5447,12 @@ textarea.journalNotes{
       現在の銘柄に対応するProvider Symbolを表示します。
     </div>
 
+    <div id="conversionDataStatus" class="statusBox">
+      必要換算を判定中。
+    </div>
+
     <div class="actionPanel">
-      <button id="tdFetchNow" class="actionButton primary" type="button">現在値 + ATR を取得</button>
+      <button id="tdFetchNow" class="actionButton primary" type="button">現在値 + ATR14 + 100本High/Low + 必要換算を取得</button>
       <button id="tdSaveKey" class="actionButton" type="button">API Keyをこの端末に保存</button>
       <button id="tdClearKey" class="actionButton danger" type="button">保存API Keyを削除</button>
     </div>
@@ -4722,18 +5461,23 @@ textarea.journalNotes{
       <li><span>銘柄</span><strong>—</strong></li>
       <li><span>Timeframe</span><strong>—</strong></li>
       <li><span>API Price</span><strong>—</strong></li>
-      <li><span>ATR</span><strong>—</strong></li>
+      <li><span>ATR14</span><strong>—</strong></li>
+      <li><span>Swing High 100</span><strong>—</strong></li>
+      <li><span>Swing Low 100</span><strong>—</strong></li>
+      <li><span>100-Bar Window</span><strong>—</strong></li>
       <li><span>Bar Time</span><strong>—</strong></li>
     </ul>
 
     <div class="panelNote">
       API Keyはソースコードへ埋め込みません。「この端末に保存」を押した場合だけ、このブラウザのlocalStorageへ保存します。
-      GitHub Pagesには送信しません。公開サイトに共通API Keyを埋め込む設計にはしていません。
+      GitHub Pagesには送信しません。必要換算は銘柄のQuote通貨と口座通貨から自動判定し、必要なFXレートだけ取得します。
+      API取得後の換算値は手入力でブローカー値へ修正でき、修正済みレートは自動更新で上書きしません。
     </div>
 
     <div class="panelNote">
-      ATRはWilder方式でローカル計算します。M3はProviderの1分足を3本ずつ集約して算出します。
-      APIの対応間隔は M1/M5/M15/H1/H4/D1 を直接使用し、M3だけローカル集約です。
+      ATRはWilder方式でローカル計算し、初期値はATR14です。Swing High/Low 100は、取得した同一時間足の直近100 OHLCバーについて
+      <strong>最高High / 最低Low</strong> を計算します。M3はProviderの1分足を3本ずつ集約、M30はProviderの30分足を直接使用します。
+      APIの直接対応は M1/M5/M15/M30/H1/H4/D1、M3だけローカル集約です。
       APIデータのリアルタイム性・遅延・利用可能銘柄はProvider契約と市場に依存するため、「LIVE」とは表示しません。
     </div>
   </div>
@@ -5076,7 +5820,7 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v2.7-P8 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v2.10-P8.3 — 建玉設計コンソール。</p>
       <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
       <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
       <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>
@@ -5084,6 +5828,9 @@ textarea.journalNotes{
       <p>Phase 6では、Current / Entry / SL / TP / BE / Add / 平均建値 / GRID各段を同一価格軸へ配置するPosition Mapを追加しています。ローソク足や未取得の値動きは描画しません。</p>
       <p>Phase 7では、ユーザー自身のTwelve Data API Keyを使った現在値とOHLC取得、Wilder ATRのローカル計算を追加しています。M3は1分足を3本ずつ集約します。取得失敗時は手入力値を維持します。</p>
       <p>Phase 8では、現在セットアップのWATCH、ENTRY Zone到達、Entry価格Cross、Gate PASS/FAIL遷移、状態変化のAlert Historyと通知を追加しています。監視はアプリが開いている間の再計算時だけ行い、バックグラウンド常時監視は行いません。</p>
+      <p>v2.8-P8.1ではM30を追加し、銘柄/時間足変更時にAPI Key設定済みなら現在値・ATR14・直近100本の最高High/最低Lowを自動取得します。取得値は基準値として既存入力欄へ入り、その後ブローカー値へ手修正できます。</p>
+      <p>v2.9-P8.2では、銘柄のQuote通貨と口座通貨から必要な換算FXレートを自動判定し、USDJPY/EURUSD/GBPUSD/AUDUSD/NZDUSD/USDCAD/USDCHFのうち必要なものだけ取得します。API取得後の換算値は手修正でき、BROKER ADJUSTEDとして保持します。</p>
+      <p>v2.10-P8.3では、銘柄と戦術画面の下部に選択中の銘柄・時間足の直近100本OHLCを使ったミニローソク足チャートを追加しています。現在値、Swing High 100、Swing Low 100も同じ価格軸に表示します。</p>
       <p>これはシグナル発生器ではありません。入力された相場・口座・ブローカー条件から、ゲート判定、建玉サイズ、管理価格を計算します。Risk Engine v2では、SL・Spread・Commission・Slippageを合算した実リスクからLotを決定します。</p>
       <p>この配布物は、2007〜2009年頃の classic iUI のHTML構造・画面遷移・Settings風UIを再現するための、オフライン動作用互換レイヤーを同梱しています。元のiUIライブラリ本体は同梱していません。</p>
       <p class="muted">実運用前に、使用ブローカーの契約サイズ、tick/pip、証拠金計算、手数料、最小ロット、ロット刻み、ストップ制約を確認してください。特に指数・原油・暗号資産はブローカー間差が大きいため、銘柄仕様の確認を必須としています。</p>
