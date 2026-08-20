@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>DEPA FX SYSTEM — Single File</title>
+
+  <!--
+    SINGLE-FILE BUILD: CSS + navigation JS + DEPA calculation JS are embedded below.
+    Upload this index.html alone to GitHub Pages.
+
+    Classic iUI-style structure.
+    The bundled iui/iui.css + iui/iui.js are a small compatibility layer
+    created for this package so the demo works offline.
+  -->
+
+  <style>
+/*
+  DEPA FX classic iUI compatibility skin.
+  This is NOT the original iUI stylesheet.
+  It reproduces the old iPhone/iUI interaction vocabulary for an offline demo.
+*/
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: Helvetica, Arial, sans-serif;
+  background: #c5ccd3;
+  color: #000;
+  -webkit-text-size-adjust: none;
+}
+
+body {
+  padding-top: 44px;
+}
+
+.toolbar {
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 44px;
+  background: #5e7795;
+  background: linear-gradient(#7d91a8, #405d7c);
+  border-bottom: 1px solid #2d3f52;
+  box-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+.toolbar h1 {
+  margin: 0;
+  padding: 0 58px;
+  color: #fff;
+  font-size: 20px;
+  line-height: 44px;
+  text-align: center;
+  text-shadow: 0 -1px 1px rgba(0,0,0,.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar .button {
+  display: none;
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  height: 29px;
+  padding: 0 10px;
+  border: 1px solid #2d4056;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 29px;
+  text-decoration: none;
+  text-shadow: 0 -1px 1px rgba(0,0,0,.6);
+  background: linear-gradient(#6f89a6, #395777);
+}
+
+body > ul,
+body > div[id]:not(.toolbar),
+body > form {
+  display: none;
+}
+
+body > [selected="true"] {
+  display: block;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body > ul > li,
+.resultList > li,
+.gateList > li {
+  position: relative;
+  min-height: 43px;
+  padding: 11px 12px;
+  box-sizing: border-box;
+  background: #fff;
+  border-bottom: 1px solid #b4b4b4;
+  font-size: 17px;
+}
+
+body > ul > li > a {
+  display: block;
+  margin: -11px -12px;
+  padding: 12px 31px 12px 12px;
+  min-height: 43px;
+  box-sizing: border-box;
+  color: #000;
+  text-decoration: none;
+}
+
+body > ul > li > a:after {
+  content: "›";
+  position: absolute;
+  right: 11px;
+  top: 7px;
+  font-size: 28px;
+  line-height: 28px;
+  color: #8d98a4;
+}
+
+li.group {
+  min-height: 26px !important;
+  padding: 6px 10px 4px !important;
+  background: #d6dce2 !important;
+  color: #53677d;
+  font-weight: bold;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #fff;
+  border-top: 1px solid #b6bec7;
+  border-bottom: 1px solid #aeb7c0;
+}
+
+.navValue {
+  float: right;
+  max-width: 48%;
+  padding-right: 5px;
+  color: #77818c;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.verdictCell {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.verdict {
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.verdict.entry { color: #18843a; }
+.verdict.watch { color: #a56d00; }
+.verdict.stop { color: #b3261e; }
+.verdict.invalid { color: #5d6872; }
+
+.smallText {
+  margin-top: 2px;
+  color: #77818c;
+  font-size: 12px;
+}
+
+fieldset {
+  margin: 14px 9px 18px;
+  padding: 0;
+  border: 1px solid #9da4aa;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+fieldset .row {
+  position: relative;
+  min-height: 44px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #c8c8c8;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+fieldset .row:last-child {
+  border-bottom: 0;
+}
+
+fieldset label {
+  display: inline-block;
+  width: 44%;
+  color: #333;
+  font-size: 14px;
+  line-height: 30px;
+  vertical-align: top;
+}
+
+fieldset input,
+fieldset select {
+  float: right;
+  width: 54%;
+  box-sizing: border-box;
+  margin: 1px 0 0;
+  padding: 5px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #111;
+  text-align: right;
+  font: 16px Helvetica, Arial, sans-serif;
+}
+
+fieldset input:focus,
+fieldset select:focus {
+  outline: none;
+  background: #eef5ff;
+}
+
+.panelNote,
+.warning,
+.aboutBox {
+  margin: 12px 10px 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.panelNote {
+  color: #5e6872;
+}
+
+.warning {
+  padding: 10px;
+  border: 1px solid #b98b24;
+  border-radius: 8px;
+  background: #fff7da;
+  color: #6d5310;
+}
+
+.aboutBox {
+  padding: 12px;
+  border: 1px solid #9da4aa;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.aboutBox h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.aboutBox p {
+  margin: 8px 0;
+}
+
+.muted {
+  color: #68737e;
+}
+
+.gateList,
+.resultList {
+  margin: 14px 9px;
+  border: 1px solid #9da4aa;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.gateList > li,
+.resultList > li {
+  border-bottom: 1px solid #c8c8c8;
+  font-size: 14px;
+}
+
+.gateList > li:last-child,
+.resultList > li:last-child {
+  border-bottom: 0;
+}
+
+.gateCode {
+  display: inline-block;
+  width: 48px;
+  color: #68737e;
+  font-family: Menlo, Monaco, monospace;
+  font-size: 11px;
+}
+
+.gateState {
+  display: inline-block;
+  width: 43px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.gateState.pass { color: #18843a; }
+.gateState.fail { color: #b3261e; }
+
+.gateName {
+  font-weight: bold;
+}
+
+.gateDetail {
+  display: block;
+  padding: 3px 0 0 95px;
+  color: #77818c;
+  font-size: 11px;
+  font-family: Menlo, Monaco, monospace;
+  line-height: 1.35;
+}
+
+.resultList > li span {
+  color: #68737e;
+}
+
+.resultList > li strong {
+  float: right;
+  max-width: 58%;
+  text-align: right;
+  font-size: 15px;
+}
+
+.resultList > li strong.go { color: #18843a; }
+.resultList > li strong.stop { color: #b3261e; }
+.resultList > li strong.hi { color: #216da0; }
+
+.tableWrap {
+  margin: 14px 9px;
+  border: 1px solid #9da4aa;
+  border-radius: 10px;
+  overflow-x: auto;
+  background: #fff;
+}
+
+table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: #fff;
+}
+
+th, td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #d0d0d0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+th {
+  color: #5e6872;
+  font-size: 10px;
+  background: #eef0f2;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+@media (max-width: 360px) {
+  fieldset label { width: 47%; font-size: 13px; }
+  fieldset input, fieldset select { width: 51%; font-size: 15px; }
+  .gateDetail { padding-left: 0; margin-top: 4px; }
+}
+
+  </style>
+
+  <script>
+/*
+  Minimal classic-iUI navigation compatibility layer for this demo.
+  This file is not the original iUI library.
+*/
+(function () {
+  var stack = [];
+
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
+  function getPages() {
+    var out = [];
+    var nodes = document.body.children;
+    var i, el;
+    for (i = 0; i < nodes.length; i++) {
+      el = nodes[i];
+      if (el.id && el.className !== "toolbar" && el.id !== "pageTitle" && el.id !== "backButton") {
+        out.push(el);
+      }
+    }
+    return out;
+  }
+
+  function selectedPage() {
+    var pages = getPages();
+    var i;
+    for (i = 0; i < pages.length; i++) {
+      if (pages[i].getAttribute("selected") === "true") return pages[i];
+    }
+    return null;
+  }
+
+  function titleFor(page) {
+    return page ? (page.getAttribute("title") || "DEPA FX") : "DEPA FX";
+  }
+
+  function refreshToolbar() {
+    var page = selectedPage();
+    var title = byId("pageTitle");
+    var back = byId("backButton");
+    if (title) title.innerHTML = titleFor(page);
+
+    if (back) {
+      if (stack.length > 0) {
+        var prev = stack[stack.length - 1];
+        back.style.display = "block";
+        back.innerHTML = prev ? titleFor(prev) : "戻る";
+      } else {
+        back.style.display = "none";
+        back.innerHTML = "";
+      }
+    }
+  }
+
+  function showPage(target, pushCurrent) {
+    if (!target) return false;
+    var current = selectedPage();
+    if (current === target) return true;
+
+    if (pushCurrent && current) stack.push(current);
+    if (current) current.removeAttribute("selected");
+    target.setAttribute("selected", "true");
+
+    window.scrollTo(0, 0);
+    refreshToolbar();
+    return true;
+  }
+
+  function back() {
+    var target = stack.pop();
+    if (target) showPage(target, false);
+    return false;
+  }
+
+  function handleClick(e) {
+    e = e || window.event;
+    var t = e.target || e.srcElement;
+    while (t && t.tagName && t.tagName.toLowerCase() !== "a") t = t.parentNode;
+    if (!t || !t.getAttribute) return;
+
+    var href = t.getAttribute("href");
+    if (href && href.charAt(0) === "#" && href.length > 1) {
+      var target = byId(href.substring(1));
+      if (target) {
+        if (e.preventDefault) e.preventDefault();
+        else e.returnValue = false;
+        showPage(target, true);
+      }
+    }
+  }
+
+  function init() {
+    var backButton = byId("backButton");
+    if (document.addEventListener) {
+      document.addEventListener("click", handleClick, false);
+    } else if (document.attachEvent) {
+      document.attachEvent("onclick", handleClick);
+    }
+
+    if (backButton) {
+      backButton.onclick = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        return back();
+      };
+    }
+
+    refreshToolbar();
+
+    window.iui = {
+      showPage: function (id) { return showPage(byId(id), true); },
+      getSelectedPage: selectedPage,
+      goBack: back
+    };
+  }
+
+  if (document.addEventListener) document.addEventListener("DOMContentLoaded", init, false);
+  else window.attachEvent("onload", init);
+}());
+
+  </script>
+
+  <script>
+/* ============================================================
+   DEPA FX SYSTEM — ENTRY CONSOLE v1.0
+   Classic iUI-style vanilla JavaScript port
+   ============================================================ */
+
+(function () {
+  var SYMBOLS = {
+    USDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "USD/JPY" },
+    EURJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "EUR/JPY" },
+    GBPJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "GBP/JPY" },
+    EURUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "EUR/USD" },
+    GBPUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "GBP/USD" },
+    AUDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "AUD/USD" },
+    XAUUSD: { pip: 0.1, digits: 2, contract: 100, quote: "USD", label: "XAU/USD" }
+  };
+
+  var lastResult = { state: "INVALID", gates: [], reason: "入力不足" };
+
+  function el(id) { return document.getElementById(id); }
+
+  function nFromValue(v) {
+    var x = parseFloat(v);
+    return isFinite(x) ? x : null;
+  }
+
+  function n(id) {
+    var node = el(id);
+    return node ? nFromValue(node.value) : null;
+  }
+
+  function value(id) {
+    var node = el(id);
+    return node ? node.value : "";
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function commas(x) {
+    if (x == null || !isFinite(x)) return "—";
+    var s = String(Math.round(x));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function fixed(x, digits) {
+    if (x == null || !isFinite(x)) return "—";
+    return Number(x).toFixed(digits);
+  }
+
+  function lotFixed(x) {
+    if (x == null || !isFinite(x)) return "—";
+    return Number(x).toFixed(2);
+  }
+
+  function calc() {
+    var gates = [];
+    function push(id, name, ok, detail) {
+      gates.push({ id: id, name: name, ok: !!ok, detail: detail });
+    }
+
+    var symbol = value("symbol");
+    var tf = value("tf");
+    var acctCcy = value("acctCcy");
+    var balance = n("balance");
+    var riskPct = n("riskPct");
+    var leverage = n("leverage");
+    var usdjpy = n("usdjpy");
+    var spreadPips = n("spreadPips");
+    var commission = n("commission");
+    var stopLevelPips = n("stopLevelPips");
+    var minLot = n("minLot");
+    var lotStep = n("lotStep");
+
+    var price = n("price");
+    var atr = n("atr");
+    var swingHigh = n("swingHigh");
+    var swingLow = n("swingLow");
+    var slAnchor = n("slAnchor");
+    var d1bias = value("d1bias");
+    var entryType = value("entryType");
+    var depth = n("depth");
+
+    var gridStepAtr = n("gridStepAtr");
+    var gridLevels = n("gridLevels");
+    var gridBaseLot = n("gridBaseLot");
+    var gridMult = n("gridMult");
+
+    var S = SYMBOLS[symbol];
+    var sp = spreadPips == null ? 0 : spreadPips;
+    var com = commission == null ? 0 : commission;
+    var slMin = stopLevelPips == null ? 0 : stopLevelPips;
+
+    var missing = [];
+    var needsUJ = (S.quote === "USD" && acctCcy === "JPY") ||
+                  (S.quote === "JPY" && acctCcy === "USD");
+
+    if (!balance || balance <= 0) missing.push("残高");
+    if (!riskPct || riskPct <= 0) missing.push("許容リスク%");
+    if (!leverage || leverage <= 0) missing.push("レバレッジ");
+    if (minLot == null || minLot <= 0) missing.push("最小ロット");
+    if (lotStep == null || lotStep <= 0) missing.push("ロット刻み");
+    if (!price || price <= 0) missing.push("現在値");
+    if (!atr || atr <= 0) missing.push("ATR");
+
+    if (entryType !== "GRID") {
+      if (!swingHigh || swingHigh <= 0) missing.push("直近高値");
+      if (!swingLow || swingLow <= 0) missing.push("直近安値");
+      if (swingHigh && swingLow && swingHigh <= swingLow) missing.push("高値>安値の関係");
+    } else {
+      if (gridStepAtr == null || gridStepAtr <= 0) missing.push("グリッド幅");
+      if (gridLevels == null || gridLevels < 1) missing.push("段数");
+      if (gridBaseLot == null || gridBaseLot <= 0) missing.push("初期ロット");
+      if (gridMult == null || gridMult <= 0) missing.push("ロット倍率");
+    }
+
+    if (needsUJ && (!usdjpy || usdjpy <= 0)) missing.push("換算USDJPY");
+
+    var g01 = missing.length === 0;
+    push("G-01", "入力完全性", g01, g01 ? "全必須項目あり" : "未入力: " + missing.join(" / "));
+
+    if (!g01) {
+      return {
+        state: "INVALID",
+        gates: gates,
+        reason: "入力不足のため判定不能",
+        mode: entryType,
+        S: S,
+        tf: tf,
+        acctCcy: acctCcy
+      };
+    }
+
+    var pipValQuote = S.pip * S.contract;
+    var q2a = 1;
+    if (S.quote !== acctCcy) q2a = (S.quote === "USD") ? usdjpy : (1 / usdjpy);
+
+    var pipVal = pipValQuote * q2a;
+    var riskAmt = balance * (riskPct / 100);
+
+    function toPips(d) { return d / S.pip; }
+    function toPrice(p) { return p * S.pip; }
+    function fmt(v) { return fixed(v, S.digits); }
+
+    var costPips = sp + (com > 0 ? (com / pipVal) : 0);
+
+    /* ================= GRID ================= */
+    if (entryType === "GRID") {
+      var stepAtr = gridStepAtr == null ? 0.5 : gridStepAtr;
+      var lv = Math.max(1, Math.round(gridLevels == null ? 3 : gridLevels));
+      var base = gridBaseLot == null ? minLot : gridBaseLot;
+      var mult = gridMult == null ? 1 : gridMult;
+      var stepPrice = atr * stepAtr;
+      var dir = d1bias === "DOWN" ? -1 : 1;
+
+      var rows = [];
+      var cumLot = 0;
+      var cumCost = 0;
+      var i, p, lot;
+
+      for (i = 0; i < lv; i++) {
+        p = price - dir * stepPrice * i;
+        lot = +(base * Math.pow(mult, i)).toFixed(3);
+        cumLot += lot;
+        cumCost += p * lot;
+        rows.push({
+          i: i + 1,
+          p: p,
+          lot: lot,
+          cumLot: +cumLot.toFixed(3),
+          avg: cumCost / cumLot
+        });
+      }
+
+      var last = rows[rows.length - 1];
+      var finalSL = last.p - dir * Math.max(stepPrice, atr * 1.0);
+      var slDistFromAvg = Math.abs(last.avg - finalSL);
+      var worstLoss = toPips(slDistFromAvg) * pipVal * last.cumLot +
+                      costPips * pipVal * last.cumLot;
+
+      var marginReq = (last.cumLot * S.contract * price * q2a) / leverage;
+      var tpAll = last.avg + dir * stepPrice;
+      var profitAll = toPips(Math.abs(tpAll - last.avg)) * pipVal * last.cumLot;
+
+      push(
+        "G-06",
+        "ストップレベル",
+        toPips(Math.abs(last.p - finalSL)) >= slMin,
+        "最終SL幅 " + toPips(Math.abs(last.p - finalSL)).toFixed(1) +
+          "pips / 下限 " + slMin + "pips"
+      );
+
+      var gG1 = worstLoss <= riskAmt;
+      push(
+        "GR-1",
+        "全段約定時の損失",
+        gG1,
+        "最大損失 " + commas(worstLoss) + " " + acctCcy +
+          " / 許容 " + commas(riskAmt) + " " + acctCcy
+      );
+
+      var gG2 = marginReq <= balance * 0.5;
+      push(
+        "GR-2",
+        "必要証拠金",
+        gG2,
+        "必要 " + commas(marginReq) + " " + acctCcy +
+          " / 残高の50%上限 " + commas(balance * 0.5) + " " + acctCcy
+      );
+
+      var gG3 = mult <= 1.0;
+      push(
+        "GR-3",
+        "ロット倍率",
+        gG3,
+        mult <= 1
+          ? "等倍（損失は線形）"
+          : "倍率 " + mult + "× — ロット総量が非線形に増大。ナンピン構造"
+      );
+
+      var allGridOk = allGatesOk(gates);
+
+      return {
+        state: allGridOk ? "ENTRY" : "NO-TRADE",
+        gates: gates,
+        mode: "GRID",
+        dir: dir,
+        rows: rows,
+        finalSL: finalSL,
+        tpAll: tpAll,
+        worstLoss: worstLoss,
+        profitAll: profitAll,
+        marginReq: marginReq,
+        cumLot: last.cumLot,
+        avg: last.avg,
+        stepPrice: stepPrice,
+        riskAmt: riskAmt,
+        pipVal: pipVal,
+        acctCcy: acctCcy,
+        S: S,
+        tf: tf,
+        fmt: fmt
+      };
+    }
+
+    /* ============ TREND / COUNTER ============ */
+    var leg = swingHigh - swingLow;
+    var dir2, entry, slA, sl, tp1, tp2;
+
+    if (entryType === "TREND") {
+      dir2 = d1bias === "DOWN" ? -1 : 1;
+
+      var biasOk = d1bias !== "RANGE";
+      push(
+        "G-02",
+        "日足バイアス",
+        biasOk,
+        biasOk ? (d1bias === "UP" ? "買い目線" : "売り目線") : "レンジ＝順張りの方向根拠なし"
+      );
+
+      if (dir2 > 0) {
+        entry = swingHigh - leg * depth;
+        slA = slAnchor == null ? swingLow : slAnchor;
+        sl = slA - Math.max(atr * 0.3, toPrice(sp) * 2);
+        tp1 = swingHigh + leg * 0.382;
+        tp2 = swingHigh + leg * 1.0;
+      } else {
+        entry = swingLow + leg * depth;
+        slA = slAnchor == null ? swingHigh : slAnchor;
+        sl = slA + Math.max(atr * 0.3, toPrice(sp) * 2);
+        tp1 = swingLow - leg * 0.382;
+        tp2 = swingLow - leg * 1.0;
+      }
+    } else {
+      dir2 = d1bias === "UP" ? -1 : 1;
+
+      var rangeOk = d1bias === "RANGE";
+      push(
+        "G-02",
+        "日足バイアス",
+        rangeOk,
+        rangeOk ? "レンジ＝逆張り可" : "日足にトレンドあり。逆張り禁止"
+      );
+
+      if (dir2 < 0) {
+        entry = swingHigh;
+        slA = slAnchor == null ? swingHigh : slAnchor;
+        sl = slA + Math.max(atr * 0.5, toPrice(sp) * 2);
+        tp1 = swingHigh - leg * 0.382;
+        tp2 = swingHigh - leg * 0.618;
+      } else {
+        entry = swingLow;
+        slA = slAnchor == null ? swingLow : slAnchor;
+        sl = slA - Math.max(atr * 0.5, toPrice(sp) * 2);
+        tp1 = swingLow + leg * 0.382;
+        tp2 = swingLow + leg * 0.618;
+      }
+    }
+
+    var slPips = toPips(Math.abs(entry - sl));
+    var tp1Pips = toPips(Math.abs(tp1 - entry));
+    var tp2Pips = toPips(Math.abs(tp2 - entry));
+    var netRR = (tp1Pips - costPips) / (slPips + costPips);
+
+    var g05 = tp1Pips >= toPips(atr * 1.5);
+    push(
+      "G-05",
+      "対抗構造までの距離",
+      g05,
+      "TP1まで " + tp1Pips.toFixed(1) +
+        "pips / 必要 " + toPips(atr * 1.5).toFixed(1) + "pips (ATR×1.5)"
+    );
+
+    var g06 = slPips >= slMin;
+    push(
+      "G-06",
+      "ストップレベル",
+      g06,
+      "SL幅 " + slPips.toFixed(1) + "pips / ブローカー下限 " + slMin + "pips"
+    );
+
+    var g07 = slPips >= toPips(atr * 1.0);
+    push(
+      "G-07",
+      "SL幅の最低保証",
+      g07,
+      "SL幅 " + slPips.toFixed(1) +
+        "pips / 必要 " + toPips(atr).toFixed(1) + "pips (ATR×1.0)"
+    );
+
+    var g08 = netRR >= 1.5;
+    push(
+      "G-08",
+      "コスト差引後RR",
+      g08,
+      "RR " + netRR.toFixed(2) +
+        " / 必要 1.50（コスト " + costPips.toFixed(1) + "pips控除後）"
+    );
+
+    var rawLot = riskAmt / (slPips * pipVal);
+    var lotCalc = Math.floor(rawLot / lotStep) * lotStep;
+    var lotOut = +lotCalc.toFixed(3);
+    var marginReq2 = (lotOut * S.contract * price * q2a) / leverage;
+    var g09a = lotOut >= minLot;
+    var g09b = marginReq2 <= balance * 0.5;
+
+    push(
+      "G-09",
+      "ロット / 証拠金",
+      g09a && g09b,
+      "算出 " + lotOut.toFixed(2) + "lot（最小 " + minLot +
+        "）/ 必要証拠金 " + commas(marginReq2) + " " + acctCcy
+    );
+
+    var riskReal = slPips * pipVal * lotOut;
+
+    var be = entry + dir2 * toPrice(costPips * 1.0);
+    var beTrigger = entry + dir2 * toPrice(slPips);
+    var trailStart = tp1;
+    var trailDist = toPips(atr * 1.5);
+    var add1 = entry + dir2 * toPrice(slPips);
+    var add2 = entry + dir2 * toPrice(slPips * 2);
+    var addLotCalc = Math.floor((lotOut * 0.5) / lotStep) * lotStep;
+    var addLot = +addLotCalc.toFixed(3);
+
+    var avg1 = lotOut + addLot > 0
+      ? (entry * lotOut + add1 * addLot) / (lotOut + addLot)
+      : entry;
+
+    var avg2 = lotOut + addLot * 2 > 0
+      ? (entry * lotOut + add1 * addLot + add2 * addLot) / (lotOut + addLot * 2)
+      : entry;
+
+    var allOk = allGatesOk(gates);
+    var nearEntry = Math.abs(price - entry) <= atr * 0.25;
+    var state = !allOk ? "NO-TRADE" : (nearEntry ? "ENTRY" : "WATCH");
+
+    return {
+      state: state,
+      gates: gates,
+      mode: entryType,
+      dir: dir2,
+      entry: entry,
+      sl: sl,
+      tp1: tp1,
+      tp2: tp2,
+      slA: slA,
+      slPips: slPips,
+      tp1Pips: tp1Pips,
+      tp2Pips: tp2Pips,
+      netRR: netRR,
+      lot: lotOut,
+      riskReal: riskReal,
+      marginReq: marginReq2,
+      be: be,
+      beTrigger: beTrigger,
+      trailStart: trailStart,
+      trailDist: trailDist,
+      add1: add1,
+      add2: add2,
+      addLot: addLot,
+      avg1: avg1,
+      avg2: avg2,
+      costPips: costPips,
+      pipVal: pipVal,
+      riskAmt: riskAmt,
+      acctCcy: acctCcy,
+      S: S,
+      tf: tf,
+      leg: leg,
+      nearEntry: nearEntry,
+      px: price,
+      fmt: fmt
+    };
+  }
+
+  function allGatesOk(gates) {
+    var i;
+    for (i = 0; i < gates.length; i++) {
+      if (!gates[i].ok) return false;
+    }
+    return true;
+  }
+
+  function stateText(state) {
+    if (state === "ENTRY") return { main: "エントリー", sub: "全ゲート通過・価格帯到達", cls: "entry" };
+    if (state === "WATCH") return { main: "監視", sub: "全ゲート通過・価格待ち", cls: "watch" };
+    if (state === "NO-TRADE") return { main: "見送り", sub: "ゲート不合格", cls: "stop" };
+    return { main: "判定不能", sub: "入力不足", cls: "invalid" };
+  }
+
+  function render() {
+    var R = calc();
+    lastResult = R;
+
+    var V = stateText(R.state);
+    var hv = el("homeVerdict");
+    hv.className = "verdict " + V.cls;
+    hv.innerHTML = esc(V.main);
+    el("homeVerdictSub").innerHTML = esc(R.reason || V.sub);
+
+    renderNavigation(R);
+    renderGates(R);
+    renderModeVisibility(R);
+
+    if (R.state === "INVALID") {
+      el("positionList").innerHTML = '<li><span>状態</span><strong>判定不能</strong></li>';
+      el("managementList").innerHTML = '<li><span>状態</span><strong>判定不能</strong></li>';
+      el("gridTable").getElementsByTagName("tbody")[0].innerHTML = "";
+      el("gridSummary").innerHTML = "";
+      return;
+    }
+
+    if (R.mode === "GRID") renderGrid(R);
+    else {
+      renderPosition(R);
+      renderManagement(R);
+    }
+  }
+
+  function renderNavigation(R) {
+    var S = SYMBOLS[value("symbol")];
+    el("navStrategy").innerHTML = esc(S.label + " / " + value("tf"));
+    el("navAccount").innerHTML = n("balance") ? (commas(n("balance")) + " " + value("acctCcy")) : "未入力";
+    el("navMarket").innerHTML = n("price") ? fixed(n("price"), S.digits) : "未入力";
+
+    var passed = 0;
+    var i;
+    for (i = 0; i < R.gates.length; i++) if (R.gates[i].ok) passed++;
+    el("navGates").innerHTML = passed + "/" + R.gates.length + " PASS";
+
+    if (R.state !== "INVALID" && R.mode !== "GRID") {
+      el("navPosition").innerHTML = (R.dir > 0 ? "BUY " : "SELL ") + R.fmt(R.entry);
+    } else {
+      el("navPosition").innerHTML = "—";
+    }
+
+    if (R.state !== "INVALID" && R.mode === "GRID") {
+      el("navGrid").innerHTML = R.cumLot.toFixed(2) + " lot";
+    } else {
+      el("navGrid").innerHTML = "—";
+    }
+  }
+
+  function renderModeVisibility(R) {
+    var mode = value("entryType");
+    el("depthRow").style.display = mode === "TREND" ? "block" : "none";
+    el("swingFields").style.display = mode === "GRID" ? "none" : "block";
+    el("gridFields").style.display = mode === "GRID" ? "block" : "none";
+
+    el("navPositionRow").style.display = mode === "GRID" ? "none" : "block";
+    el("navManagementRow").style.display = mode === "GRID" ? "none" : "block";
+    el("navGridRow").style.display = mode === "GRID" ? "block" : "none";
+  }
+
+  function renderGates(R) {
+    var html = "";
+    var i, g;
+    for (i = 0; i < R.gates.length; i++) {
+      g = R.gates[i];
+      html += '<li>' +
+        '<span class="gateCode">' + esc(g.id) + '</span>' +
+        '<span class="gateState ' + (g.ok ? 'pass' : 'fail') + '">' + (g.ok ? 'PASS' : 'FAIL') + '</span>' +
+        '<span class="gateName">' + esc(g.name) + '</span>' +
+        '<span class="gateDetail">' + esc(g.detail) + '</span>' +
+        '</li>';
+    }
+    el("gateList").innerHTML = html;
+  }
+
+  function resultRow(label, valueText, cls) {
+    return '<li><span>' + esc(label) + '</span><strong' +
+      (cls ? ' class="' + cls + '"' : '') + '>' + esc(valueText) + '</strong></li>';
+  }
+
+  function renderPosition(R) {
+    var html = "";
+    html += resultRow("方向", R.dir > 0 ? "BUY" : "SELL", R.dir > 0 ? "go" : "stop");
+    html += resultRow("エントリー", R.fmt(R.entry) + "  / 現在 " + R.fmt(R.px), "hi");
+    html += resultRow("損切り", R.fmt(R.sl) + "  (" + R.slPips.toFixed(1) + " pips)");
+    html += resultRow("利確 TP1", R.fmt(R.tp1) + "  (" + R.tp1Pips.toFixed(1) + " pips)");
+    html += resultRow("利確 TP2", R.fmt(R.tp2) + "  (" + R.tp2Pips.toFixed(1) + " pips)");
+    html += resultRow("RR（コスト後）", R.netRR.toFixed(2), R.netRR >= 1.5 ? "go" : "stop");
+    html += resultRow("ロット", lotFixed(R.lot));
+    html += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
+    html += resultRow("想定損失額", commas(R.riskReal) + " " + R.acctCcy);
+    html += resultRow("許容損失額", commas(R.riskAmt) + " " + R.acctCcy);
+    el("positionList").innerHTML = html;
+  }
+
+  function renderManagement(R) {
+    var html = "";
+    html += resultRow("BE移行トリガー", R.fmt(R.beTrigger) + " (+1R)");
+    html += resultRow("BE時のSL", R.fmt(R.be) + " (コスト " + R.costPips.toFixed(1) + " pips)");
+    html += resultRow("トレール開始", R.fmt(R.trailStart) + " (TP1)");
+    html += resultRow("トレール幅", R.trailDist.toFixed(1) + " pips");
+    html += resultRow("増し玉 1回目", R.fmt(R.add1) + " / " + lotFixed(R.addLot) + " lot");
+    html += resultRow("1回目後の平均", R.fmt(R.avg1));
+    html += resultRow("増し玉 2回目", R.fmt(R.add2) + " / " + lotFixed(R.addLot) + " lot");
+    html += resultRow("2回目後の平均", R.fmt(R.avg2));
+    el("managementList").innerHTML = html;
+  }
+
+  function renderGrid(R) {
+    var tbody = el("gridTable").getElementsByTagName("tbody")[0];
+    var html = "";
+    var i, r;
+
+    for (i = 0; i < R.rows.length; i++) {
+      r = R.rows[i];
+      html += "<tr>" +
+        "<td>" + r.i + "</td>" +
+        "<td>" + esc(R.fmt(r.p)) + "</td>" +
+        "<td>" + r.lot.toFixed(2) + "</td>" +
+        "<td>" + r.cumLot.toFixed(2) + "</td>" +
+        "<td>" + esc(R.fmt(r.avg)) + "</td>" +
+        "</tr>";
+    }
+
+    tbody.innerHTML = html;
+
+    var sum = "";
+    sum += resultRow("全体利確", R.fmt(R.tpAll) + " / +" + commas(R.profitAll) + " " + R.acctCcy);
+    sum += resultRow("最終損切り", R.fmt(R.finalSL));
+    sum += resultRow("最大損失", "−" + commas(R.worstLoss) + " " + R.acctCcy,
+      R.worstLoss <= R.riskAmt ? "go" : "stop");
+    sum += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
+    sum += resultRow("累計ロット", R.cumLot.toFixed(2));
+    sum += resultRow("平均建値", R.fmt(R.avg));
+
+    el("gridSummary").innerHTML = sum;
+  }
+
+  function hookInputs() {
+    var ids = [
+      "symbol", "tf", "acctCcy", "balance", "riskPct", "leverage", "usdjpy",
+      "spreadPips", "commission", "stopLevelPips", "minLot", "lotStep",
+      "price", "atr", "swingHigh", "swingLow", "slAnchor", "d1bias",
+      "entryType", "depth", "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+    ];
+
+    var i, node;
+    for (i = 0; i < ids.length; i++) {
+      node = el(ids[i]);
+      if (!node) continue;
+
+      if (node.addEventListener) {
+        node.addEventListener("change", render, false);
+        node.addEventListener("input", render, false);
+      } else if (node.attachEvent) {
+        node.attachEvent("onchange", render);
+        node.attachEvent("onkeyup", render);
+      }
+    }
+  }
+
+  function init() {
+    hookInputs();
+    render();
+  }
+
+  if (document.addEventListener) document.addEventListener("DOMContentLoaded", init, false);
+  else window.attachEvent("onload", init);
+}());
+
+  </script>
+
+</head>
+
+<body>
+  <div class="toolbar">
+    <h1 id="pageTitle">DEPA FX</h1>
+    <a id="backButton" class="button" href="#"></a>
+  </div>
+
+  <!-- HOME -->
+  <ul id="home" title="DEPA FX" selected="true">
+    <li class="group">ENTRY CONSOLE v1.0</li>
+    <li class="verdictCell">
+      <div id="homeVerdict" class="verdict invalid">判定不能</div>
+      <div id="homeVerdictSub" class="smallText">入力不足</div>
+    </li>
+    <li><a href="#strategy">銘柄と戦術 <span id="navStrategy" class="navValue">USD/JPY / H1</span></a></li>
+    <li><a href="#account">口座とブローカー <span id="navAccount" class="navValue">未入力</span></a></li>
+    <li><a href="#market">チャート入力 <span id="navMarket" class="navValue">未入力</span></a></li>
+    <li><a href="#gates">ゲート判定 <span id="navGates" class="navValue">G-01</span></a></li>
+    <li id="navPositionRow"><a href="#position">建玉設計 <span id="navPosition" class="navValue">—</span></a></li>
+    <li id="navManagementRow"><a href="#management">建玉後の管理 <span class="navValue">—</span></a></li>
+    <li id="navGridRow" style="display:none"><a href="#grid">グリッド構成 <span id="navGrid" class="navValue">—</span></a></li>
+    <li class="group">SYSTEM</li>
+    <li><a href="#about">仕様 / 注意事項</a></li>
+  </ul>
+
+  <!-- STRATEGY -->
+  <div id="strategy" title="銘柄と戦術">
+    <fieldset>
+      <div class="row">
+        <label for="symbol">銘柄</label>
+        <select id="symbol">
+          <option value="USDJPY">USD/JPY</option>
+          <option value="EURJPY">EUR/JPY</option>
+          <option value="GBPJPY">GBP/JPY</option>
+          <option value="EURUSD">EUR/USD</option>
+          <option value="GBPUSD">GBP/USD</option>
+          <option value="AUDUSD">AUD/USD</option>
+          <option value="XAUUSD">XAU/USD</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="tf">トリガー時間足</label>
+        <select id="tf">
+          <option value="M15">M15</option>
+          <option value="H1" selected>H1</option>
+          <option value="H4">H4</option>
+          <option value="D1">D1</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="d1bias">日足バイアス</label>
+        <select id="d1bias">
+          <option value="UP">買い目線</option>
+          <option value="DOWN">売り目線</option>
+          <option value="RANGE">レンジ</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="entryType">エントリー</label>
+        <select id="entryType">
+          <option value="TREND">順張り</option>
+          <option value="COUNTER">逆張り</option>
+          <option value="GRID">グリッド</option>
+        </select>
+      </div>
+      <div class="row" id="depthRow">
+        <label for="depth">押し目・戻り深度</label>
+        <select id="depth">
+          <option value="0.382">38.2%</option>
+          <option value="0.5">50.0%</option>
+          <option value="0.618" selected>61.8%</option>
+          <option value="0.786">78.6%</option>
+        </select>
+      </div>
+    </fieldset>
+    <div class="panelNote">順張りでは深い押し目・戻りほど、他条件が同じならエントリー価格が変わりRRも変化します。</div>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div id="account" title="口座とブローカー">
+    <fieldset>
+      <div class="row">
+        <label for="acctCcy">口座通貨</label>
+        <select id="acctCcy">
+          <option value="JPY">JPY</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+      <div class="row"><label for="balance">残高</label><input id="balance" type="number" step="any" placeholder="1000000"></div>
+      <div class="row"><label for="riskPct">許容リスク %</label><input id="riskPct" type="number" step="any" value="1.0"></div>
+      <div class="row"><label for="leverage">レバレッジ</label><input id="leverage" type="number" step="1" value="500"></div>
+      <div class="row"><label for="spreadPips">スプレッド pips</label><input id="spreadPips" type="number" step="any" value="0.8"></div>
+      <div class="row"><label for="commission">手数料 /lot 往復</label><input id="commission" type="number" step="any" value="0"></div>
+      <div class="row"><label for="stopLevelPips">ストップレベル pips</label><input id="stopLevelPips" type="number" step="any" value="0"></div>
+      <div class="row"><label for="minLot">最小ロット</label><input id="minLot" type="number" step="any" value="0.01"></div>
+      <div class="row"><label for="lotStep">ロット刻み</label><input id="lotStep" type="number" step="any" value="0.01"></div>
+    </fieldset>
+  </div>
+
+  <!-- MARKET -->
+  <div id="market" title="チャート入力">
+    <fieldset>
+      <div class="row"><label for="price">現在値</label><input id="price" type="number" step="any" placeholder="—"></div>
+      <div class="row"><label for="atr">ATR（価格単位）</label><input id="atr" type="number" step="any" placeholder="—"></div>
+      <div class="row"><label for="usdjpy">換算 USDJPY</label><input id="usdjpy" type="number" step="any" placeholder="不要なら空欄"></div>
+
+      <div id="swingFields">
+        <div class="row"><label for="swingHigh">直近スイング高値</label><input id="swingHigh" type="number" step="any"></div>
+        <div class="row"><label for="swingLow">直近スイング安値</label><input id="swingLow" type="number" step="any"></div>
+        <div class="row"><label for="slAnchor">SLアンカー</label><input id="slAnchor" type="number" step="any" placeholder="空欄=スイング端"></div>
+      </div>
+
+      <div id="gridFields" style="display:none">
+        <div class="row"><label for="gridStepAtr">グリッド幅 ATR倍</label><input id="gridStepAtr" type="number" step="any" value="0.5"></div>
+        <div class="row"><label for="gridLevels">段数</label><input id="gridLevels" type="number" step="1" value="5"></div>
+        <div class="row"><label for="gridBaseLot">初期ロット</label><input id="gridBaseLot" type="number" step="any" value="0.01"></div>
+        <div class="row"><label for="gridMult">ロット倍率</label><input id="gridMult" type="number" step="any" value="1.0"></div>
+      </div>
+    </fieldset>
+    <div class="panelNote">確定足の値を入力してください。React版と同じく、入力が変わるたびに自動再計算します。</div>
+  </div>
+
+  <!-- GATES -->
+  <div id="gates" title="ゲート判定">
+    <ul id="gateList" class="gateList"></ul>
+    <div class="panelNote">初期状態は判定不能。全ゲート通過で初めて監視／エントリーに遷移します。</div>
+  </div>
+
+  <!-- POSITION -->
+  <div id="position" title="建玉設計">
+    <ul id="positionList" class="resultList">
+      <li><span>状態</span><strong>—</strong></li>
+    </ul>
+  </div>
+
+  <!-- MANAGEMENT -->
+  <div id="management" title="建玉後の管理">
+    <ul id="managementList" class="resultList">
+      <li><span>状態</span><strong>—</strong></li>
+    </ul>
+    <div class="warning">増し玉は、その時点で全ゲートを再評価し、全体SLを平均建値へ移動する前提です。</div>
+  </div>
+
+  <!-- GRID -->
+  <div id="grid" title="グリッド構成">
+    <div class="tableWrap">
+      <table id="gridTable">
+        <thead>
+          <tr><th>段</th><th>約定価格</th><th>Lot</th><th>累計</th><th>平均</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <ul id="gridSummary" class="resultList"></ul>
+    <div class="warning">
+      グリッドでは、全段約定後に最終SLへ到達した場合の損失額を主要なリスク量として表示します。
+      ロット倍率が1を超える場合は、段数増加に対してロット総量が非線形に増えます。
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="about" title="仕様 / 注意事項">
+    <div class="aboutBox">
+      <h2>DEPA FX SYSTEM</h2>
+      <p>ENTRY CONSOLE v1.0 — 建玉設計コンソール。</p>
+      <p>これはシグナル発生器ではありません。入力された相場・口座・ブローカー条件から、ゲート判定、建玉サイズ、管理価格を計算します。</p>
+      <p>この配布物は、2007〜2009年頃の classic iUI のHTML構造・画面遷移・Settings風UIを再現するための、オフライン動作用互換レイヤーを同梱しています。元のiUIライブラリ本体は同梱していません。</p>
+      <p class="muted">実運用前に、使用ブローカーの契約サイズ、tick/pip、証拠金計算、手数料、最小ロット、ロット刻み、ストップ制約を確認してください。</p>
+    </div>
+  </div>
+
+</body>
+</html>
