@@ -373,7 +373,262 @@ td:first-child {
   .gateDetail { padding-left: 0; margin-top: 4px; }
 }
 
-  </style>
+  
+.actionPanel {
+  margin: 14px 9px 18px;
+}
+
+.actionButton {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  margin: 9px 0;
+  padding: 9px 12px;
+  box-sizing: border-box;
+  border: 1px solid #7c8997;
+  border-radius: 8px;
+  background: linear-gradient(#ffffff, #dde3e8);
+  color: #1e2b38;
+  font: bold 14px Helvetica, Arial, sans-serif;
+  text-align: center;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.actionButton.primary {
+  border-color: #375675;
+  background: linear-gradient(#7d98b7, #426586);
+  color: #fff;
+  text-shadow: 0 -1px 1px rgba(0,0,0,.55);
+}
+
+.actionButton.danger {
+  border-color: #9c4741;
+  background: linear-gradient(#d77a72, #a6413a);
+  color: #fff;
+  text-shadow: 0 -1px 1px rgba(0,0,0,.5);
+}
+
+.statusBox {
+  margin: 12px 9px;
+  padding: 10px 12px;
+  border: 1px solid #9da4aa;
+  border-radius: 9px;
+  background: #f7f8f9;
+  color: #59646f;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.statusBox strong {
+  color: #263442;
+}
+
+.storageGood {
+  color: #18843a !important;
+}
+
+.storageWarn {
+  color: #a56d00 !important;
+}
+
+
+.portfolioTableWrap{margin:14px 9px;border:1px solid #9da4aa;border-radius:10px;overflow-x:auto;background:#fff;}
+.portfolioTable{width:100%;min-width:720px;border-collapse:collapse;background:#fff;font-size:12px;}
+.portfolioTable th,.portfolioTable td{padding:8px 6px;border-bottom:1px solid #d0d0d0;text-align:right;white-space:nowrap;}
+.portfolioTable th{background:#eef0f2;color:#5e6872;font-size:10px;}
+.portfolioTable th:first-child,.portfolioTable td:first-child{text-align:left;}
+.pill{display:inline-block;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:bold;}
+.pill.buy{background:#e4f4e9;color:#18733a;}
+.pill.sell{background:#f8e5e2;color:#9d2e27;}
+.concentrationGrid{margin:14px 9px;border:1px solid #9da4aa;border-radius:10px;overflow:hidden;background:#fff;}
+.concentrationRow{display:grid;grid-template-columns:64px 1fr 1fr 74px;gap:6px;padding:8px 10px;border-bottom:1px solid #d0d0d0;align-items:center;font-size:12px;}
+.concentrationRow:last-child{border-bottom:0;}
+.concentrationRow .ccy{font-weight:bold;}
+.concentrationRow .longLeg{color:#18733a;}
+.concentrationRow .shortLeg{color:#9d2e27;}
+.concentrationRow .count{text-align:right;color:#6c7680;}
+.smallDanger{padding:4px 7px;border:1px solid #9c4741;border-radius:6px;background:#fff;color:#9c4741;font:bold 11px Helvetica,Arial,sans-serif;}
+
+
+.journalTableWrap{
+  margin:14px 9px;
+  border:1px solid #9da4aa;
+  border-radius:10px;
+  overflow-x:auto;
+  background:#fff;
+}
+.journalTable{
+  width:100%;
+  min-width:860px;
+  border-collapse:collapse;
+  background:#fff;
+  font-size:12px;
+}
+.journalTable th,.journalTable td{
+  padding:8px 6px;
+  border-bottom:1px solid #d0d0d0;
+  text-align:right;
+  white-space:nowrap;
+}
+.journalTable th{
+  background:#eef0f2;
+  color:#5e6872;
+  font-size:10px;
+}
+.journalTable th:first-child,.journalTable td:first-child{text-align:left;}
+.statusPlanned{color:#6a7380;font-weight:bold;}
+.statusOpen{color:#216da0;font-weight:bold;}
+.statusWin{color:#18843a;font-weight:bold;}
+.statusLoss{color:#b3261e;font-weight:bold;}
+.statusBE{color:#a56d00;font-weight:bold;}
+.statusCancel{color:#6a7380;font-weight:bold;}
+.journalEditorTitle{
+  margin:16px 10px 6px;
+  color:#53677d;
+  font-size:12px;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+textarea.journalNotes{
+  width:54%;
+  min-height:72px;
+  float:right;
+  box-sizing:border-box;
+  border:0;
+  resize:vertical;
+  background:transparent;
+  font:14px Helvetica,Arial,sans-serif;
+}
+.statGood{color:#18843a;}
+.statBad{color:#b3261e;}
+
+
+.positionMapShell{
+  margin:12px 8px 16px;
+  border:1px solid #87929d;
+  border-radius:10px;
+  overflow:hidden;
+  background:#f7f8f9;
+  box-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+.positionMapHeader{
+  padding:9px 11px;
+  border-bottom:1px solid #aeb6bd;
+  background:linear-gradient(#f9fafb,#dce1e6);
+  color:#3d4d5d;
+  font-size:12px;
+  font-weight:bold;
+  text-shadow:0 1px 0 #fff;
+}
+.positionMapCanvas{
+  width:100%;
+  min-height:470px;
+  background:#fff;
+}
+.positionMapCanvas svg{
+  display:block;
+  width:100%;
+  height:auto;
+  min-height:470px;
+}
+.mapLegend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px 10px;
+  padding:9px 10px;
+  border-top:1px solid #c6cbd0;
+  background:#f3f5f6;
+  color:#5d6873;
+  font-size:10px;
+}
+.mapLegend span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.mapDot{
+  display:inline-block;
+  width:9px;
+  height:9px;
+  border-radius:5px;
+  border:1px solid rgba(0,0,0,.25);
+}
+.mapDot.current{background:#455a70;}
+.mapDot.entry{background:#2e6da4;}
+.mapDot.tp{background:#31834a;}
+.mapDot.sl{background:#b23a32;}
+.mapDot.manage{background:#a27613;}
+.mapDot.grid{background:#715c92;}
+.mapPlaceholder{
+  padding:70px 18px;
+  text-align:center;
+  color:#727d87;
+  font-size:13px;
+  line-height:1.6;
+}
+.chartCallout{
+  font:10px Helvetica,Arial,sans-serif;
+}
+
+
+.marketDataStatus{
+  margin:12px 9px;
+  padding:10px 12px;
+  border:1px solid #9aa4ad;
+  border-radius:9px;
+  background:#f7f8f9;
+  color:#56616c;
+  font-size:12px;
+  line-height:1.55;
+}
+.marketDataStatus.ok{
+  border-color:#72a781;
+  background:#eef8f1;
+}
+.marketDataStatus.error{
+  border-color:#c88d87;
+  background:#fff0ee;
+}
+.marketDataStatus.loading{
+  border-color:#9b8a55;
+  background:#fff9e6;
+}
+.secretRow input{
+  letter-spacing:.08em;
+}
+.apiHint{
+  color:#6c7680;
+  font-size:11px;
+}
+.dataSourceBadge{
+  display:inline-block;
+  padding:2px 6px;
+  border:1px solid #9aa4ad;
+  border-radius:8px;
+  background:#fff;
+  font-size:10px;
+  font-weight:bold;
+  color:#54606b;
+}
+
+
+.watchStatusBox{margin:12px 9px;padding:10px 12px;border:1px solid #9aa4ad;border-radius:9px;background:#f7f8f9;color:#56616c;font-size:12px;line-height:1.55;}
+.watchStatusBox.armed{border-color:#7da27d;background:#eef7ee;}
+.watchStatusBox.stale{border-color:#c88d87;background:#fff0ee;}
+.watchEventList{margin:12px 9px;border:1px solid #9da4aa;border-radius:10px;overflow:hidden;background:#fff;}
+.watchEvent{padding:9px 10px;border-bottom:1px solid #d0d0d0;font-size:12px;line-height:1.45;}
+.watchEvent:last-child{border-bottom:0;}
+.watchEvent strong{display:block;color:#33414f;}
+.watchEvent .time{color:#7a848e;font-size:10px;}
+.watchEvent.zone strong{color:#a56d00;}
+.watchEvent.entry strong{color:#18843a;}
+.watchEvent.gate strong{color:#3f6288;}
+.watchEvent.state strong{color:#6a4d89;}
+.watchEvent.cross strong{color:#9b4f2d;}
+.watchCheckRow{min-height:44px;}
+.watchCheckRow input[type="checkbox"]{float:right;margin-top:3px;width:24px;height:24px;}
+
+</style>
 
   <script>
 /*
@@ -506,7 +761,7 @@ td:first-child {
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v1.01
+   DEPA FX SYSTEM — ENTRY CONSOLE v2.7-P8
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -515,10 +770,46 @@ td:first-child {
     USDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "USD/JPY" },
     EURJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "EUR/JPY" },
     GBPJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "GBP/JPY" },
+    AUDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "AUD/JPY" },
+    NZDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "NZD/JPY" },
+    CADJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "CAD/JPY" },
+    CHFJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "CHF/JPY" },
+
     EURUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "EUR/USD" },
     GBPUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "GBP/USD" },
     AUDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "AUD/USD" },
-    XAUUSD: { pip: 0.1, digits: 2, contract: 100, quote: "USD", label: "XAU/USD" }
+    NZDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "NZD/USD" },
+    USDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "USD/CAD" },
+    USDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "USD/CHF" },
+
+    EURGBP: { pip: 0.0001, digits: 5, contract: 100000, quote: "GBP", label: "EUR/GBP" },
+    EURAUD: { pip: 0.0001, digits: 5, contract: 100000, quote: "AUD", label: "EUR/AUD" },
+    EURNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "EUR/NZD" },
+    EURCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "EUR/CAD" },
+    EURCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "EUR/CHF" },
+
+    GBPAUD: { pip: 0.0001, digits: 5, contract: 100000, quote: "AUD", label: "GBP/AUD" },
+    GBPNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "GBP/NZD" },
+    GBPCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "GBP/CAD" },
+    GBPCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "GBP/CHF" },
+
+    AUDNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "AUD/NZD" },
+    AUDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "AUD/CAD" },
+    AUDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "AUD/CHF" },
+    NZDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "NZD/CAD" },
+    NZDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "NZD/CHF" },
+    CADCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "CAD/CHF" },
+
+    XAUUSD: { pip: 0.1, digits: 2, contract: 100, quote: "USD", label: "XAU/USD" },
+    XAGUSD: { pip: 0.01, digits: 3, contract: 5000, quote: "USD", label: "XAG/USD" },
+
+    /* Broker-dependent CFD / crypto specs.
+       pip/contract are intentionally null until the user confirms broker specs. */
+    WTI:    { pip: null, digits: 2, contract: null, quote: "USD", label: "WTI", customSpec: true },
+    JP225:  { pip: null, digits: 1, contract: null, quote: "JPY", label: "JP225", customSpec: true },
+    NAS100: { pip: null, digits: 1, contract: null, quote: "USD", label: "NAS100", customSpec: true },
+    BTCUSD: { pip: null, digits: 2, contract: null, quote: "USD", label: "BTC/USD", customSpec: true },
+    ETHUSD: { pip: null, digits: 2, contract: null, quote: "USD", label: "ETH/USD", customSpec: true }
   };
 
   var lastResult = { state: "INVALID", gates: [], reason: "入力不足" };
@@ -564,6 +855,58 @@ td:first-child {
     return Number(x).toFixed(2);
   }
 
+  function stepDecimals(step) {
+    if (!isFinite(step) || step <= 0) return 0;
+    var s = String(step);
+    if (s.indexOf("e-") > -1) return parseInt(s.split("e-")[1], 10) || 0;
+    var p = s.indexOf(".");
+    return p < 0 ? 0 : s.length - p - 1;
+  }
+
+  function floorToStep(v, step) {
+    if (!isFinite(v) || !isFinite(step) || step <= 0 || v <= 0) return 0;
+    var d = Math.min(8, Math.max(0, stepDecimals(step)));
+    var units = Math.floor((v + 1e-12) / step);
+    return +(units * step).toFixed(d);
+  }
+
+  function riskSize(riskAmt, slPips, pipVal, spreadPips, slippagePips, commissionPerLot, lotStep, maxLot) {
+    var spread = Math.max(0, spreadPips || 0);
+    var slip = Math.max(0, slippagePips || 0);
+    var commission = Math.max(0, commissionPerLot || 0);
+    var perLotSL = slPips * pipVal;
+    var perLotSpread = spread * pipVal;
+    var perLotSlippage = slip * pipVal;
+    var perLotCommission = commission;
+    var perLotRisk = perLotSL + perLotSpread + perLotSlippage + perLotCommission;
+
+    if (!isFinite(perLotRisk) || perLotRisk <= 0) {
+      return {
+        rawLot: 0, lot: 0, perLotRisk: 0,
+        perLotSL: 0, perLotSpread: 0, perLotSlippage: 0, perLotCommission: 0
+      };
+    }
+
+    var rawLot = riskAmt / perLotRisk;
+    var candidate = rawLot;
+
+    if (maxLot != null && isFinite(maxLot) && maxLot > 0) {
+      candidate = Math.min(candidate, maxLot);
+    }
+
+    var lot = floorToStep(candidate, lotStep);
+
+    return {
+      rawLot: rawLot,
+      lot: lot,
+      perLotRisk: perLotRisk,
+      perLotSL: perLotSL,
+      perLotSpread: perLotSpread,
+      perLotSlippage: perLotSlippage,
+      perLotCommission: perLotCommission
+    };
+  }
+
   function calc() {
     var gates = [];
     function push(id, name, ok, detail) {
@@ -577,11 +920,25 @@ td:first-child {
     var riskPct = n("riskPct");
     var leverage = n("leverage");
     var usdjpy = n("usdjpy");
+    var eurusdConv = n("eurusdConv");
+    var gbpusdConv = n("gbpusdConv");
+    var audusdConv = n("audusdConv");
+    var nzdusdConv = n("nzdusdConv");
+    var usdcadConv = n("usdcadConv");
+    var usdchfConv = n("usdchfConv");
     var spreadPips = n("spreadPips");
+    var slippagePips = n("slippagePips");
     var commission = n("commission");
     var stopLevelPips = n("stopLevelPips");
+    var freezeLevelPips = n("freezeLevelPips");
     var minLot = n("minLot");
+    var maxLot = n("maxLot");
     var lotStep = n("lotStep");
+    var marginCapPct = n("marginCapPct");
+    var portfolioRiskCapPct = n("portfolioRiskCapPct");
+    var portfolioMarginCapPct = n("portfolioMarginCapPct");
+    var currencyLegCap = n("currencyLegCap");
+    var minRR = n("minRR");
 
     var price = n("price");
     var atr = n("atr");
@@ -597,19 +954,78 @@ td:first-child {
     var gridBaseLot = n("gridBaseLot");
     var gridMult = n("gridMult");
 
-    var S = SYMBOLS[symbol];
+    var baseS = SYMBOLS[symbol];
+    var customPip = n("customPip");
+    var customContract = n("customContract");
+    var customDigits = n("customDigits");
+
+    var S = {
+      pip: baseS.customSpec ? customPip : baseS.pip,
+      digits: baseS.customSpec ? (customDigits == null ? baseS.digits : Math.max(0, Math.round(customDigits))) : baseS.digits,
+      contract: baseS.customSpec ? customContract : baseS.contract,
+      quote: baseS.quote,
+      label: baseS.label,
+      customSpec: !!baseS.customSpec
+    };
+
     var sp = spreadPips == null ? 0 : spreadPips;
+    var slip = slippagePips == null ? 0 : slippagePips;
     var com = commission == null ? 0 : commission;
     var slMin = stopLevelPips == null ? 0 : stopLevelPips;
+    var freezeLevel = freezeLevelPips == null ? 0 : freezeLevelPips;
+    var marginCap = marginCapPct == null ? 50 : marginCapPct;
+    var rrFloor = minRR == null ? 1.5 : minRR;
 
     var missing = [];
-    var needsUJ = (S.quote === "USD" && acctCcy === "JPY") ||
-                  (S.quote === "JPY" && acctCcy === "USD");
+
+    function quoteToUSD(quote) {
+      if (quote === "USD") return 1;
+      if (quote === "JPY") return usdjpy && usdjpy > 0 ? 1 / usdjpy : null;
+      if (quote === "EUR") return eurusdConv && eurusdConv > 0 ? eurusdConv : null;
+      if (quote === "GBP") return gbpusdConv && gbpusdConv > 0 ? gbpusdConv : null;
+      if (quote === "AUD") return audusdConv && audusdConv > 0 ? audusdConv : null;
+      if (quote === "NZD") return nzdusdConv && nzdusdConv > 0 ? nzdusdConv : null;
+      if (quote === "CAD") return usdcadConv && usdcadConv > 0 ? 1 / usdcadConv : null;
+      if (quote === "CHF") return usdchfConv && usdchfConv > 0 ? 1 / usdchfConv : null;
+      return null;
+    }
+
+    function quoteToAccount(quote) {
+      if (quote === acctCcy) return 1;
+
+      var qUsd = quoteToUSD(quote);
+      if (qUsd == null) return null;
+
+      if (acctCcy === "USD") return qUsd;
+      if (acctCcy === "JPY") {
+        if (!usdjpy || usdjpy <= 0) return null;
+        return qUsd * usdjpy;
+      }
+      return null;
+    }
+
+    var q2aPreview = quoteToAccount(S.quote);
 
     if (!balance || balance <= 0) missing.push("残高");
     if (!riskPct || riskPct <= 0) missing.push("許容リスク%");
     if (!leverage || leverage <= 0) missing.push("レバレッジ");
+    if (sp < 0) missing.push("スプレッド>=0");
+    if (slip < 0) missing.push("スリッページ>=0");
+    if (com < 0) missing.push("手数料>=0");
+    if (slMin < 0) missing.push("ストップレベル>=0");
+    if (freezeLevel < 0) missing.push("Freeze level>=0");
+    if (!marginCap || marginCap <= 0) missing.push("証拠金上限%");
+    if (!portfolioRiskCapPct || portfolioRiskCapPct <= 0) missing.push("Portfolio Risk上限%");
+    if (!portfolioMarginCapPct || portfolioMarginCapPct <= 0) missing.push("Portfolio証拠金上限%");
+    if (!currencyLegCap || currencyLegCap < 1) missing.push("同方向通貨Leg上限");
+    if (!rrFloor || rrFloor <= 0) missing.push("最低RR");
+    if (S.customSpec) {
+      if (!S.pip || S.pip <= 0) missing.push("pip/価格単位");
+      if (!S.contract || S.contract <= 0) missing.push("1lot契約サイズ");
+    }
     if (minLot == null || minLot <= 0) missing.push("最小ロット");
+    if (maxLot != null && maxLot <= 0) missing.push("最大ロット>0");
+    if (maxLot != null && minLot != null && maxLot < minLot) missing.push("最大ロット>=最小ロット");
     if (lotStep == null || lotStep <= 0) missing.push("ロット刻み");
     if (!price || price <= 0) missing.push("現在値");
     if (!atr || atr <= 0) missing.push("ATR");
@@ -625,7 +1041,16 @@ td:first-child {
       if (gridMult == null || gridMult <= 0) missing.push("ロット倍率");
     }
 
-    if (needsUJ && (!usdjpy || usdjpy <= 0)) missing.push("換算USDJPY");
+    if (q2aPreview == null) {
+      if (acctCcy === "JPY" && (!usdjpy || usdjpy <= 0)) missing.push("換算USDJPY");
+      if (S.quote === "EUR" && (!eurusdConv || eurusdConv <= 0)) missing.push("換算EURUSD");
+      if (S.quote === "GBP" && (!gbpusdConv || gbpusdConv <= 0)) missing.push("換算GBPUSD");
+      if (S.quote === "AUD" && (!audusdConv || audusdConv <= 0)) missing.push("換算AUDUSD");
+      if (S.quote === "NZD" && (!nzdusdConv || nzdusdConv <= 0)) missing.push("換算NZDUSD");
+      if (S.quote === "CAD" && (!usdcadConv || usdcadConv <= 0)) missing.push("換算USDCAD");
+      if (S.quote === "CHF" && (!usdchfConv || usdchfConv <= 0)) missing.push("換算USDCHF");
+      if (S.quote === "JPY" && acctCcy === "USD" && (!usdjpy || usdjpy <= 0)) missing.push("換算USDJPY");
+    }
 
     var g01 = missing.length === 0;
     push("G-01", "入力完全性", g01, g01 ? "全必須項目あり" : "未入力: " + missing.join(" / "));
@@ -643,9 +1068,7 @@ td:first-child {
     }
 
     var pipValQuote = S.pip * S.contract;
-    var q2a = 1;
-    if (S.quote !== acctCcy) q2a = (S.quote === "USD") ? usdjpy : (1 / usdjpy);
-
+    var q2a = quoteToAccount(S.quote);
     var pipVal = pipValQuote * q2a;
     var riskAmt = balance * (riskPct / 100);
 
@@ -653,7 +1076,7 @@ td:first-child {
     function toPrice(p) { return p * S.pip; }
     function fmt(v) { return fixed(v, S.digits); }
 
-    var costPips = sp + (com > 0 ? (com / pipVal) : 0);
+    var costPips = sp + slip + (com > 0 ? (com / pipVal) : 0);
 
     /* ================= GRID ================= */
     if (entryType === "GRID") {
@@ -669,29 +1092,57 @@ td:first-child {
       var cumCost = 0;
       var i, p, lot;
 
+      var gridVolumeOk = true;
+      var gridVolumeReason = [];
+
       for (i = 0; i < lv; i++) {
         p = price - dir * stepPrice * i;
-        lot = +(base * Math.pow(mult, i)).toFixed(3);
+        var intendedLot = base * Math.pow(mult, i);
+        if (maxLot != null) intendedLot = Math.min(intendedLot, maxLot);
+        lot = floorToStep(intendedLot, lotStep);
+
+        if (lot < minLot) {
+          gridVolumeOk = false;
+          gridVolumeReason.push("第" + (i + 1) + "段<最小Lot");
+        }
+        if (maxLot != null && lot > maxLot + 1e-12) {
+          gridVolumeOk = false;
+          gridVolumeReason.push("第" + (i + 1) + "段>最大Lot");
+        }
+
         cumLot += lot;
         cumCost += p * lot;
         rows.push({
           i: i + 1,
           p: p,
           lot: lot,
-          cumLot: +cumLot.toFixed(3),
-          avg: cumCost / cumLot
+          cumLot: +cumLot.toFixed(8),
+          avg: cumLot > 0 ? cumCost / cumLot : p
         });
       }
+
+      push(
+        "GR-0",
+        "グリッドLot仕様",
+        gridVolumeOk,
+        gridVolumeOk ? "全段が最小/最大/刻みに適合" : gridVolumeReason.join(" / ")
+      );
 
       var last = rows[rows.length - 1];
       var finalSL = last.p - dir * Math.max(stepPrice, atr * 1.0);
       var slDistFromAvg = Math.abs(last.avg - finalSL);
-      var worstLoss = toPips(slDistFromAvg) * pipVal * last.cumLot +
-                      costPips * pipVal * last.cumLot;
+      var gridSlLoss = toPips(slDistFromAvg) * pipVal * last.cumLot;
+      var gridSpreadCost = sp * pipVal * last.cumLot;
+      var gridSlippageCost = slip * pipVal * last.cumLot;
+      var gridCommissionCost = com * last.cumLot;
+      var gridTradingCosts = gridSpreadCost + gridSlippageCost + gridCommissionCost;
+      var worstLoss = gridSlLoss + gridTradingCosts;
 
       var marginReq = (last.cumLot * S.contract * price * q2a) / leverage;
       var tpAll = last.avg + dir * stepPrice;
-      var profitAll = toPips(Math.abs(tpAll - last.avg)) * pipVal * last.cumLot;
+      var grossProfitAll = toPips(Math.abs(tpAll - last.avg)) * pipVal * last.cumLot;
+      var profitAll = grossProfitAll - gridTradingCosts;
+      var gridRiskUsage = riskAmt > 0 ? (worstLoss / riskAmt) * 100 : 0;
 
       push(
         "G-06",
@@ -710,13 +1161,14 @@ td:first-child {
           " / 許容 " + commas(riskAmt) + " " + acctCcy
       );
 
-      var gG2 = marginReq <= balance * 0.5;
+      var marginLimit = balance * (marginCap / 100);
+      var gG2 = marginReq <= marginLimit;
       push(
         "GR-2",
         "必要証拠金",
         gG2,
         "必要 " + commas(marginReq) + " " + acctCcy +
-          " / 残高の50%上限 " + commas(balance * 0.5) + " " + acctCcy
+          " / 上限 " + marginCap.toFixed(1) + "% = " + commas(marginLimit) + " " + acctCcy
       );
 
       var gG3 = mult <= 1.0;
@@ -742,10 +1194,20 @@ td:first-child {
         worstLoss: worstLoss,
         profitAll: profitAll,
         marginReq: marginReq,
+        marginLimit: marginLimit,
+        marginCapPct: marginCap,
         cumLot: last.cumLot,
         avg: last.avg,
         stepPrice: stepPrice,
         riskAmt: riskAmt,
+        riskUsage: gridRiskUsage,
+        slLoss: gridSlLoss,
+        spreadCost: gridSpreadCost,
+        slippageCost: gridSlippageCost,
+        commissionCost: gridCommissionCost,
+        tradingCosts: gridTradingCosts,
+        costPips: costPips,
+        freezeLevelPips: freezeLevel,
         pipVal: pipVal,
         acctCcy: acctCcy,
         S: S,
@@ -808,6 +1270,19 @@ td:first-child {
       }
     }
 
+    var geometryOk = dir2 > 0
+      ? (sl < entry && tp1 > entry && tp2 > entry)
+      : (sl > entry && tp1 < entry && tp2 < entry);
+
+    push(
+      "G-03",
+      "価格配置",
+      geometryOk,
+      geometryOk
+        ? (dir2 > 0 ? "BUY: SL < Entry < TP" : "SELL: TP < Entry < SL")
+        : "SLアンカー/TP配置が売買方向と矛盾"
+    );
+
     var slPips = toPips(Math.abs(entry - sl));
     var tp1Pips = toPips(Math.abs(tp1 - entry));
     var tp2Pips = toPips(Math.abs(tp2 - entry));
@@ -839,31 +1314,56 @@ td:first-child {
         "pips / 必要 " + toPips(atr).toFixed(1) + "pips (ATR×1.0)"
     );
 
-    var g08 = netRR >= 1.5;
+    var g08 = netRR >= rrFloor;
     push(
       "G-08",
       "コスト差引後RR",
       g08,
       "RR " + netRR.toFixed(2) +
-        " / 必要 1.50（コスト " + costPips.toFixed(1) + "pips控除後）"
+        " / 必要 " + rrFloor.toFixed(2) +
+        "（Spread+Commission+Slippage = " + costPips.toFixed(1) + "pips換算）"
     );
 
-    var rawLot = riskAmt / (slPips * pipVal);
-    var lotCalc = Math.floor(rawLot / lotStep) * lotStep;
-    var lotOut = +lotCalc.toFixed(3);
+    var size = riskSize(
+      riskAmt, slPips, pipVal, sp, slip, com, lotStep, maxLot
+    );
+    var rawLot = size.rawLot;
+    var lotOut = size.lot;
+
+    var slLoss = size.perLotSL * lotOut;
+    var spreadCost = size.perLotSpread * lotOut;
+    var slippageCost = size.perLotSlippage * lotOut;
+    var commissionCost = size.perLotCommission * lotOut;
+    var tradingCosts = spreadCost + slippageCost + commissionCost;
+    var riskReal = slLoss + tradingCosts;
+    var riskUsage = riskAmt > 0 ? (riskReal / riskAmt) * 100 : 0;
+    var riskReserve = Math.max(0, riskAmt - riskReal);
+
     var marginReq2 = (lotOut * S.contract * price * q2a) / leverage;
+    var marginLimit2 = balance * (marginCap / 100);
+
     var g09a = lotOut >= minLot;
-    var g09b = marginReq2 <= balance * 0.5;
+    var g09max = maxLot == null || lotOut <= maxLot + 1e-12;
+    var g09b = marginReq2 <= marginLimit2;
 
     push(
       "G-09",
       "ロット / 証拠金",
-      g09a && g09b,
-      "算出 " + lotOut.toFixed(2) + "lot（最小 " + minLot +
-        "）/ 必要証拠金 " + commas(marginReq2) + " " + acctCcy
+      g09a && g09max && g09b,
+      "Risk算出 " + rawLot.toFixed(4) + " → 採用 " + lotOut.toFixed(2) +
+        "lot / 証拠金 " + commas(marginReq2) + " " + acctCcy +
+        " / 上限 " + marginCap.toFixed(1) + "%"
     );
 
-    var riskReal = slPips * pipVal * lotOut;
+    var g10 = riskReal <= riskAmt + Math.max(0.01, riskAmt * 1e-9);
+    push(
+      "G-10",
+      "実リスク上限",
+      g10,
+      "実リスク " + commas(riskReal) + " " + acctCcy +
+        " / 許容 " + commas(riskAmt) + " " + acctCcy +
+        " / 使用率 " + riskUsage.toFixed(1) + "%"
+    );
 
     var be = entry + dir2 * toPrice(costPips * 1.0);
     var beTrigger = entry + dir2 * toPrice(slPips);
@@ -900,9 +1400,22 @@ td:first-child {
       tp1Pips: tp1Pips,
       tp2Pips: tp2Pips,
       netRR: netRR,
+      rrFloor: rrFloor,
+      rawLot: rawLot,
       lot: lotOut,
       riskReal: riskReal,
+      riskUsage: riskUsage,
+      riskReserve: riskReserve,
+      slLoss: slLoss,
+      spreadCost: spreadCost,
+      slippageCost: slippageCost,
+      commissionCost: commissionCost,
+      tradingCosts: tradingCosts,
       marginReq: marginReq2,
+      marginLimit: marginLimit2,
+      marginCapPct: marginCap,
+      maxLot: maxLot,
+      freezeLevelPips: freezeLevel,
       be: be,
       beTrigger: beTrigger,
       trailStart: trailStart,
@@ -953,14 +1466,18 @@ td:first-child {
     renderNavigation(R);
     renderGates(R);
     renderModeVisibility(R);
+    renderPositionMap(R);
 
     if (R.state === "INVALID") {
       el("positionList").innerHTML = '<li><span>状態</span><strong>判定不能</strong></li>';
       el("managementList").innerHTML = '<li><span>状態</span><strong>判定不能</strong></li>';
+      el("riskList").innerHTML = '<li><span>状態</span><strong>入力待ち</strong></li>';
       el("gridTable").getElementsByTagName("tbody")[0].innerHTML = "";
       el("gridSummary").innerHTML = "";
       return;
     }
+
+    renderRisk(R);
 
     if (R.mode === "GRID") renderGrid(R);
     else {
@@ -971,14 +1488,21 @@ td:first-child {
 
   function renderNavigation(R) {
     var S = SYMBOLS[value("symbol")];
+    var navDigits = S.customSpec ? (n("customDigits") == null ? S.digits : Math.max(0, Math.round(n("customDigits")))) : S.digits;
     el("navStrategy").innerHTML = esc(S.label + " / " + value("tf"));
     el("navAccount").innerHTML = n("balance") ? (commas(n("balance")) + " " + value("acctCcy")) : "未入力";
-    el("navMarket").innerHTML = n("price") ? fixed(n("price"), S.digits) : "未入力";
+    el("navMarket").innerHTML = n("price") ? fixed(n("price"), navDigits) : "未入力";
 
     var passed = 0;
     var i;
     for (i = 0; i < R.gates.length; i++) if (R.gates[i].ok) passed++;
     el("navGates").innerHTML = passed + "/" + R.gates.length + " PASS";
+
+    if (R.state !== "INVALID" && R.riskAmt > 0 && R.riskUsage != null) {
+      el("navRisk").innerHTML = R.riskUsage.toFixed(1) + "%";
+    } else {
+      el("navRisk").innerHTML = "—";
+    }
 
     if (R.state !== "INVALID" && R.mode !== "GRID") {
       el("navPosition").innerHTML = (R.dir > 0 ? "BUY " : "SELL ") + R.fmt(R.entry);
@@ -995,6 +1519,12 @@ td:first-child {
 
   function renderModeVisibility(R) {
     var mode = value("entryType");
+    var sym = SYMBOLS[value("symbol")];
+    var showCustom = !!(sym && sym.customSpec);
+
+    el("customSpecFields").style.display = showCustom ? "block" : "none";
+    el("customSpecNote").style.display = showCustom ? "block" : "none";
+
     el("depthRow").style.display = mode === "TREND" ? "block" : "none";
     el("swingFields").style.display = mode === "GRID" ? "none" : "block";
     el("gridFields").style.display = mode === "GRID" ? "block" : "none";
@@ -1024,6 +1554,47 @@ td:first-child {
       (cls ? ' class="' + cls + '"' : '') + '>' + esc(valueText) + '</strong></li>';
   }
 
+  function renderRisk(R) {
+    var html = "";
+
+    if (R.mode === "GRID") {
+      html += resultRow("許容損失", commas(R.riskAmt) + " " + R.acctCcy);
+      html += resultRow("SL本体", commas(R.slLoss) + " " + R.acctCcy);
+      html += resultRow("Spread", commas(R.spreadCost) + " " + R.acctCcy);
+      html += resultRow("Commission", commas(R.commissionCost) + " " + R.acctCcy);
+      html += resultRow("Slippage", commas(R.slippageCost) + " " + R.acctCcy);
+      html += resultRow("実リスク", commas(R.worstLoss) + " " + R.acctCcy,
+        R.worstLoss <= R.riskAmt ? "go" : "stop");
+      html += resultRow("Risk Usage", R.riskUsage.toFixed(1) + "%",
+        R.riskUsage <= 100 ? "go" : "stop");
+      html += resultRow("累計ロット", R.cumLot.toFixed(2));
+      html += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
+      html += resultRow("証拠金上限", commas(R.marginLimit) + " " + R.acctCcy +
+        " (" + R.marginCapPct.toFixed(1) + "%)");
+      html += resultRow("1lot pip価値", commas(R.pipVal) + " " + R.acctCcy);
+    } else {
+      html += resultRow("許容損失", commas(R.riskAmt) + " " + R.acctCcy);
+      html += resultRow("SL本体", commas(R.slLoss) + " " + R.acctCcy);
+      html += resultRow("Spread", commas(R.spreadCost) + " " + R.acctCcy);
+      html += resultRow("Commission", commas(R.commissionCost) + " " + R.acctCcy);
+      html += resultRow("Slippage", commas(R.slippageCost) + " " + R.acctCcy);
+      html += resultRow("実リスク", commas(R.riskReal) + " " + R.acctCcy,
+        R.riskReal <= R.riskAmt ? "go" : "stop");
+      html += resultRow("Risk Usage", R.riskUsage.toFixed(1) + "%",
+        R.riskUsage <= 100 ? "go" : "stop");
+      html += resultRow("余剰リスク枠", commas(R.riskReserve) + " " + R.acctCcy);
+      html += resultRow("理論ロット", R.rawLot.toFixed(4));
+      html += resultRow("採用ロット", lotFixed(R.lot));
+      html += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
+      html += resultRow("証拠金上限", commas(R.marginLimit) + " " + R.acctCcy +
+        " (" + R.marginCapPct.toFixed(1) + "%)");
+      html += resultRow("1lot pip価値", commas(R.pipVal) + " " + R.acctCcy);
+      html += resultRow("総コスト換算", R.costPips.toFixed(2) + " pips");
+    }
+
+    el("riskList").innerHTML = html;
+  }
+
   function renderPosition(R) {
     var html = "";
     html += resultRow("方向", R.dir > 0 ? "BUY" : "SELL", R.dir > 0 ? "go" : "stop");
@@ -1031,10 +1602,11 @@ td:first-child {
     html += resultRow("損切り", R.fmt(R.sl) + "  (" + R.slPips.toFixed(1) + " pips)");
     html += resultRow("利確 TP1", R.fmt(R.tp1) + "  (" + R.tp1Pips.toFixed(1) + " pips)");
     html += resultRow("利確 TP2", R.fmt(R.tp2) + "  (" + R.tp2Pips.toFixed(1) + " pips)");
-    html += resultRow("RR（コスト後）", R.netRR.toFixed(2), R.netRR >= 1.5 ? "go" : "stop");
-    html += resultRow("ロット", lotFixed(R.lot));
+    html += resultRow("RR（コスト後）", R.netRR.toFixed(2), R.netRR >= R.rrFloor ? "go" : "stop");
+    html += resultRow("ロット", lotFixed(R.lot) + " / 理論 " + R.rawLot.toFixed(4));
     html += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
-    html += resultRow("想定損失額", commas(R.riskReal) + " " + R.acctCcy);
+    html += resultRow("実リスク", commas(R.riskReal) + " " + R.acctCcy +
+      " (" + R.riskUsage.toFixed(1) + "%)");
     html += resultRow("許容損失額", commas(R.riskAmt) + " " + R.acctCcy);
     el("positionList").innerHTML = html;
   }
@@ -1049,6 +1621,7 @@ td:first-child {
     html += resultRow("1回目後の平均", R.fmt(R.avg1));
     html += resultRow("増し玉 2回目", R.fmt(R.add2) + " / " + lotFixed(R.addLot) + " lot");
     html += resultRow("2回目後の平均", R.fmt(R.avg2));
+    html += resultRow("Freeze level", R.freezeLevelPips.toFixed(1) + " pips（参考）");
     el("managementList").innerHTML = html;
   }
 
@@ -1075,6 +1648,8 @@ td:first-child {
     sum += resultRow("最終損切り", R.fmt(R.finalSL));
     sum += resultRow("最大損失", "−" + commas(R.worstLoss) + " " + R.acctCcy,
       R.worstLoss <= R.riskAmt ? "go" : "stop");
+    sum += resultRow("Risk Usage", R.riskUsage.toFixed(1) + "%",
+      R.riskUsage <= 100 ? "go" : "stop");
     sum += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
     sum += resultRow("累計ロット", R.cumLot.toFixed(2));
     sum += resultRow("平均建値", R.fmt(R.avg));
@@ -1082,10 +1657,2751 @@ td:first-child {
     el("gridSummary").innerHTML = sum;
   }
 
+
+
+
+
+
+
+
+  /* ================= PHASE 8: WATCH / ALERTS ================= */
+
+  var WATCH_KEY = "depaFX.activeWatch.v8";
+  var WATCH_EVENTS_KEY = "depaFX.watchEvents.v8";
+  var WATCH_SETTINGS_KEY = "depaFX.watchSettings.v8";
+  var watchEvaluating = false;
+
+  var WATCH_SIGNATURE_IDS = [
+    "symbol", "tf", "d1bias", "entryType", "depth",
+    "acctCcy", "balance", "riskPct", "leverage",
+    "spreadPips", "slippagePips", "commission",
+    "stopLevelPips", "freezeLevelPips",
+    "minLot", "maxLot", "lotStep", "marginCapPct",
+    "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
+    "customPip", "customContract", "customDigits",
+    "usdjpy", "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv",
+    "usdcadConv", "usdchfConv",
+    "swingHigh", "swingLow", "slAnchor",
+    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+  ];
+
+  function defaultWatchSettings() {
+    return {
+      schema:8,
+      zoneAtr:0.25,
+      notifyZone:true,
+      notifyCross:true,
+      notifyGate:true,
+      notifyState:true
+    };
+  }
+
+  function getWatchSettings() {
+    var s = storageRead(WATCH_SETTINGS_KEY, null);
+    if (!s || typeof s !== "object") s = defaultWatchSettings();
+    if (s.zoneAtr == null || !isFinite(Number(s.zoneAtr)) || Number(s.zoneAtr) <= 0) {
+      s.zoneAtr = 0.25;
+    }
+    return s;
+  }
+
+  function saveWatchSettingsFromUi() {
+    var s = getWatchSettings();
+    var z = parseFloat(el("watchZoneAtr").value);
+
+    if (!isFinite(z) || z < 0.05) z = 0.25;
+    if (z > 2) z = 2;
+
+    s.zoneAtr = z;
+    s.notifyZone = !!el("watchNotifyZone").checked;
+    s.notifyCross = !!el("watchNotifyCross").checked;
+    s.notifyGate = !!el("watchNotifyGate").checked;
+    s.notifyState = !!el("watchNotifyState").checked;
+
+    storageWrite(WATCH_SETTINGS_KEY, s);
+    renderWatchPanel();
+  }
+
+  function restoreWatchSettingsUi() {
+    var s = getWatchSettings();
+    el("watchZoneAtr").value = String(s.zoneAtr);
+    el("watchNotifyZone").checked = !!s.notifyZone;
+    el("watchNotifyCross").checked = !!s.notifyCross;
+    el("watchNotifyGate").checked = !!s.notifyGate;
+    el("watchNotifyState").checked = !!s.notifyState;
+  }
+
+  function getActiveWatch() {
+    return storageRead(WATCH_KEY, null);
+  }
+
+  function saveActiveWatch(w) {
+    return w ? storageWrite(WATCH_KEY, w) : storageRemove(WATCH_KEY);
+  }
+
+  function getWatchEvents() {
+    var d = storageRead(WATCH_EVENTS_KEY, { schema:8, items:[] });
+    if (!d || !d.items || typeof d.items.length !== "number") {
+      d = { schema:8, items:[] };
+    }
+    return d;
+  }
+
+  function saveWatchEvents(d) {
+    return storageWrite(WATCH_EVENTS_KEY, d);
+  }
+
+  function watchSignature() {
+    var values = collectValues(WATCH_SIGNATURE_IDS);
+    var ordered = {};
+    var i;
+    for (i = 0; i < WATCH_SIGNATURE_IDS.length; i++) {
+      ordered[WATCH_SIGNATURE_IDS[i]] =
+        values[WATCH_SIGNATURE_IDS[i]] == null
+          ? ""
+          : String(values[WATCH_SIGNATURE_IDS[i]]);
+    }
+    return JSON.stringify(ordered);
+  }
+
+  function gateMap(R) {
+    var m = {}, i;
+    if (!R || !R.gates) return m;
+    for (i = 0; i < R.gates.length; i++) {
+      m[R.gates[i].id] = !!R.gates[i].ok;
+    }
+    return m;
+  }
+
+  function currentWatchEntry(R) {
+    if (!R || R.state === "INVALID") return null;
+    return R.mode === "GRID" ? R.avg : R.entry;
+  }
+
+  function currentWatchAtr() {
+    var a = n("atr");
+    return a != null && a > 0 ? a : null;
+  }
+
+  function addWatchEvent(type, title, body, browserNotify) {
+    var d = getWatchEvents();
+    d.items.unshift({
+      id:"wa-" + new Date().getTime() + "-" + Math.floor(Math.random()*1000000),
+      time:new Date().getTime(),
+      type:type,
+      title:title,
+      body:body
+    });
+    if (d.items.length > 80) d.items = d.items.slice(0, 80);
+    saveWatchEvents(d);
+    renderWatchEvents();
+
+    if (browserNotify !== false) showWatchNotification(title, body, type);
+  }
+
+  function notificationPermissionText() {
+    if (!("Notification" in window)) return "非対応";
+    if (Notification.permission === "granted") return "許可済み";
+    if (Notification.permission === "denied") return "拒否";
+    return "未許可";
+  }
+
+  function requestWatchNotificationPermission() {
+    if (!("Notification" in window)) {
+      addWatchEvent(
+        "state",
+        "通知API非対応",
+        "この環境ではBrowser通知を利用できません。Alert Historyは利用できます。",
+        false
+      );
+      renderWatchNotificationState();
+      return;
+    }
+
+    Notification.requestPermission().then(function (result) {
+      if (result === "granted") {
+        addWatchEvent(
+          "state",
+          "Browser通知を許可",
+          "WATCH通知を表示できる状態になりました。",
+          false
+        );
+      } else if (result === "denied") {
+        addWatchEvent(
+          "state",
+          "Browser通知は拒否",
+          "Alert Historyは引き続き利用できます。",
+          false
+        );
+      }
+      renderWatchNotificationState();
+    }).catch(function () {
+      renderWatchNotificationState();
+    });
+  }
+
+  function showWatchNotification(title, body, type) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (!("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker.ready.then(function (reg) {
+      return reg.showNotification("DEPA FX — " + title, {
+        body:body,
+        icon:"./icon-192.png",
+        badge:"./icon-192.png",
+        tag:"depa-watch-" + type,
+        renotify:false,
+        data:{ url:"./#watch" }
+      });
+    }).catch(function () {});
+  }
+
+  function renderWatchNotificationState() {
+    if (!el("watchNotificationState")) return;
+    var html = "";
+    html += resultRow("Browser通知", notificationPermissionText());
+    html += resultRow("監視方式", "APP OPEN");
+    html += resultRow(
+      "データ源",
+      typeof marketDataMode !== "undefined" && marketDataMode === "API"
+        ? "API / 手入力"
+        : "手入力 / API待ち"
+    );
+    el("watchNotificationState").innerHTML = html;
+  }
+
+  function armCurrentWatch() {
+    var R = lastResult;
+
+    if (!R || R.state === "INVALID") {
+      setStorageStatus("WATCH前に必須入力を完了してください。", false);
+      return;
+    }
+
+    var entry = currentWatchEntry(R);
+    var atr = currentWatchAtr();
+    var price = n("price");
+
+    if (entry == null || atr == null || price == null) {
+      setStorageStatus("WATCHには有効なEntry/平均建値・現在値・ATRが必要です。", false);
+      return;
+    }
+
+    var w = {
+      schema:8,
+      armedAt:new Date().getTime(),
+      signature:watchSignature(),
+      symbol:value("symbol"),
+      label:SYMBOLS[value("symbol")].label,
+      timeframe:value("tf"),
+      mode:R.mode,
+      direction:R.dir > 0 ? "BUY" : "SELL",
+      entry:Number(entry),
+      lastPrice:Number(price),
+      lastAtr:Number(atr),
+      lastState:R.state,
+      lastInZone:Math.abs(price - entry) <= atr * getWatchSettings().zoneAtr,
+      gates:gateMap(R),
+      stale:false
+    };
+
+    saveActiveWatch(w);
+    addWatchEvent(
+      "state",
+      "WATCH ARMED",
+      w.label + " " + w.timeframe + " " + w.direction +
+      " / Entry " + R.fmt(w.entry),
+      false
+    );
+    renderWatchPanel();
+  }
+
+  function disarmCurrentWatch() {
+    var w = getActiveWatch();
+    saveActiveWatch(null);
+
+    if (w) {
+      addWatchEvent(
+        "state",
+        "WATCH DISARMED",
+        w.label + " " + w.timeframe + " の監視を解除しました。",
+        false
+      );
+    }
+    renderWatchPanel();
+  }
+
+  function compareGateChanges(previous, current) {
+    var changes = [], id;
+    for (id in current) {
+      if (!Object.prototype.hasOwnProperty.call(current, id)) continue;
+      if (previous[id] == null) continue;
+      if (!!previous[id] !== !!current[id]) {
+        changes.push({
+          id:id,
+          from:previous[id] ? "PASS" : "FAIL",
+          to:current[id] ? "PASS" : "FAIL"
+        });
+      }
+    }
+    return changes;
+  }
+
+  function entryCrossed(prev, now, entry) {
+    if (prev == null || now == null || entry == null) return false;
+    prev = Number(prev);
+    now = Number(now);
+    entry = Number(entry);
+
+    if (!isFinite(prev) || !isFinite(now) || !isFinite(entry)) return false;
+    if (prev === now) return false;
+
+    return (prev - entry) * (now - entry) <= 0;
+  }
+
+  function evaluateActiveWatch(source) {
+    if (watchEvaluating) return;
+
+    var w = getActiveWatch();
+    if (!w) {
+      renderWatchPanel();
+      return;
+    }
+
+    var R = lastResult;
+    if (!R || R.state === "INVALID") {
+      renderWatchPanel();
+      return;
+    }
+
+    watchEvaluating = true;
+
+    try {
+      var sig = watchSignature();
+
+      if (w.signature !== sig) {
+        if (!w.stale) {
+          w.stale = true;
+          saveActiveWatch(w);
+          addWatchEvent(
+            "state",
+            "SETUP CHANGED",
+            "Swing/Risk/戦術などの監視条件が変更されました。再ARMしてください。",
+            false
+          );
+        }
+        renderWatchPanel();
+        return;
+      }
+
+      w.stale = false;
+
+      var settings = getWatchSettings();
+      var price = n("price");
+      var atr = currentWatchAtr();
+      var entry = currentWatchEntry(R);
+
+      if (price == null || atr == null || entry == null) {
+        renderWatchPanel();
+        return;
+      }
+
+      var distance = Math.abs(price - entry);
+      var inZone = distance <= atr * settings.zoneAtr;
+      var stateNow = R.state;
+      var gatesNow = gateMap(R);
+
+      if (settings.notifyZone && !w.lastInZone && inZone) {
+        addWatchEvent(
+          "zone",
+          "ENTRY ZONE到達",
+          w.label + " " + w.timeframe +
+          " / 距離 " + (distance / R.S.pip).toFixed(1) + " pips" +
+          " / " + settings.zoneAtr.toFixed(2) + " ATR以内"
+        );
+      }
+
+      if (settings.notifyCross && entryCrossed(w.lastPrice, price, entry)) {
+        addWatchEvent(
+          "cross",
+          "ENTRY価格をCross",
+          w.label + " / Entry " + R.fmt(entry) +
+          " / Current " + R.fmt(price)
+        );
+      }
+
+      if (settings.notifyState && w.lastState !== stateNow) {
+        addWatchEvent(
+          "state",
+          "状態変化 " + w.lastState + " → " + stateNow,
+          w.label + " " + w.timeframe + " / source " + source
+        );
+      }
+
+      if (settings.notifyGate) {
+        var changes = compareGateChanges(w.gates || {}, gatesNow);
+        if (changes.length > 0) {
+          var parts = [], i;
+          for (i = 0; i < changes.length; i++) {
+            parts.push(
+              changes[i].id + " " +
+              changes[i].from + "→" + changes[i].to
+            );
+          }
+          addWatchEvent("gate", "Gate変化", parts.join(" / "));
+        }
+      }
+
+      w.entry = Number(entry);
+      w.lastPrice = Number(price);
+      w.lastAtr = Number(atr);
+      w.lastState = stateNow;
+      w.lastInZone = inZone;
+      w.gates = gatesNow;
+      w.lastEvaluatedAt = new Date().getTime();
+      w.lastSource = source;
+      saveActiveWatch(w);
+
+      renderWatchPanel();
+    } finally {
+      watchEvaluating = false;
+    }
+  }
+
+  function renderWatchEvents() {
+    var node = el("watchEvents");
+    if (!node) return;
+
+    var d = getWatchEvents();
+    if (d.items.length === 0) {
+      node.innerHTML =
+        '<div class="watchEvent"><strong>記録なし</strong><span class="time">—</span></div>';
+      return;
+    }
+
+    var html = "", i, x;
+    for (i = 0; i < d.items.length; i++) {
+      x = d.items[i];
+      html += '<div class="watchEvent ' + esc(x.type || "state") + '">' +
+        '<strong>' + esc(x.title || "Alert") + '</strong>' +
+        esc(x.body || "") +
+        '<br><span class="time">' + esc(formatLocalStamp(x.time)) + '</span>' +
+        '</div>';
+    }
+    node.innerHTML = html;
+  }
+
+  function clearWatchEvents() {
+    saveWatchEvents({ schema:8, items:[] });
+    renderWatchEvents();
+  }
+
+  function renderWatchPanel() {
+    var status = el("watchStatus");
+    var summary = el("watchSummary");
+    var nav = el("navWatch");
+    if (!status || !summary) return;
+
+    var w = getActiveWatch();
+    var R = lastResult;
+    var settings = getWatchSettings();
+
+    if (!w) {
+      status.className = "watchStatusBox";
+      status.innerHTML =
+        "<strong>OFF</strong><br>現在WATCHは設定されていません。";
+
+      summary.innerHTML =
+        resultRow("対象", "—") +
+        resultRow("状態", "OFF") +
+        resultRow("Entry距離", "—") +
+        resultRow("ENTRY Zone", settings.zoneAtr.toFixed(2) + " ATR");
+
+      if (nav) nav.innerHTML = "OFF";
+      renderWatchNotificationState();
+      return;
+    }
+
+    var sigMatch = w.signature === watchSignature();
+
+    if (w.stale || !sigMatch) {
+      status.className = "watchStatusBox stale";
+      status.innerHTML =
+        "<strong>SETUP CHANGED</strong><br>" +
+        "監視条件が変更されています。現在条件で再ARMしてください。";
+      if (nav) nav.innerHTML = "STALE";
+    } else {
+      status.className = "watchStatusBox armed";
+      status.innerHTML =
+        "<strong>ARMED</strong><br>" +
+        esc(w.label + " / " + w.timeframe + " / " + w.direction + " / " + w.mode);
+      if (nav) nav.innerHTML = "ARMED";
+    }
+
+    var distanceText = "—";
+    var zoneText = settings.zoneAtr.toFixed(2) + " ATR";
+    var stateNow = w.lastState || "—";
+
+    if (R && R.state !== "INVALID" && sigMatch) {
+      var entry = currentWatchEntry(R);
+      var atr = currentWatchAtr();
+      var price = n("price");
+
+      if (entry != null && atr != null && price != null) {
+        var dist = Math.abs(price - entry);
+        distanceText =
+          (dist / R.S.pip).toFixed(1) + " pips / " +
+          (dist / atr).toFixed(2) + " ATR";
+
+        zoneText =
+          dist <= atr * settings.zoneAtr
+            ? "IN ZONE"
+            : "OUT / " + settings.zoneAtr.toFixed(2) + " ATR";
+      }
+
+      stateNow = R.state;
+    }
+
+    summary.innerHTML =
+      resultRow("対象", w.label + " / " + w.timeframe) +
+      resultRow("状態", stateNow) +
+      resultRow("Entry距離", distanceText) +
+      resultRow(
+        "ENTRY Zone",
+        zoneText,
+        zoneText === "IN ZONE" ? "go" : ""
+      );
+
+    renderWatchNotificationState();
+  }
+
+  function hookPhase8Controls() {
+    var arm = el("armCurrentWatch");
+    var armPos = el("armWatchFromPosition");
+    var armGrid = el("armWatchFromGrid");
+    var disarm = el("disarmWatch");
+    var req = el("requestNotificationPermission");
+    var clear = el("clearWatchEvents");
+    var ids = [
+      "watchZoneAtr", "watchNotifyZone", "watchNotifyCross",
+      "watchNotifyGate", "watchNotifyState"
+    ];
+    var i, node;
+
+    if (arm) arm.onclick = armCurrentWatch;
+    if (armPos) armPos.onclick = armCurrentWatch;
+    if (armGrid) armGrid.onclick = armCurrentWatch;
+    if (disarm) disarm.onclick = disarmCurrentWatch;
+    if (req) req.onclick = requestWatchNotificationPermission;
+    if (clear) clear.onclick = clearWatchEvents;
+
+    for (i = 0; i < ids.length; i++) {
+      node = el(ids[i]);
+      if (node) node.onchange = saveWatchSettingsFromUi;
+    }
+
+    restoreWatchSettingsUi();
+    renderWatchEvents();
+    renderWatchPanel();
+  }
+
+
+  /* ================= PHASE 7: MARKET DATA ================= */
+
+  var MARKET_DATA_SETTINGS_KEY = "depaFX.marketDataSettings.v7";
+  var MARKET_DATA_API_KEY = "depaFX.twelveDataApiKey.v7";
+  var marketDataTimer = null;
+  var marketDataBusy = false;
+  var applyingMarketData = false;
+  var marketDataMode = "MANUAL";
+
+  function providerDefaultSymbol(localSymbol) {
+    if (!localSymbol) return { symbol:"", note:"銘柄未選択" };
+
+    if (localSymbol === "WTI") {
+      return { symbol:"WTI/USD", note:"WTI Spot / USD" };
+    }
+    if (localSymbol === "JP225") {
+      return { symbol:"N225", note:"Nikkei 225" };
+    }
+    if (localSymbol === "NAS100") {
+      return {
+        symbol:"NDX",
+        note:"NASDAQ-100用の暫定マッピング。APIで拒否された場合はProvider Symbolを変更してください。"
+      };
+    }
+    if (localSymbol === "XAUUSD") return { symbol:"XAU/USD", note:"Gold Spot / USD" };
+    if (localSymbol === "XAGUSD") return { symbol:"XAG/USD", note:"Silver Spot / USD" };
+    if (localSymbol === "BTCUSD") return { symbol:"BTC/USD", note:"Bitcoin / USD" };
+    if (localSymbol === "ETHUSD") return { symbol:"ETH/USD", note:"Ethereum / USD" };
+
+    if (localSymbol.length === 6) {
+      return {
+        symbol:localSymbol.substring(0,3) + "/" + localSymbol.substring(3,6),
+        note:"FX pair"
+      };
+    }
+
+    return { symbol:localSymbol, note:"自動マッピング。必要なら変更してください。" };
+  }
+
+  function getMarketDataSettings() {
+    var d = storageRead(MARKET_DATA_SETTINGS_KEY, null);
+    if (!d || typeof d !== "object") {
+      d = {
+        schema:7,
+        atrPeriod:14,
+        autoRefreshSec:0,
+        symbolOverrides:{},
+        lastMeta:null
+      };
+    }
+    if (!d.symbolOverrides) d.symbolOverrides = {};
+    return d;
+  }
+
+  function saveMarketDataSettings(d) {
+    return storageWrite(MARKET_DATA_SETTINGS_KEY, d);
+  }
+
+  function currentProviderSymbol(settings) {
+    settings = settings || getMarketDataSettings();
+    var localSymbol = value("symbol");
+    var override = settings.symbolOverrides[localSymbol];
+
+    if (override != null && String(override).replace(/^\s+|\s+$/g, "") !== "") {
+      return String(override).replace(/^\s+|\s+$/g, "");
+    }
+
+    return providerDefaultSymbol(localSymbol).symbol;
+  }
+
+  function syncProviderSymbolField() {
+    var settings = getMarketDataSettings();
+    var localSymbol = value("symbol");
+    var field = el("tdProviderSymbol");
+    var hint = el("providerSymbolHint");
+    var mapped = providerDefaultSymbol(localSymbol);
+    var override = settings.symbolOverrides[localSymbol];
+    var actual = override != null && String(override).replace(/^\s+|\s+$/g, "") !== ""
+      ? String(override).replace(/^\s+|\s+$/g, "")
+      : mapped.symbol;
+
+    if (field) field.value = actual;
+
+    if (hint) {
+      hint.innerHTML =
+        "<strong>" + esc(localSymbol) + " → " + esc(actual || "未設定") + "</strong><br>" +
+        esc(mapped.note) +
+        (override ? "<br>現在はユーザー上書きマッピングを使用中。" : "");
+    }
+  }
+
+  function restoreMarketDataSettings() {
+    var settings = getMarketDataSettings();
+    var key = storageRead(MARKET_DATA_API_KEY, "");
+
+    if (el("tdApiKey") && key) el("tdApiKey").value = key;
+    if (el("atrPeriod")) el("atrPeriod").value = String(settings.atrPeriod || 14);
+    if (el("marketAutoRefreshSec")) {
+      el("marketAutoRefreshSec").value = String(settings.autoRefreshSec || 0);
+    }
+
+    syncProviderSymbolField();
+
+    var meta = settings.lastMeta;
+    var priceNow = n("price");
+    var atrNow = n("atr");
+
+    if (meta &&
+        meta.localSymbol === value("symbol") &&
+        meta.timeframe === value("tf") &&
+        priceNow != null &&
+        atrNow != null &&
+        Math.abs(priceNow - Number(meta.price)) <= Math.max(1e-12, Math.abs(priceNow) * 1e-12) &&
+        Math.abs(atrNow - Number(meta.atr)) <= Math.max(1e-12, Math.abs(atrNow) * 1e-12)) {
+      marketDataMode = "API";
+    } else {
+      marketDataMode = "MANUAL";
+    }
+
+    renderMarketDataStatus();
+  }
+
+  function saveMarketDataUiSettings() {
+    var settings = getMarketDataSettings();
+    var period = parseInt(el("atrPeriod").value, 10);
+    var autoSec = parseInt(el("marketAutoRefreshSec").value, 10);
+    var localSymbol = value("symbol");
+    var typed = String(el("tdProviderSymbol").value || "").replace(/^\s+|\s+$/g, "");
+    var defaultSymbol = providerDefaultSymbol(localSymbol).symbol;
+
+    if (!isFinite(period) || period < 2) period = 14;
+    if (period > 100) period = 100;
+    if (autoSec !== 60 && autoSec !== 300) autoSec = 0;
+
+    settings.atrPeriod = period;
+    settings.autoRefreshSec = autoSec;
+
+    if (typed && typed !== defaultSymbol) {
+      settings.symbolOverrides[localSymbol] = typed;
+    } else {
+      delete settings.symbolOverrides[localSymbol];
+    }
+
+    saveMarketDataSettings(settings);
+    syncProviderSymbolField();
+    restartMarketAutoRefresh();
+  }
+
+  function saveTwelveDataKey() {
+    var key = String(el("tdApiKey").value || "").replace(/^\s+|\s+$/g, "");
+    if (!key) {
+      setMarketDataMessage("API Keyが空です。", "error");
+      return;
+    }
+
+    if (!storageWrite(MARKET_DATA_API_KEY, key)) {
+      setMarketDataMessage("API Keyの端末保存に失敗しました。", "error");
+      return;
+    }
+
+    setMarketDataMessage("API Keyをこの端末に保存しました。", "ok");
+  }
+
+  function clearTwelveDataKey() {
+    storageRemove(MARKET_DATA_API_KEY);
+    if (el("tdApiKey")) el("tdApiKey").value = "";
+    stopMarketAutoRefresh();
+    setMarketDataMessage("保存API Keyを削除しました。手入力はそのまま利用できます。", "ok");
+  }
+
+  function marketDataInterval(tf) {
+    if (tf === "M1") return { api:"1min", aggregate:1, output:100 };
+    if (tf === "M3") return { api:"1min", aggregate:3, output:240 };
+    if (tf === "M5") return { api:"5min", aggregate:1, output:100 };
+    if (tf === "M15") return { api:"15min", aggregate:1, output:100 };
+    if (tf === "H1") return { api:"1h", aggregate:1, output:100 };
+    if (tf === "H4") return { api:"4h", aggregate:1, output:100 };
+    if (tf === "D1") return { api:"1day", aggregate:1, output:100 };
+    return null;
+  }
+
+  function parseTwelveBars(values) {
+    var out = [];
+    var i, x, o, h, l, c;
+
+    if (!values || typeof values.length !== "number") return out;
+
+    for (i = 0; i < values.length; i++) {
+      x = values[i];
+      o = parseFloat(x.open);
+      h = parseFloat(x.high);
+      l = parseFloat(x.low);
+      c = parseFloat(x.close);
+
+      if (!x.datetime || !isFinite(o) || !isFinite(h) || !isFinite(l) || !isFinite(c)) continue;
+
+      out.push({
+        datetime:String(x.datetime),
+        open:o,
+        high:h,
+        low:l,
+        close:c
+      });
+    }
+
+    out.sort(function (a, b) {
+      return a.datetime < b.datetime ? -1 : (a.datetime > b.datetime ? 1 : 0);
+    });
+
+    return out;
+  }
+
+  function aggregateThreeMinuteBars(oneMinuteBars) {
+    var buckets = {};
+    var order = [];
+    var i, b, dt, datePart, timePart, hm, hour, minute, bucketMinute, key;
+
+    for (i = 0; i < oneMinuteBars.length; i++) {
+      b = oneMinuteBars[i];
+      dt = b.datetime;
+      var parts = dt.split(" ");
+      if (parts.length < 2) continue;
+
+      datePart = parts[0];
+      timePart = parts[1];
+      hm = timePart.split(":");
+      if (hm.length < 2) continue;
+
+      hour = parseInt(hm[0], 10);
+      minute = parseInt(hm[1], 10);
+      if (!isFinite(hour) || !isFinite(minute)) continue;
+
+      bucketMinute = Math.floor(minute / 3) * 3;
+      key = datePart + " " + (hour < 10 ? "0" + hour : hour) + ":" +
+        (bucketMinute < 10 ? "0" + bucketMinute : bucketMinute);
+
+      if (!buckets[key]) {
+        buckets[key] = {
+          datetime:key + ":00",
+          open:b.open,
+          high:b.high,
+          low:b.low,
+          close:b.close,
+          count:1
+        };
+        order.push(key);
+      } else {
+        if (b.high > buckets[key].high) buckets[key].high = b.high;
+        if (b.low < buckets[key].low) buckets[key].low = b.low;
+        buckets[key].close = b.close;
+        buckets[key].count += 1;
+      }
+    }
+
+    var out = [];
+    for (i = 0; i < order.length; i++) {
+      b = buckets[order[i]];
+      if (b.count >= 3) {
+        out.push({
+          datetime:b.datetime,
+          open:b.open,
+          high:b.high,
+          low:b.low,
+          close:b.close
+        });
+      }
+    }
+    return out;
+  }
+
+  function wilderAtr(bars, period) {
+    if (!bars || bars.length < period + 1) return null;
+
+    var tr = [];
+    var i, high, low, prevClose, v;
+
+    for (i = 0; i < bars.length; i++) {
+      high = Number(bars[i].high);
+      low = Number(bars[i].low);
+
+      if (i === 0) {
+        v = high - low;
+      } else {
+        prevClose = Number(bars[i - 1].close);
+        v = Math.max(
+          high - low,
+          Math.abs(high - prevClose),
+          Math.abs(low - prevClose)
+        );
+      }
+
+      if (!isFinite(v) || v < 0) return null;
+      tr.push(v);
+    }
+
+    var atr = 0;
+    for (i = 0; i < period; i++) atr += tr[i];
+    atr = atr / period;
+
+    for (i = period; i < tr.length; i++) {
+      atr = ((atr * (period - 1)) + tr[i]) / period;
+    }
+
+    return atr;
+  }
+
+  function twelveDataErrorMessage(data, fallback) {
+    if (!data) return fallback || "空レスポンス";
+    if (data.message) return String(data.message);
+    if (data.error && data.error.message) return String(data.error.message);
+    if (data.code) return "API error " + data.code;
+    return fallback || "APIエラー";
+  }
+
+  function fetchTwelveJson(url) {
+    return fetch(url, { cache:"no-store" }).then(function (response) {
+      var used = response.headers ? response.headers.get("api-credits-used") : null;
+      var left = response.headers ? response.headers.get("api-credits-left") : null;
+
+      return response.json().then(function (data) {
+        if (!response.ok || (data && data.status === "error")) {
+          throw new Error(twelveDataErrorMessage(data, "HTTP " + response.status));
+        }
+        return { data:data, creditsUsed:used, creditsLeft:left };
+      });
+    });
+  }
+
+  function extractTwelvePrice(data) {
+    if (!data) return null;
+    var v = data.price;
+
+    if (v == null && data.result && data.result.price != null) v = data.result.price;
+
+    v = parseFloat(v);
+    return isFinite(v) ? v : null;
+  }
+
+  function setMarketDataMessage(message, cls) {
+    var node = el("marketDataStatus");
+    if (!node) return;
+
+    node.className = "marketDataStatus" + (cls ? " " + cls : "");
+    node.innerHTML = "<strong>" +
+      (cls === "loading" ? "FETCHING" : cls === "error" ? "ERROR" : cls === "ok" ? "OK" : marketDataMode) +
+      "</strong><br>" + esc(message);
+  }
+
+  function renderMarketDataStatus() {
+    var settings = getMarketDataSettings();
+    var meta = settings.lastMeta;
+    var localSymbol = value("symbol");
+    var tf = value("tf");
+    var providerSymbol = currentProviderSymbol(settings);
+    var interval = marketDataInterval(tf);
+    var nav = el("navData");
+    var result = el("marketDataResult");
+
+    if (nav) nav.innerHTML = marketDataBusy ? "FETCH" : marketDataMode;
+
+    if (!result) return;
+
+    var html = "";
+    html += resultRow("銘柄", SYMBOLS[localSymbol].label + " → " + providerSymbol);
+    html += resultRow("Timeframe", tf + (interval ? " / " + interval.api : ""));
+    html += resultRow("API Price",
+      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
+        ? meta.priceText
+        : "—");
+    html += resultRow("ATR",
+      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
+        ? meta.atrText
+        : "—");
+    html += resultRow("ATR方式", "Wilder(" + (settings.atrPeriod || 14) + ")");
+    html += resultRow("Bar Time",
+      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
+        ? meta.barTime
+        : "—");
+    html += resultRow("取得時刻",
+      meta && meta.localSymbol === localSymbol && meta.timeframe === tf
+        ? formatLocalStamp(meta.fetchedAt)
+        : "—");
+    html += resultRow("API Credits",
+      meta && meta.creditsLeft != null
+        ? "left " + meta.creditsLeft
+        : "—");
+
+    result.innerHTML = html;
+
+    if (!marketDataBusy) {
+      if (marketDataMode === "API" &&
+          meta && meta.localSymbol === localSymbol && meta.timeframe === tf) {
+        setMarketDataMessage(
+          "API取得値を使用中。Bar Time " + meta.barTime + " / 取得 " + formatLocalStamp(meta.fetchedAt),
+          "ok"
+        );
+      } else if (marketDataMode === "ERROR") {
+        // Keep the error message already shown.
+      } else {
+        setMarketDataMessage(
+          "API未適用。現在値とATRは手入力/保存済み値を使用します。",
+          ""
+        );
+      }
+    }
+  }
+
+  function markMarketDataManual() {
+    if (applyingMarketData) return;
+    marketDataMode = "MANUAL";
+    renderMarketDataStatus();
+  }
+
+  function fetchMarketDataNow(fromTimer) {
+    if (marketDataBusy) return;
+
+    if (navigator.onLine === false) {
+      marketDataMode = "ERROR";
+      setMarketDataMessage("オフラインです。手入力値を維持します。", "error");
+      renderMarketDataStatus();
+      return;
+    }
+
+    var key = String(el("tdApiKey").value || "").replace(/^\s+|\s+$/g, "");
+    if (!key) {
+      key = storageRead(MARKET_DATA_API_KEY, "");
+    }
+
+    if (!key) {
+      marketDataMode = "ERROR";
+      setMarketDataMessage("Twelve Data API Keyを入力してください。手入力値は変更していません。", "error");
+      renderMarketDataStatus();
+      return;
+    }
+
+    saveMarketDataUiSettings();
+
+    var settings = getMarketDataSettings();
+    var localSymbol = value("symbol");
+    var tf = value("tf");
+    var providerSymbol = currentProviderSymbol(settings);
+    var interval = marketDataInterval(tf);
+    var period = parseInt(settings.atrPeriod, 10) || 14;
+
+    if (!providerSymbol || !interval) {
+      marketDataMode = "ERROR";
+      setMarketDataMessage("Provider SymbolまたはTimeframeが未対応です。", "error");
+      renderMarketDataStatus();
+      return;
+    }
+
+    var base = "https://api.twelvedata.com";
+    var priceUrl = base + "/price?symbol=" + encodeURIComponent(providerSymbol) +
+      "&apikey=" + encodeURIComponent(key);
+    var seriesUrl = base + "/time_series?symbol=" + encodeURIComponent(providerSymbol) +
+      "&interval=" + encodeURIComponent(interval.api) +
+      "&outputsize=" + encodeURIComponent(String(interval.output)) +
+      "&timezone=UTC&apikey=" + encodeURIComponent(key);
+
+    marketDataBusy = true;
+    setMarketDataMessage(
+      providerSymbol + " / " + tf + " を取得中。既存値は成功するまで維持します。",
+      "loading"
+    );
+    renderMarketDataStatus();
+
+    Promise.all([
+      fetchTwelveJson(priceUrl),
+      fetchTwelveJson(seriesUrl)
+    ]).then(function (responses) {
+      var price = extractTwelvePrice(responses[0].data);
+      if (price == null || price <= 0) throw new Error("現在値を解釈できません。");
+
+      var rawBars = parseTwelveBars(responses[1].data.values);
+      var bars = interval.aggregate === 3 ? aggregateThreeMinuteBars(rawBars) : rawBars;
+
+      if (bars.length < period + 1) {
+        throw new Error(
+          "ATR計算に必要なOHLC本数が不足しています。取得 " + bars.length +
+          " / 必要 " + (period + 1)
+        );
+      }
+
+      var atrValue = wilderAtr(bars, period);
+      if (atrValue == null || !isFinite(atrValue) || atrValue <= 0) {
+        throw new Error("ATRを計算できません。");
+      }
+
+      var lastBar = bars[bars.length - 1];
+      var S = SYMBOLS[localSymbol];
+      var digits = S.customSpec
+        ? (n("customDigits") == null ? S.digits : Math.max(0, Math.round(n("customDigits"))))
+        : S.digits;
+      var atrDigits = Math.min(8, Math.max(digits, 4));
+
+      // Atomic apply: only after price and ATR both validate.
+      applyingMarketData = true;
+      el("price").value = price.toFixed(digits);
+      el("atr").value = atrValue.toFixed(atrDigits);
+      applyingMarketData = false;
+
+      settings = getMarketDataSettings();
+      settings.lastMeta = {
+        localSymbol:localSymbol,
+        timeframe:tf,
+        providerSymbol:providerSymbol,
+        fetchedAt:new Date().getTime(),
+        barTime:lastBar.datetime,
+        price:price,
+        atr:atrValue,
+        priceText:price.toFixed(digits),
+        atrText:atrValue.toFixed(atrDigits),
+        creditsUsed:responses[0].creditsUsed || responses[1].creditsUsed || null,
+        creditsLeft:responses[1].creditsLeft || responses[0].creditsLeft || null
+      };
+      saveMarketDataSettings(settings);
+
+      marketDataMode = "API";
+      marketDataBusy = false;
+
+      render();
+      renderPortfolio();
+      scheduleWorkspaceSave();
+      renderMarketDataStatus();
+      evaluateActiveWatch(fromTimer ? "API AUTO" : "API");
+
+      if (!fromTimer) restartMarketAutoRefresh();
+    }).catch(function (err) {
+      marketDataBusy = false;
+      marketDataMode = "ERROR";
+      setMarketDataMessage(
+        "取得失敗: " + (err && err.message ? err.message : "不明なエラー") +
+        "。現在値/ATRは上書きしていません。",
+        "error"
+      );
+      var nav = el("navData");
+      if (nav) nav.innerHTML = "ERR";
+    });
+  }
+
+  function stopMarketAutoRefresh() {
+    if (marketDataTimer) {
+      window.clearInterval(marketDataTimer);
+      marketDataTimer = null;
+    }
+  }
+
+  function restartMarketAutoRefresh() {
+    stopMarketAutoRefresh();
+
+    var settings = getMarketDataSettings();
+    var sec = parseInt(settings.autoRefreshSec, 10) || 0;
+
+    if (sec < 60 || document.hidden || navigator.onLine === false) return;
+
+    marketDataTimer = window.setInterval(function () {
+      fetchMarketDataNow(true);
+    }, sec * 1000);
+  }
+
+  function marketContextChanged() {
+    marketDataMode = "MANUAL";
+    syncProviderSymbolField();
+    renderMarketDataStatus();
+    restartMarketAutoRefresh();
+    renderWatchPanel();
+  }
+
+  function openMarketDataPage() {
+    if (window.iui && window.iui.showPage) window.iui.showPage("marketdata");
+  }
+
+  function hookPhase7Controls() {
+    var fetchBtn = el("tdFetchNow");
+    var saveKeyBtn = el("tdSaveKey");
+    var clearKeyBtn = el("tdClearKey");
+    var openBtn = el("openMarketData");
+    var period = el("atrPeriod");
+    var refresh = el("marketAutoRefreshSec");
+    var providerSymbol = el("tdProviderSymbol");
+    var symbolNode = el("symbol");
+    var tfNode = el("tf");
+    var priceNode = el("price");
+    var atrNode = el("atr");
+
+    if (fetchBtn) fetchBtn.onclick = function () { fetchMarketDataNow(false); };
+    if (saveKeyBtn) saveKeyBtn.onclick = saveTwelveDataKey;
+    if (clearKeyBtn) clearKeyBtn.onclick = clearTwelveDataKey;
+    if (openBtn) openBtn.onclick = openMarketDataPage;
+
+    if (period) period.onchange = saveMarketDataUiSettings;
+    if (refresh) refresh.onchange = saveMarketDataUiSettings;
+    if (providerSymbol) providerSymbol.onchange = saveMarketDataUiSettings;
+
+    if (symbolNode && symbolNode.addEventListener) {
+      symbolNode.addEventListener("change", marketContextChanged, false);
+    }
+    if (tfNode && tfNode.addEventListener) {
+      tfNode.addEventListener("change", marketContextChanged, false);
+    }
+    if (priceNode && priceNode.addEventListener) {
+      priceNode.addEventListener("input", markMarketDataManual, false);
+    }
+    if (atrNode && atrNode.addEventListener) {
+      atrNode.addEventListener("input", markMarketDataManual, false);
+    }
+
+    if (document.addEventListener) {
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) stopMarketAutoRefresh();
+        else restartMarketAutoRefresh();
+      }, false);
+    }
+
+    if (window.addEventListener) {
+      window.addEventListener("online", restartMarketAutoRefresh, false);
+      window.addEventListener("offline", function () {
+        stopMarketAutoRefresh();
+        renderMarketDataStatus();
+      }, false);
+    }
+  }
+
+
+  /* ================= PHASE 6: POSITION MAP ================= */
+
+  function chartColor(kind) {
+    if (kind === "current") return "#455a70";
+    if (kind === "entry") return "#2e6da4";
+    if (kind === "tp") return "#31834a";
+    if (kind === "sl") return "#b23a32";
+    if (kind === "manage") return "#a27613";
+    if (kind === "grid") return "#715c92";
+    return "#596673";
+  }
+
+  function finiteChartValue(v) {
+    return v != null && isFinite(Number(v));
+  }
+
+  function chartLevel(label, value, kind, emphasis) {
+    return {
+      label: label,
+      value: Number(value),
+      kind: kind || "manage",
+      emphasis: !!emphasis
+    };
+  }
+
+  function normalMapLevels(R) {
+    var levels = [
+      chartLevel("CURRENT", R.px, "current", true),
+      chartLevel("ENTRY", R.entry, "entry", true),
+      chartLevel("SL", R.sl, "sl", true),
+      chartLevel("TP1", R.tp1, "tp", true),
+      chartLevel("TP2", R.tp2, "tp", false),
+      chartLevel("BE", R.be, "manage", false),
+      chartLevel("ADD1 / +1R", R.add1, "manage", false),
+      chartLevel("ADD2", R.add2, "manage", false),
+      chartLevel("AVG1", R.avg1, "manage", false),
+      chartLevel("AVG2", R.avg2, "manage", false)
+    ];
+
+    var out = [];
+    var i;
+    for (i = 0; i < levels.length; i++) {
+      if (finiteChartValue(levels[i].value)) out.push(levels[i]);
+    }
+    return out;
+  }
+
+  function gridMapLevels(R) {
+    var levels = [];
+    var px = n("price");
+
+    if (finiteChartValue(px)) levels.push(chartLevel("CURRENT", px, "current", true));
+    if (finiteChartValue(R.avg)) levels.push(chartLevel("AVG", R.avg, "entry", true));
+    if (finiteChartValue(R.tpAll)) levels.push(chartLevel("TP ALL", R.tpAll, "tp", true));
+    if (finiteChartValue(R.finalSL)) levels.push(chartLevel("FINAL SL", R.finalSL, "sl", true));
+
+    var i, row;
+    for (i = 0; i < R.rows.length; i++) {
+      row = R.rows[i];
+      if (finiteChartValue(row.p)) {
+        levels.push(chartLevel("G" + row.i + "  " + row.lot.toFixed(2) + "lot", row.p, "grid", false));
+      }
+    }
+    return levels;
+  }
+
+  function chartRange(levels) {
+    var min = Infinity, max = -Infinity, i, v;
+    for (i = 0; i < levels.length; i++) {
+      v = Number(levels[i].value);
+      if (!isFinite(v)) continue;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+
+    if (!isFinite(min) || !isFinite(max)) return null;
+
+    var span = max - min;
+    if (span <= 0) {
+      span = Math.max(Math.abs(max) * 0.01, 1);
+      min -= span * 0.5;
+      max += span * 0.5;
+    } else {
+      var pad = span * 0.12;
+      min -= pad;
+      max += pad;
+    }
+
+    return { min:min, max:max, span:max-min };
+  }
+
+  function labelLayout(levels, range, top, bottom) {
+    var arranged = [];
+    var i, x, y;
+
+    function yFor(v) {
+      return top + ((range.max - v) / range.span) * (bottom - top);
+    }
+
+    for (i = 0; i < levels.length; i++) {
+      x = {
+        level: levels[i],
+        actualY: yFor(levels[i].value),
+        labelY: yFor(levels[i].value)
+      };
+      arranged.push(x);
+    }
+
+    arranged.sort(function (a, b) { return a.actualY - b.actualY; });
+
+    var gap = 17;
+    for (i = 1; i < arranged.length; i++) {
+      if (arranged[i].labelY - arranged[i - 1].labelY < gap) {
+        arranged[i].labelY = arranged[i - 1].labelY + gap;
+      }
+    }
+
+    if (arranged.length && arranged[arranged.length - 1].labelY > bottom) {
+      var shift = arranged[arranged.length - 1].labelY - bottom;
+      for (i = 0; i < arranged.length; i++) arranged[i].labelY -= shift;
+    }
+
+    if (arranged.length && arranged[0].labelY < top) {
+      var down = top - arranged[0].labelY;
+      for (i = 0; i < arranged.length; i++) arranged[i].labelY += down;
+    }
+
+    return arranged;
+  }
+
+  function svgEsc(s) {
+    return esc(String(s));
+  }
+
+  function renderPositionMapSvg(R, levels) {
+    var range = chartRange(levels);
+    if (!range || levels.length === 0) {
+      return '<div class="mapPlaceholder">描画できる価格レベルがありません。</div>';
+    }
+
+    var W = 390, H = 470;
+    var top = 36, bottom = 425;
+    var x1 = 83, x2 = 363;
+    var labelX = 8;
+    var priceX = 385;
+    var axisX = 70;
+
+    function yFor(v) {
+      return top + ((range.max - v) / range.span) * (bottom - top);
+    }
+
+    var svg = '';
+    svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Position price map">';
+
+    // Background.
+    svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#ffffff"/>';
+
+    // Risk / reward zones for orientation only.
+    var center = R.mode === "GRID" ? R.avg : R.entry;
+    var take = R.mode === "GRID" ? R.tpAll : R.tp1;
+    var stop = R.mode === "GRID" ? R.finalSL : R.sl;
+
+    if (finiteChartValue(center) && finiteChartValue(take)) {
+      var yC = yFor(center), yT = yFor(take);
+      svg += '<rect x="' + x1 + '" y="' + Math.min(yC,yT).toFixed(1) +
+        '" width="' + (x2-x1) + '" height="' + Math.max(2, Math.abs(yC-yT)).toFixed(1) +
+        '" fill="#dff0e4" opacity="0.50"/>';
+    }
+    if (finiteChartValue(center) && finiteChartValue(stop)) {
+      var yS = yFor(stop), yC2 = yFor(center);
+      svg += '<rect x="' + x1 + '" y="' + Math.min(yC2,yS).toFixed(1) +
+        '" width="' + (x2-x1) + '" height="' + Math.max(2, Math.abs(yC2-yS)).toFixed(1) +
+        '" fill="#f4dddd" opacity="0.55"/>';
+    }
+
+    // Price-axis ticks.
+    var ticks = 5;
+    var t, tv, ty;
+    for (t = 0; t <= ticks; t++) {
+      tv = range.max - (range.span * t / ticks);
+      ty = top + ((bottom - top) * t / ticks);
+
+      svg += '<line x1="' + axisX + '" y1="' + ty.toFixed(1) +
+        '" x2="' + x2 + '" y2="' + ty.toFixed(1) +
+        '" stroke="#e6e9ec" stroke-width="1"/>';
+      svg += '<text x="' + (axisX-4) + '" y="' + (ty+3).toFixed(1) +
+        '" text-anchor="end" fill="#8a949e" font-size="9" font-family="Helvetica,Arial,sans-serif">' +
+        svgEsc(R.fmt(tv)) + '</text>';
+    }
+
+    svg += '<line x1="' + axisX + '" y1="' + top + '" x2="' + axisX +
+      '" y2="' + bottom + '" stroke="#aeb6bd" stroke-width="1"/>';
+
+    // Exact levels + non-overlapping labels.
+    var arranged = labelLayout(levels, range, top, bottom);
+    var i, item, level, color, sw, dash, ly, ay;
+
+    for (i = 0; i < arranged.length; i++) {
+      item = arranged[i];
+      level = item.level;
+      color = chartColor(level.kind);
+      sw = level.emphasis ? 2.4 : 1.4;
+      dash = level.kind === "manage" ? ' stroke-dasharray="4 3"' : '';
+      ay = item.actualY;
+      ly = item.labelY;
+
+      svg += '<line x1="' + x1 + '" y1="' + ay.toFixed(1) +
+        '" x2="' + x2 + '" y2="' + ay.toFixed(1) +
+        '" stroke="' + color + '" stroke-width="' + sw + '"' + dash + '/>';
+
+      // Connector to the left-side label when displaced.
+      svg += '<line x1="' + x1 + '" y1="' + ay.toFixed(1) +
+        '" x2="' + (x1-8) + '" y2="' + ly.toFixed(1) +
+        '" stroke="' + color + '" stroke-width="1" opacity="0.65"/>';
+
+      svg += '<circle cx="' + x1 + '" cy="' + ay.toFixed(1) +
+        '" r="' + (level.emphasis ? 3.5 : 2.5) +
+        '" fill="' + color + '" stroke="#fff" stroke-width="1"/>';
+
+      svg += '<text x="' + labelX + '" y="' + (ly+3).toFixed(1) +
+        '" fill="' + color + '" font-size="9.5" font-weight="' +
+        (level.emphasis ? "bold" : "normal") +
+        '" font-family="Helvetica,Arial,sans-serif">' +
+        svgEsc(level.label) + '</text>';
+
+      svg += '<text x="' + priceX + '" y="' + (ly+3).toFixed(1) +
+        '" text-anchor="end" fill="' + color + '" font-size="9.5" font-weight="' +
+        (level.emphasis ? "bold" : "normal") +
+        '" font-family="Helvetica,Arial,sans-serif">' +
+        svgEsc(R.fmt(level.value)) + '</text>';
+    }
+
+    // Direction marker.
+    var directionText = R.dir > 0 ? "BUY ↑" : "SELL ↓";
+    var directionColor = R.dir > 0 ? "#2d7b46" : "#a93b35";
+    svg += '<text x="' + x2 + '" y="20" text-anchor="end" fill="' +
+      directionColor + '" font-size="11" font-weight="bold" font-family="Helvetica,Arial,sans-serif">' +
+      directionText + '</text>';
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderPositionMap(R) {
+    var canvas = el("positionMapCanvas");
+    var summary = el("positionMapSummary");
+    var header = el("positionMapHeader");
+    var nav = el("navChart");
+
+    if (!canvas || !summary || !header) return;
+
+    if (!R || R.state === "INVALID") {
+      canvas.innerHTML = '<div class="mapPlaceholder">相場・建玉条件を入力すると価格レベルを可視化します。</div>';
+      summary.innerHTML = resultRow("状態", "入力待ち");
+      header.innerHTML = "PRICE MAP";
+      if (nav) nav.innerHTML = "—";
+      return;
+    }
+
+    var S = SYMBOLS[value("symbol")];
+    var levels = R.mode === "GRID" ? gridMapLevels(R) : normalMapLevels(R);
+    var range = chartRange(levels);
+
+    header.innerHTML = esc(S.label + " / " + value("tf") + " / " + R.mode);
+
+    var s = "";
+    s += resultRow("銘柄 / TF", S.label + " / " + value("tf"));
+    s += resultRow("モード", R.mode);
+    s += resultRow("方向", R.dir > 0 ? "BUY" : "SELL", R.dir > 0 ? "go" : "stop");
+    s += resultRow("判定", stateText(R.state).main);
+
+    if (range) {
+      s += resultRow("表示上限", R.fmt(range.max));
+      s += resultRow("表示下限", R.fmt(range.min));
+    }
+
+    if (R.mode === "GRID") {
+      s += resultRow("GRID段数", String(R.rows.length));
+      s += resultRow("平均建値", R.fmt(R.avg));
+    } else {
+      s += resultRow("Entry距離",
+        (Math.abs(R.px - R.entry) / R.S.pip).toFixed(1) + " pips");
+    }
+
+    summary.innerHTML = s;
+    canvas.innerHTML = renderPositionMapSvg(R, levels);
+
+    if (nav) nav.innerHTML = R.mode === "GRID" ? "GRID" : (R.dir > 0 ? "BUY" : "SELL");
+  }
+
+
+  /* ================= PHASE 5: PWA / OFFLINE ================= */
+
+  var pwaUpdatePending = false;
+
+  function isStandaloneMode() {
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+      window.navigator.standalone === true;
+  }
+
+  function renderPwaStatus() {
+    var displayNode = el("pwaDisplayMode");
+    var networkNode = el("pwaNetworkState");
+    var cacheNode = el("pwaCacheState");
+    var nav = el("navPwa");
+
+    var standalone = isStandaloneMode();
+    var online = navigator.onLine !== false;
+
+    if (displayNode) displayNode.innerHTML = standalone ? "APP" : "WEB";
+    if (networkNode) networkNode.innerHTML = online ? "ONLINE" : "OFFLINE";
+
+    if (nav) {
+      if (!online) nav.innerHTML = "OFFLINE";
+      else nav.innerHTML = standalone ? "APP" : "WEB";
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      if (cacheNode) cacheNode.innerHTML = "未対応";
+    } else if (navigator.serviceWorker.controller) {
+      if (cacheNode) cacheNode.innerHTML = pwaUpdatePending ? "更新あり" : "READY";
+    } else {
+      if (cacheNode) cacheNode.innerHTML = "準備中";
+    }
+  }
+
+  function registerDepaServiceWorker() {
+    if (!("serviceWorker" in navigator)) {
+      renderPwaStatus();
+      return;
+    }
+
+    navigator.serviceWorker.register("./service-worker.js", { scope:"./" })
+      .then(function (reg) {
+        renderPwaStatus();
+
+        if (reg.waiting) {
+          pwaUpdatePending = true;
+          renderPwaStatus();
+        }
+
+        reg.addEventListener("updatefound", function () {
+          var worker = reg.installing;
+          if (!worker) return;
+
+          worker.addEventListener("statechange", function () {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+              pwaUpdatePending = true;
+              renderPwaStatus();
+            }
+          });
+        });
+      })
+      .catch(function () {
+        var cacheNode = el("pwaCacheState");
+        if (cacheNode) cacheNode.innerHTML = "登録失敗";
+      });
+
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      pwaUpdatePending = false;
+      renderPwaStatus();
+    });
+  }
+
+  function requestPwaRefresh() {
+    if (!("serviceWorker" in navigator)) {
+      window.location.reload();
+      return;
+    }
+
+    navigator.serviceWorker.getRegistration("./")
+      .then(function (reg) {
+        if (!reg) {
+          window.location.reload();
+          return;
+        }
+
+        reg.update().then(function () {
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type:"SKIP_WAITING" });
+            return;
+          }
+
+          window.setTimeout(function () {
+            window.location.reload();
+          }, 250);
+        }).catch(function () {
+          window.location.reload();
+        });
+      })
+      .catch(function () {
+        window.location.reload();
+      });
+  }
+
+  function hookPhase5Controls() {
+    var btn = el("pwaRefresh");
+    if (btn) btn.onclick = requestPwaRefresh;
+
+    if (window.addEventListener) {
+      window.addEventListener("online", renderPwaStatus, false);
+      window.addEventListener("offline", renderPwaStatus, false);
+    }
+
+    renderPwaStatus();
+    registerDepaServiceWorker();
+  }
+
+
+  /* ================= PHASE 4: TRADE JOURNAL ================= */
+
+  var JOURNAL_KEY = "depaFX.tradeJournal.v4";
+  var selectedJournalId = null;
+
+  function getJournal() {
+    var data = storageRead(JOURNAL_KEY, { schema:4, items:[] });
+    if (!data || !data.items || typeof data.items.length !== "number") {
+      data = { schema:4, items:[] };
+    }
+    return data;
+  }
+
+  function saveJournal(data) {
+    return storageWrite(JOURNAL_KEY, data);
+  }
+
+  function makeJournalId() {
+    return "jr-" + new Date().getTime() + "-" + Math.floor(Math.random() * 1000000);
+  }
+
+  function journalStatusClass(status) {
+    if (status === "OPEN") return "statusOpen";
+    if (status === "WIN") return "statusWin";
+    if (status === "LOSS") return "statusLoss";
+    if (status === "BE") return "statusBE";
+    if (status === "CANCEL") return "statusCancel";
+    return "statusPlanned";
+  }
+
+  function journalSnapshotFromCurrent() {
+    var R = lastResult;
+    if (!R || R.state === "INVALID") return null;
+
+    var symbol = value("symbol");
+    var S = SYMBOLS[symbol];
+    var digits = R.S && R.S.digits != null ? R.S.digits : S.digits;
+
+    if (R.mode === "GRID") {
+      if (!R.cumLot || R.cumLot <= 0 || !R.worstLoss || R.worstLoss <= 0) return null;
+      return {
+        id:makeJournalId(),
+        createdAt:new Date().getTime(),
+        updatedAt:new Date().getTime(),
+        symbol:symbol,
+        label:S.label,
+        timeframe:value("tf"),
+        mode:"GRID",
+        direction:R.dir > 0 ? "BUY" : "SELL",
+        stateAtSave:R.state,
+        entry:R.avg,
+        sl:R.finalSL,
+        tp1:R.tpAll,
+        tp2:null,
+        lot:R.cumLot,
+        plannedRR:null,
+        risk:R.worstLoss,
+        acctCcy:R.acctCcy,
+        digits:digits,
+        status:"PLANNED",
+        realizedR:null,
+        notes:""
+      };
+    }
+
+    if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
+
+    return {
+      id:makeJournalId(),
+      createdAt:new Date().getTime(),
+      updatedAt:new Date().getTime(),
+      symbol:symbol,
+      label:S.label,
+      timeframe:value("tf"),
+      mode:R.mode,
+      direction:R.dir > 0 ? "BUY" : "SELL",
+      stateAtSave:R.state,
+      entry:R.entry,
+      sl:R.sl,
+      tp1:R.tp1,
+      tp2:R.tp2,
+      lot:R.lot,
+      plannedRR:R.netRR,
+      risk:R.riskReal,
+      acctCcy:R.acctCcy,
+      digits:digits,
+      status:"PLANNED",
+      realizedR:null,
+      notes:""
+    };
+  }
+
+  function saveCurrentToJournal() {
+    var R = lastResult;
+    if (!R || R.state === "INVALID") {
+      setStorageStatus("Journal保存前に必須入力を完了してください。", false);
+      return;
+    }
+
+    if (R.state === "NO-TRADE") {
+      setStorageStatus("ゲート不合格の建玉はJournalへ保存できません。", false);
+      return;
+    }
+
+    var snap = journalSnapshotFromCurrent();
+    if (!snap) {
+      setStorageStatus("Journalスナップショットを作成できません。", false);
+      return;
+    }
+
+    var data = getJournal();
+    data.items.unshift(snap);
+
+    if (!saveJournal(data)) {
+      setStorageStatus("Journalの保存に失敗しました。", false);
+      return;
+    }
+
+    selectedJournalId = snap.id;
+    renderJournal();
+    openJournalEditor(snap.id);
+    setStorageStatus("Journalへ " + snap.label + " " + snap.direction + " を保存しました。", true);
+  }
+
+  function getJournalItem(id) {
+    var data = getJournal();
+    var i;
+    for (i = 0; i < data.items.length; i++) {
+      if (data.items[i].id === id) return data.items[i];
+    }
+    return null;
+  }
+
+  function openJournalEditor(id) {
+    var item = getJournalItem(id);
+    if (!item) {
+      selectedJournalId = null;
+      el("journalEditor").style.display = "none";
+      el("journalEditorEmpty").style.display = "block";
+      return;
+    }
+
+    selectedJournalId = id;
+    el("journalEditStatus").value = item.status || "PLANNED";
+    el("journalEditR").value = item.realizedR == null ? "" : String(item.realizedR);
+    el("journalEditNotes").value = item.notes || "";
+    el("journalEditorEmpty").style.display = "none";
+    el("journalEditor").style.display = "block";
+  }
+
+  function updateSelectedJournal() {
+    if (!selectedJournalId) {
+      setStorageStatus("更新するJournal記録を選択してください。", false);
+      return;
+    }
+
+    var data = getJournal();
+    var i, item = null;
+    for (i = 0; i < data.items.length; i++) {
+      if (data.items[i].id === selectedJournalId) {
+        item = data.items[i];
+        break;
+      }
+    }
+
+    if (!item) {
+      openJournalEditor(null);
+      setStorageStatus("選択Journal記録が見つかりません。", false);
+      return;
+    }
+
+    var status = value("journalEditStatus");
+    var realizedText = el("journalEditR").value;
+    var realized = realizedText === "" ? null : parseFloat(realizedText);
+
+    if (realizedText !== "" && !isFinite(realized)) {
+      setStorageStatus("実現Rは数値で入力してください。", false);
+      return;
+    }
+
+    if ((status === "PLANNED" || status === "OPEN") && realizedText !== "") {
+      setStorageStatus("PLANNED / OPENでは実現Rを入力しません。決済後にStatusを更新してください。", false);
+      return;
+    }
+
+    if (status === "WIN" && realizedText !== "" && realized <= 0) {
+      setStorageStatus("WINの実現Rは0より大きい値にしてください。", false);
+      return;
+    }
+
+    if (status === "LOSS" && realizedText !== "" && realized >= 0) {
+      setStorageStatus("LOSSの実現Rは0より小さい値にしてください。", false);
+      return;
+    }
+
+    if (status === "BE" && realizedText !== "" && Math.abs(realized) > 1e-12) {
+      setStorageStatus("BEの実現Rは0Rにしてください。", false);
+      return;
+    }
+
+    if (status === "CANCEL" && realizedText !== "" && Math.abs(realized) > 1e-12) {
+      setStorageStatus("CANCELは実現Rを空欄または0Rにしてください。", false);
+      return;
+    }
+
+    item.status = status;
+    item.realizedR = realized;
+    item.notes = String(el("journalEditNotes").value || "").substring(0, 800);
+    item.updatedAt = new Date().getTime();
+
+    if (!saveJournal(data)) {
+      setStorageStatus("Journal更新に失敗しました。", false);
+      return;
+    }
+
+    renderJournal();
+    openJournalEditor(selectedJournalId);
+    setStorageStatus("Journalを更新しました。", true);
+  }
+
+  function deleteSelectedJournal() {
+    if (!selectedJournalId) {
+      setStorageStatus("削除するJournal記録を選択してください。", false);
+      return;
+    }
+
+    var data = getJournal();
+    var next = [];
+    var i;
+    for (i = 0; i < data.items.length; i++) {
+      if (data.items[i].id !== selectedJournalId) next.push(data.items[i]);
+    }
+    data.items = next;
+
+    if (!saveJournal(data)) {
+      setStorageStatus("Journal削除に失敗しました。", false);
+      return;
+    }
+
+    selectedJournalId = null;
+    renderJournal();
+    openJournalEditor(null);
+    setStorageStatus("Journal記録を削除しました。", true);
+  }
+
+  function clearJournalAll() {
+    if (!saveJournal({ schema:4, items:[] })) {
+      setStorageStatus("Journal全削除に失敗しました。", false);
+      return;
+    }
+
+    selectedJournalId = null;
+    renderJournal();
+    openJournalEditor(null);
+    setStorageStatus("Journalを全削除しました。", true);
+  }
+
+  function journalStats(items) {
+    var s = {
+      total:items.length,
+      planned:0, open:0, win:0, loss:0, be:0, cancel:0,
+      rCount:0, rSum:0, positiveR:0, negativeR:0
+    };
+
+    var i, x, r;
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      if (x.status === "OPEN") s.open += 1;
+      else if (x.status === "WIN") s.win += 1;
+      else if (x.status === "LOSS") s.loss += 1;
+      else if (x.status === "BE") s.be += 1;
+      else if (x.status === "CANCEL") s.cancel += 1;
+      else s.planned += 1;
+
+      if (x.realizedR != null && isFinite(Number(x.realizedR))) {
+        r = Number(x.realizedR);
+        s.rCount += 1;
+        s.rSum += r;
+        if (r > 0) s.positiveR += 1;
+        if (r < 0) s.negativeR += 1;
+      }
+    }
+    return s;
+  }
+
+  function renderJournalStats(items) {
+    var s = journalStats(items);
+    var closedDirectional = s.win + s.loss;
+    var winRate = closedDirectional > 0 ? (s.win / closedDirectional) * 100 : null;
+    var avgR = s.rCount > 0 ? s.rSum / s.rCount : null;
+
+    var html = "";
+    html += resultRow("記録数", String(s.total));
+    html += resultRow("PLANNED / OPEN", s.planned + " / " + s.open);
+    html += resultRow("WIN / LOSS / BE", s.win + " / " + s.loss + " / " + s.be);
+    html += resultRow("CANCEL", String(s.cancel));
+    html += resultRow("WIN率*",
+      winRate == null ? "—" : winRate.toFixed(1) + "%");
+    html += resultRow("実現R入力数", String(s.rCount));
+    html += resultRow("平均実現R",
+      avgR == null ? "—" : avgR.toFixed(2) + "R",
+      avgR == null ? "" : (avgR >= 0 ? "go" : "stop"));
+    html += resultRow("累計実現R",
+      s.rCount === 0 ? "—" : s.rSum.toFixed(2) + "R",
+      s.rCount === 0 ? "" : (s.rSum >= 0 ? "go" : "stop"));
+
+    el("journalStats").innerHTML = html;
+
+    var nav = el("navJournal");
+    if (nav) nav.innerHTML = String(s.total);
+  }
+
+  function formatJournalDate(ms) {
+    if (!ms) return "—";
+    var d = new Date(ms);
+    return pad2(d.getMonth() + 1) + "/" + pad2(d.getDate()) + " " +
+      pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
+
+  function renderJournalTable(items) {
+    var tbody = el("journalTable").getElementsByTagName("tbody")[0];
+
+    if (items.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="11" style="text-align:center;color:#77818c">Journal記録なし</td></tr>';
+      return;
+    }
+
+    var html = "", i, x, d, rr, rrText, rText;
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      d = x.digits == null ? 5 : Math.max(0, Math.min(8, Number(x.digits)));
+      rr = x.plannedRR;
+      rrText = rr == null || !isFinite(Number(rr)) ? "—" : Number(rr).toFixed(2);
+      rText = x.realizedR == null || !isFinite(Number(x.realizedR))
+        ? "—" : Number(x.realizedR).toFixed(2) + "R";
+
+      html += "<tr>" +
+        "<td>" + esc(formatJournalDate(x.createdAt)) + "</td>" +
+        "<td>" + esc(x.label || x.symbol) + "</td>" +
+        "<td>" + esc(x.timeframe || "—") + "</td>" +
+        "<td>" + esc(x.direction || "—") + "</td>" +
+        '<td class="' + journalStatusClass(x.status) + '">' + esc(x.status || "PLANNED") + "</td>" +
+        "<td>" + Number(x.entry).toFixed(d) + "</td>" +
+        "<td>" + Number(x.sl).toFixed(d) + "</td>" +
+        "<td>" + rrText + "</td>" +
+        "<td>" + commas(x.risk) + " " + esc(x.acctCcy || "") + "</td>" +
+        "<td>" + rText + "</td>" +
+        '<td><button type="button" class="smallDanger" data-jr-edit="' + esc(x.id) + '">編集</button></td>' +
+        "</tr>";
+    }
+
+    tbody.innerHTML = html;
+
+    if (tbody.querySelectorAll) {
+      var buttons = tbody.querySelectorAll("[data-jr-edit]");
+      for (i = 0; i < buttons.length; i++) {
+        buttons[i].onclick = function () {
+          openJournalEditor(this.getAttribute("data-jr-edit"));
+        };
+      }
+    }
+  }
+
+  function renderJournal() {
+    var data = getJournal();
+    renderJournalStats(data.items);
+    renderJournalTable(data.items);
+
+    if (selectedJournalId && !getJournalItem(selectedJournalId)) {
+      openJournalEditor(null);
+    }
+  }
+
+  function hookPhase4Controls() {
+    var saveBtn = el("saveToJournal");
+    var saveGridBtn = el("saveGridToJournal");
+    var updateBtn = el("journalUpdate");
+    var deleteBtn = el("journalDelete");
+    var clearBtn = el("clearJournal");
+
+    if (saveBtn) saveBtn.onclick = saveCurrentToJournal;
+    if (saveGridBtn) saveGridBtn.onclick = saveCurrentToJournal;
+    if (updateBtn) updateBtn.onclick = updateSelectedJournal;
+    if (deleteBtn) deleteBtn.onclick = deleteSelectedJournal;
+    if (clearBtn) clearBtn.onclick = clearJournalAll;
+  }
+
+
+  /* ================= PHASE 3: PORTFOLIO RISK ================= */
+
+  var PORTFOLIO_KEY = "depaFX.portfolio.v3";
+
+  function assetMeta(symbol) {
+    var fx = {
+      USD:1, EUR:1, GBP:1, AUD:1, NZD:1, CAD:1, CHF:1, JPY:1
+    };
+
+    if (symbol === "XAUUSD") return { assetClass:"METAL", base:"XAU", quote:"USD" };
+    if (symbol === "XAGUSD") return { assetClass:"METAL", base:"XAG", quote:"USD" };
+    if (symbol === "WTI") return { assetClass:"ENERGY", base:"WTI", quote:"USD" };
+    if (symbol === "JP225") return { assetClass:"INDEX", base:"JP225", quote:"JPY" };
+    if (symbol === "NAS100") return { assetClass:"INDEX", base:"NAS100", quote:"USD" };
+    if (symbol === "BTCUSD") return { assetClass:"CRYPTO", base:"BTC", quote:"USD" };
+    if (symbol === "ETHUSD") return { assetClass:"CRYPTO", base:"ETH", quote:"USD" };
+
+    if (symbol && symbol.length === 6) {
+      var base = symbol.substring(0, 3);
+      var quote = symbol.substring(3, 6);
+      if (fx[base] && fx[quote]) {
+        return { assetClass:"FX", base:base, quote:quote };
+      }
+    }
+    return { assetClass:"OTHER", base:null, quote:null };
+  }
+
+  function getPortfolio() {
+    var data = storageRead(PORTFOLIO_KEY, { schema:3, items:[] });
+    if (!data || !data.items || typeof data.items.length !== "number") {
+      data = { schema:3, items:[] };
+    }
+    return data;
+  }
+
+  function savePortfolio(data) {
+    return storageWrite(PORTFOLIO_KEY, data);
+  }
+
+  function makePortfolioId() {
+    return "pf-" + new Date().getTime() + "-" + Math.floor(Math.random() * 1000000);
+  }
+
+  function portfolioTotals(items) {
+    var out = {
+      risk:0, margin:0, count:items.length,
+      fxCount:0, otherCount:0, legs:{}, acctCcy:null, mixedCurrency:false
+    };
+    var i, p, meta;
+
+    for (i = 0; i < items.length; i++) {
+      p = items[i];
+
+      if (out.acctCcy == null) out.acctCcy = p.acctCcy || null;
+      if (out.acctCcy !== (p.acctCcy || null)) out.mixedCurrency = true;
+
+      out.risk += Number(p.risk) || 0;
+      out.margin += Number(p.margin) || 0;
+
+      meta = assetMeta(p.symbol);
+      if (meta.assetClass === "FX") {
+        out.fxCount += 1;
+        if (!out.legs[meta.base]) out.legs[meta.base] = { long:0, short:0 };
+        if (!out.legs[meta.quote]) out.legs[meta.quote] = { long:0, short:0 };
+
+        if (p.direction === "BUY") {
+          out.legs[meta.base].long += 1;
+          out.legs[meta.quote].short += 1;
+        } else {
+          out.legs[meta.base].short += 1;
+          out.legs[meta.quote].long += 1;
+        }
+      } else {
+        out.otherCount += 1;
+      }
+    }
+
+    return out;
+  }
+
+  function portfolioGates(totals, balanceNow, currentAcctCcy) {
+    var riskCapPct = n("portfolioRiskCapPct");
+    var marginCapPct = n("portfolioMarginCapPct");
+    var legCap = n("currencyLegCap");
+
+    riskCapPct = riskCapPct == null ? 3.0 : riskCapPct;
+    marginCapPct = marginCapPct == null ? 60 : marginCapPct;
+    legCap = legCap == null ? 3 : Math.max(1, Math.round(legCap));
+
+    var currencyOk = !totals.mixedCurrency &&
+      (totals.count === 0 || totals.acctCcy === currentAcctCcy);
+
+    var riskPct = (currencyOk && balanceNow > 0) ? (totals.risk / balanceNow) * 100 : 0;
+    var marginPct = (currencyOk && balanceNow > 0) ? (totals.margin / balanceNow) * 100 : 0;
+
+    var maxLeg = 0, maxLegCcy = "—", maxLegDir = "";
+    var ccy;
+    for (ccy in totals.legs) {
+      if (!Object.prototype.hasOwnProperty.call(totals.legs, ccy)) continue;
+
+      if (totals.legs[ccy].long > maxLeg) {
+        maxLeg = totals.legs[ccy].long;
+        maxLegCcy = ccy;
+        maxLegDir = "LONG";
+      }
+      if (totals.legs[ccy].short > maxLeg) {
+        maxLeg = totals.legs[ccy].short;
+        maxLegCcy = ccy;
+        maxLegDir = "SHORT";
+      }
+    }
+
+    return {
+      currencyOk:currencyOk,
+      riskPct:riskPct, marginPct:marginPct,
+      riskCapPct:riskCapPct, marginCapPct:marginCapPct,
+      legCap:legCap, maxLeg:maxLeg, maxLegCcy:maxLegCcy, maxLegDir:maxLegDir,
+      riskOk:currencyOk && balanceNow > 0 && riskPct <= riskCapPct,
+      marginOk:currencyOk && balanceNow > 0 && marginPct <= marginCapPct,
+      legOk:maxLeg <= legCap
+    };
+  }
+
+  function prospectivePortfolioGate(snapshot) {
+    var data = getPortfolio();
+    var next = data.items.slice(0);
+    next.push(snapshot);
+    return portfolioGates(portfolioTotals(next), n("balance") || 0, value("acctCcy"));
+  }
+
+  function currentPortfolioSnapshot() {
+    var R = lastResult;
+    if (!R || R.state === "INVALID") return null;
+
+    var symbol = value("symbol");
+    var S = SYMBOLS[symbol];
+    var digits = R.S && R.S.digits != null ? R.S.digits : S.digits;
+
+    if (R.mode === "GRID") {
+      if (!R.cumLot || R.cumLot <= 0 || !R.worstLoss || R.worstLoss <= 0) return null;
+      return {
+        id:makePortfolioId(),
+        createdAt:new Date().getTime(),
+        symbol:symbol,
+        label:S.label,
+        direction:R.dir > 0 ? "BUY" : "SELL",
+        state:R.state + "/GRID",
+        timeframe:value("tf"),
+        entryType:"GRID",
+        entry:R.avg,
+        sl:R.finalSL,
+        tp1:R.tpAll,
+        tp2:null,
+        lot:R.cumLot,
+        risk:R.worstLoss,
+        margin:R.marginReq,
+        acctCcy:R.acctCcy,
+        riskUsage:R.riskUsage,
+        digits:digits
+      };
+    }
+
+    if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
+
+    return {
+      id:makePortfolioId(),
+      createdAt:new Date().getTime(),
+      symbol:symbol,
+      label:S.label,
+      direction:R.dir > 0 ? "BUY" : "SELL",
+      state:R.state,
+      timeframe:value("tf"),
+      entryType:value("entryType"),
+      entry:R.entry,
+      sl:R.sl,
+      tp1:R.tp1,
+      tp2:R.tp2,
+      lot:R.lot,
+      risk:R.riskReal,
+      margin:R.marginReq,
+      acctCcy:R.acctCcy,
+      riskUsage:R.riskUsage,
+      digits:digits
+    };
+  }
+
+  function addCurrentToPortfolio() {
+    var R = lastResult;
+
+    if (!R || R.state === "INVALID") {
+      setStorageStatus("Portfolio追加前に必須入力を完了してください。", false);
+      return;
+    }
+    if (R.state === "NO-TRADE") {
+      setStorageStatus("ゲート不合格の建玉はRisk予約できません。", false);
+      return;
+    }
+
+    var snap = currentPortfolioSnapshot();
+    if (!snap) {
+      setStorageStatus("有効なRisk予約を作成できません。", false);
+      return;
+    }
+
+    var existing = getPortfolio();
+    if (existing.items.length > 0) {
+      var exCcy = existing.items[0].acctCcy;
+      if (exCcy !== snap.acctCcy) {
+        setStorageStatus("Portfolioの口座通貨が一致しません。既存Portfolioを整理してから追加してください。", false);
+        return;
+      }
+    }
+
+    var pg = prospectivePortfolioGate(snap);
+    if (!pg.currencyOk || !pg.riskOk || !pg.marginOk || !pg.legOk) {
+      var why = [];
+      if (!pg.currencyOk) why.push("口座通貨");
+      if (!pg.riskOk) why.push("総リスク");
+      if (!pg.marginOk) why.push("総証拠金");
+      if (!pg.legOk) why.push("通貨集中");
+      setStorageStatus("追加するとPortfolio Gateを超過します: " + why.join(" / "), false);
+      return;
+    }
+
+    existing.items.push(snap);
+    if (!savePortfolio(existing)) {
+      setStorageStatus("Portfolioの保存に失敗しました。", false);
+      return;
+    }
+
+    renderPortfolio();
+    setStorageStatus("Risk予約: " + snap.label + " " + snap.direction + " を追加しました。", true);
+  }
+
+  function removePortfolioItem(id) {
+    var data = getPortfolio();
+    var next = [];
+    var i;
+    for (i = 0; i < data.items.length; i++) {
+      if (data.items[i].id !== id) next.push(data.items[i]);
+    }
+    data.items = next;
+    savePortfolio(data);
+    renderPortfolio();
+  }
+
+  function clearPortfolioAll() {
+    savePortfolio({ schema:3, items:[] });
+    renderPortfolio();
+    setStorageStatus("Portfolioを全削除しました。", true);
+  }
+
+  function renderPortfolioGates(g, hasItems) {
+    var html = "";
+
+    function gate(id, name, ok, detail) {
+      html += '<li>' +
+        '<span class="gateCode">' + esc(id) + '</span>' +
+        '<span class="gateState ' + (ok ? 'pass' : 'fail') + '">' + (ok ? 'PASS' : 'FAIL') + '</span>' +
+        '<span class="gateName">' + esc(name) + '</span>' +
+        '<span class="gateDetail">' + esc(detail) + '</span>' +
+        '</li>';
+    }
+
+    gate("PF-00", "口座通貨整合", g.currencyOk,
+      g.currencyOk ? "全予約が同一口座通貨" : "口座通貨が混在/現在設定と不一致");
+
+    gate("PF-01", "名目総リスク", hasItems ? g.riskOk : true,
+      hasItems
+        ? "現在 " + g.riskPct.toFixed(2) + "% / 上限 " + g.riskCapPct.toFixed(2) + "%"
+        : "Risk予約なし");
+
+    gate("PF-02", "登録時証拠金合計", hasItems ? g.marginOk : true,
+      hasItems
+        ? "現在 " + g.marginPct.toFixed(1) + "% / 上限 " + g.marginCapPct.toFixed(1) + "%"
+        : "Risk予約なし");
+
+    gate("PF-03", "同方向通貨集中", g.legOk,
+      "最大 " + g.maxLegCcy + " " + g.maxLegDir + " " + g.maxLeg +
+      " legs / 上限 " + g.legCap);
+
+    el("portfolioGates").innerHTML = html;
+  }
+
+  function renderCurrencyConcentration(legs) {
+    var names = [], ccy;
+    for (ccy in legs) {
+      if (Object.prototype.hasOwnProperty.call(legs, ccy)) names.push(ccy);
+    }
+    names.sort();
+
+    if (names.length === 0) {
+      el("currencyConcentration").innerHTML =
+        '<div class="concentrationRow"><span class="ccy">—</span>' +
+        '<span>FX予約なし</span><span></span><span></span></div>';
+      return;
+    }
+
+    var html = "", i, x;
+    for (i = 0; i < names.length; i++) {
+      x = legs[names[i]];
+      html += '<div class="concentrationRow">' +
+        '<span class="ccy">' + esc(names[i]) + '</span>' +
+        '<span class="longLeg">LONG ' + x.long + '</span>' +
+        '<span class="shortLeg">SHORT ' + x.short + '</span>' +
+        '<span class="count">Net ' + (x.long - x.short) + '</span>' +
+        '</div>';
+    }
+    el("currencyConcentration").innerHTML = html;
+  }
+
+  function renderPortfolioTable(items) {
+    var tbody = el("portfolioTable").getElementsByTagName("tbody")[0];
+    if (items.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="9" style="text-align:center;color:#77818c">Risk予約なし</td></tr>';
+      return;
+    }
+
+    var html = "", i, p, cls;
+    for (i = 0; i < items.length; i++) {
+      p = items[i];
+      cls = p.direction === "BUY" ? "buy" : "sell";
+
+      var pd = p.digits == null ? 5 : Math.max(0, Math.min(8, Number(p.digits)));
+      html += "<tr>" +
+        "<td>" + esc(p.label || p.symbol) + "</td>" +
+        '<td><span class="pill ' + cls + '">' + esc(p.direction) + "</span></td>" +
+        "<td>" + esc(p.state || "RESERVED") + "</td>" +
+        "<td>" + Number(p.lot).toFixed(2) + "</td>" +
+        "<td>" + Number(p.entry).toFixed(pd) + "</td>" +
+        "<td>" + Number(p.sl).toFixed(pd) + "</td>" +
+        "<td>" + commas(p.risk) + " " + esc(p.acctCcy || "") + "</td>" +
+        "<td>" + commas(p.margin) + " " + esc(p.acctCcy || "") + "</td>" +
+        '<td><button type="button" class="smallDanger" data-pf-remove="' + esc(p.id) + '">削除</button></td>' +
+        "</tr>";
+    }
+    tbody.innerHTML = html;
+
+    if (tbody.querySelectorAll) {
+      var buttons = tbody.querySelectorAll("[data-pf-remove]");
+      for (i = 0; i < buttons.length; i++) {
+        buttons[i].onclick = function () {
+          removePortfolioItem(this.getAttribute("data-pf-remove"));
+        };
+      }
+    }
+  }
+
+  function renderPortfolio() {
+    var data = getPortfolio();
+    var totals = portfolioTotals(data.items);
+    var bal = n("balance") || 0;
+    var acct = value("acctCcy");
+    var g = portfolioGates(totals, bal, acct);
+
+    var summary = "";
+    var amountCcy = g.currencyOk ? (totals.acctCcy || acct) : "MIXED";
+    var riskText = g.currencyOk
+      ? commas(totals.risk) + " " + amountCcy
+      : "— 口座通貨不一致";
+    var marginText = g.currencyOk
+      ? commas(totals.margin) + " " + amountCcy
+      : "— 口座通貨不一致";
+    var riskPctText = g.currencyOk ? g.riskPct.toFixed(2) + "%" : "—";
+    var marginPctText = g.currencyOk ? g.marginPct.toFixed(1) + "%" : "—";
+
+    summary += resultRow("Risk予約数", String(totals.count));
+    summary += resultRow("名目総リスク", riskText,
+      totals.count ? (g.riskOk ? "go" : "stop") : "");
+    summary += resultRow("残高比リスク", riskPctText,
+      totals.count ? (g.riskOk ? "go" : "stop") : "");
+    summary += resultRow("登録時証拠金合計", marginText);
+    summary += resultRow("残高比証拠金", marginPctText,
+      totals.count ? (g.marginOk ? "go" : "stop") : "");
+    summary += resultRow("FX予約", String(totals.fxCount));
+    summary += resultRow("その他資産", String(totals.otherCount));
+
+    el("portfolioSummary").innerHTML = summary;
+    renderPortfolioGates(g, totals.count > 0);
+    renderPortfolioTable(data.items);
+    renderCurrencyConcentration(totals.legs);
+
+    var nav = el("navPortfolio");
+    if (nav) nav.innerHTML = g.currencyOk ? g.riskPct.toFixed(1) + "%" : "CCY";
+  }
+
+  function hookPhase3Controls() {
+    var addBtn = el("addToPortfolio");
+    var clearBtn = el("clearPortfolio");
+    if (addBtn) addBtn.onclick = addCurrentToPortfolio;
+    if (clearBtn) clearBtn.onclick = clearPortfolioAll;
+  }
+
+
+  /* ================= PHASE 2: LOCAL SAVE / PRESETS ================= */
+
+  var WORKSPACE_KEY = "depaFX.workspace.v2";
+  var PRESET_KEY = "depaFX.brokerPresets.v2";
+  var workspaceTimer = null;
+  var suppressWorkspaceSave = false;
+
+  var WORKSPACE_IDS = [
+    "symbol", "tf", "d1bias", "entryType", "depth",
+    "acctCcy", "balance", "riskPct", "leverage",
+    "spreadPips", "slippagePips", "commission",
+    "stopLevelPips", "freezeLevelPips",
+    "minLot", "maxLot", "lotStep", "marginCapPct",
+    "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
+    "customPip", "customContract", "customDigits",
+    "price", "atr", "usdjpy",
+    "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv",
+    "usdcadConv", "usdchfConv",
+    "swingHigh", "swingLow", "slAnchor",
+    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+  ];
+
+  var BROKER_PRESET_IDS = [
+    "symbol", "acctCcy", "leverage",
+    "spreadPips", "slippagePips", "commission",
+    "stopLevelPips", "freezeLevelPips",
+    "minLot", "maxLot", "lotStep", "marginCapPct",
+    "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
+    "customPip", "customContract", "customDigits"
+  ];
+
+  var MARKET_IDS = [
+    "price", "atr", "usdjpy",
+    "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv",
+    "usdcadConv", "usdchfConv",
+    "swingHigh", "swingLow", "slAnchor"
+  ];
+
+  function storageAvailable() {
+    try {
+      var k = "__depa_storage_test__";
+      window.localStorage.setItem(k, "1");
+      window.localStorage.removeItem(k);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function storageRead(key, fallback) {
+    if (!storageAvailable()) return fallback;
+    try {
+      var raw = window.localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function storageWrite(key, value) {
+    if (!storageAvailable()) return false;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function storageRemove(key) {
+    if (!storageAvailable()) return false;
+    try {
+      window.localStorage.removeItem(key);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function collectValues(ids) {
+    var out = {};
+    var i, node;
+    for (i = 0; i < ids.length; i++) {
+      node = el(ids[i]);
+      if (node) out[ids[i]] = node.value;
+    }
+    return out;
+  }
+
+  function selectHasValue(node, v) {
+    if (!node || node.tagName.toLowerCase() !== "select") return true;
+    var i;
+    for (i = 0; i < node.options.length; i++) {
+      if (node.options[i].value === String(v)) return true;
+    }
+    return false;
+  }
+
+  function applyValues(values) {
+    if (!values) return;
+    var id, node, v;
+    for (id in values) {
+      if (!Object.prototype.hasOwnProperty.call(values, id)) continue;
+      node = el(id);
+      if (!node) continue;
+      v = values[id];
+      if (node.tagName.toLowerCase() === "select" && !selectHasValue(node, v)) continue;
+      node.value = v == null ? "" : String(v);
+    }
+  }
+
+  function pad2(v) {
+    return v < 10 ? "0" + v : String(v);
+  }
+
+  function formatLocalStamp(ms) {
+    if (!ms) return "未保存";
+    var d = new Date(ms);
+    return d.getFullYear() + "/" +
+      pad2(d.getMonth() + 1) + "/" + pad2(d.getDate()) + " " +
+      pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+  }
+
+  function setStorageStatus(message, good) {
+    var box = el("storageStatus");
+    if (box) {
+      box.innerHTML =
+        "<strong>Local Save</strong><br>" +
+        esc(message);
+      box.className = "statusBox " + (good ? "storageGood" : "storageWarn");
+    }
+    var nav = el("navSave");
+    if (nav) nav.innerHTML = good ? "SAVED" : "CHECK";
+  }
+
+  function saveWorkspaceNow() {
+    if (suppressWorkspaceSave) return true;
+
+    if (!storageAvailable()) {
+      setStorageStatus("このブラウザではlocalStorageを利用できません。", false);
+      return false;
+    }
+
+    var payload = {
+      schema: 2,
+      savedAt: new Date().getTime(),
+      values: collectValues(WORKSPACE_IDS)
+    };
+
+    if (!storageWrite(WORKSPACE_KEY, payload)) {
+      setStorageStatus("自動保存に失敗しました。ブラウザの保存設定を確認してください。", false);
+      return false;
+    }
+
+    setStorageStatus("自動保存済み: " + formatLocalStamp(payload.savedAt), true);
+    return true;
+  }
+
+  function scheduleWorkspaceSave() {
+    if (workspaceTimer) window.clearTimeout(workspaceTimer);
+    workspaceTimer = window.setTimeout(function () {
+      workspaceTimer = null;
+      saveWorkspaceNow();
+    }, 180);
+  }
+
+  function restoreWorkspace() {
+    if (!storageAvailable()) {
+      setStorageStatus("このブラウザではlocalStorageを利用できません。", false);
+      return false;
+    }
+
+    var payload = storageRead(WORKSPACE_KEY, null);
+    if (!payload || !payload.values) {
+      setStorageStatus("まだ自動保存データはありません。入力すると自動保存されます。", true);
+      return false;
+    }
+
+    applyValues(payload.values);
+    setStorageStatus("復元済み: " + formatLocalStamp(payload.savedAt) + " — 市場データの鮮度を確認してください。", true);
+    return true;
+  }
+
+  function getPresets() {
+    var data = storageRead(PRESET_KEY, { schema: 2, items: {} });
+    if (!data || !data.items) data = { schema: 2, items: {} };
+    return data;
+  }
+
+  function savePresets(data) {
+    return storageWrite(PRESET_KEY, data);
+  }
+
+  function refreshPresetSelect(selectedName) {
+    var node = el("brokerPresetSelect");
+    if (!node) return;
+
+    var data = getPresets();
+    var names = [];
+    var name;
+
+    for (name in data.items) {
+      if (Object.prototype.hasOwnProperty.call(data.items, name)) names.push(name);
+    }
+
+    names.sort();
+
+    var html = '<option value="">-- 選択 --</option>';
+    var i;
+    for (i = 0; i < names.length; i++) {
+      html += '<option value="' + esc(names[i]) + '">' + esc(names[i]) + "</option>";
+    }
+    node.innerHTML = html;
+
+    if (selectedName && data.items[selectedName]) {
+      node.value = selectedName;
+    }
+  }
+
+  function saveCurrentBrokerPreset() {
+    var nameNode = el("brokerPresetName");
+    var name = nameNode ? String(nameNode.value || "").replace(/^\s+|\s+$/g, "") : "";
+
+    if (!name) {
+      setStorageStatus("Preset名を入力してください。", false);
+      return;
+    }
+
+    if (name === "__proto__" || name === "prototype" || name === "constructor" || name === "hasOwnProperty") {
+      setStorageStatus("そのPreset名は使用できません。別の名前にしてください。", false);
+      return;
+    }
+
+    var data = getPresets();
+    data.items[name] = {
+      name: name,
+      savedAt: new Date().getTime(),
+      values: collectValues(BROKER_PRESET_IDS)
+    };
+
+    if (!savePresets(data)) {
+      setStorageStatus("Presetの保存に失敗しました。", false);
+      return;
+    }
+
+    refreshPresetSelect(name);
+    saveWorkspaceNow();
+    setStorageStatus("Preset「" + name + "」を保存しました。", true);
+  }
+
+  function loadSelectedBrokerPreset() {
+    var select = el("brokerPresetSelect");
+    var name = select ? select.value : "";
+    if (!name) {
+      setStorageStatus("読込むPresetを選択してください。", false);
+      return;
+    }
+
+    var data = getPresets();
+    var item = data.items[name];
+    if (!item || !item.values) {
+      setStorageStatus("選択Presetが見つかりません。", false);
+      refreshPresetSelect();
+      return;
+    }
+
+    applyValues(item.values);
+
+    var nameNode = el("brokerPresetName");
+    if (nameNode) nameNode.value = name;
+
+    render();
+    renderPortfolio();
+    saveWorkspaceNow();
+    setStorageStatus("Preset「" + name + "」を読込みました。銘柄仕様を確認してください。", true);
+  }
+
+  function deleteSelectedBrokerPreset() {
+    var select = el("brokerPresetSelect");
+    var name = select ? select.value : "";
+    if (!name) {
+      setStorageStatus("削除するPresetを選択してください。", false);
+      return;
+    }
+
+    var data = getPresets();
+    if (data.items[name]) delete data.items[name];
+
+    if (!savePresets(data)) {
+      setStorageStatus("Presetの削除に失敗しました。", false);
+      return;
+    }
+
+    var nameNode = el("brokerPresetName");
+    if (nameNode && nameNode.value === name) nameNode.value = "";
+
+    refreshPresetSelect();
+    setStorageStatus("Preset「" + name + "」を削除しました。", true);
+  }
+
+  function clearMarketOnly() {
+    var i, node;
+    for (i = 0; i < MARKET_IDS.length; i++) {
+      node = el(MARKET_IDS[i]);
+      if (node) node.value = "";
+    }
+    render();
+    saveWorkspaceNow();
+    setStorageStatus("市場入力をクリアしました。Broker/Risk設定は保持しています。", true);
+  }
+
+  function resetWorkspaceOnly() {
+    suppressWorkspaceSave = true;
+
+    if (workspaceTimer) {
+      window.clearTimeout(workspaceTimer);
+      workspaceTimer = null;
+    }
+
+    if (!storageRemove(WORKSPACE_KEY)) {
+      suppressWorkspaceSave = false;
+      setStorageStatus("自動保存データの削除に失敗しました。", false);
+      return;
+    }
+
+    setStorageStatus("自動保存データを初期化しました。Presetは保持されています。初期値へ戻します。", true);
+
+    window.setTimeout(function () {
+      window.location.reload();
+    }, 120);
+  }
+
+  function hookPhase2Controls() {
+    var saveBtn = el("saveBrokerPreset");
+    var loadBtn = el("loadBrokerPreset");
+    var deleteBtn = el("deleteBrokerPreset");
+    var clearMarketBtn = el("clearMarketInputs");
+    var clearWorkspaceBtn = el("clearWorkspace");
+    var presetSelect = el("brokerPresetSelect");
+
+    if (saveBtn) saveBtn.onclick = saveCurrentBrokerPreset;
+    if (loadBtn) loadBtn.onclick = loadSelectedBrokerPreset;
+    if (deleteBtn) deleteBtn.onclick = deleteSelectedBrokerPreset;
+    if (clearMarketBtn) clearMarketBtn.onclick = clearMarketOnly;
+    if (clearWorkspaceBtn) clearWorkspaceBtn.onclick = resetWorkspaceOnly;
+
+    if (presetSelect) {
+      presetSelect.onchange = function () {
+        var nameNode = el("brokerPresetName");
+        if (nameNode && presetSelect.value) nameNode.value = presetSelect.value;
+      };
+    }
+  }
+
+  function handleUserInput(e) {
+    render();
+    renderPortfolio();
+    scheduleWorkspaceSave();
+
+    var t = e ? (e.target || e.srcElement) : null;
+    var id = t && t.id ? t.id : "";
+
+    if (id === "price" || id === "atr") {
+      evaluateActiveWatch("MANUAL");
+    } else {
+      renderWatchPanel();
+    }
+  }
+
+
   function hookInputs() {
     var ids = [
       "symbol", "tf", "acctCcy", "balance", "riskPct", "leverage", "usdjpy",
-      "spreadPips", "commission", "stopLevelPips", "minLot", "lotStep",
+      "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv", "usdcadConv", "usdchfConv",
+      "spreadPips", "slippagePips", "commission", "stopLevelPips", "freezeLevelPips",
+      "minLot", "maxLot", "lotStep", "marginCapPct",
+      "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
+      "customPip", "customContract", "customDigits",
       "price", "atr", "swingHigh", "swingLow", "slAnchor", "d1bias",
       "entryType", "depth", "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
     ];
@@ -1096,18 +4412,38 @@ td:first-child {
       if (!node) continue;
 
       if (node.addEventListener) {
-        node.addEventListener("change", render, false);
-        node.addEventListener("input", render, false);
+        node.addEventListener("change", handleUserInput, false);
+        node.addEventListener("input", handleUserInput, false);
       } else if (node.attachEvent) {
-        node.attachEvent("onchange", render);
-        node.attachEvent("onkeyup", render);
+        node.attachEvent("onchange", handleUserInput);
+        node.attachEvent("onkeyup", handleUserInput);
       }
     }
   }
 
   function init() {
+    restoreWorkspace();
+    restoreMarketDataSettings();
     hookInputs();
+    hookPhase2Controls();
+    hookPhase3Controls();
+    hookPhase4Controls();
+    hookPhase5Controls();
+    hookPhase7Controls();
+    hookPhase8Controls();
+    refreshPresetSelect();
     render();
+    renderPortfolio();
+    renderJournal();
+    renderMarketDataStatus();
+    renderWatchPanel();
+    restartMarketAutoRefresh();
+
+    if (window.addEventListener) {
+      window.addEventListener("pagehide", saveWorkspaceNow, false);
+    } else if (window.attachEvent) {
+      window.attachEvent("onunload", saveWorkspaceNow);
+    }
   }
 
   if (document.addEventListener) document.addEventListener("DOMContentLoaded", init, false);
@@ -1116,6 +4452,12 @@ td:first-child {
 
   </script>
 
+  <meta name="theme-color" content="#4d6f92">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DEPA FX">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 </head>
 
 <body>
@@ -1126,19 +4468,27 @@ td:first-child {
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v1.0</li>
+    <li class="group">ENTRY CONSOLE v2.7-P8</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
     </li>
-    <li><a href="#strategy">銘柄と戦術 <span id="navStrategy" class="navValue">USD/JPY / H1</span></a></li>
+    <li><a href="#strategy">銘柄と戦術 <span id="navStrategy" class="navValue">XAU/USD / H1</span></a></li>
     <li><a href="#account">口座とブローカー <span id="navAccount" class="navValue">未入力</span></a></li>
     <li><a href="#market">チャート入力 <span id="navMarket" class="navValue">未入力</span></a></li>
+    <li><a href="#marketdata">Market Data <span id="navData" class="navValue">MANUAL</span></a></li>
+    <li><a href="#watch">WATCH / Alerts <span id="navWatch" class="navValue">OFF</span></a></li>
     <li><a href="#gates">ゲート判定 <span id="navGates" class="navValue">G-01</span></a></li>
+    <li><a href="#riskengine">Risk Engine <span id="navRisk" class="navValue">—</span></a></li>
+    <li><a href="#positionmap">Position Map <span id="navChart" class="navValue">—</span></a></li>
+    <li><a href="#portfolio">Portfolio Risk <span id="navPortfolio" class="navValue">0.0%</span></a></li>
+    <li><a href="#journal">Trade Journal <span id="navJournal" class="navValue">0</span></a></li>
     <li id="navPositionRow"><a href="#position">建玉設計 <span id="navPosition" class="navValue">—</span></a></li>
     <li id="navManagementRow"><a href="#management">建玉後の管理 <span class="navValue">—</span></a></li>
     <li id="navGridRow" style="display:none"><a href="#grid">グリッド構成 <span id="navGrid" class="navValue">—</span></a></li>
     <li class="group">SYSTEM</li>
+    <li><a href="#storage">保存 / Broker Preset <span id="navSave" class="navValue">LOCAL</span></a></li>
+    <li><a href="#pwa">App / Offline <span id="navPwa" class="navValue">WEB</span></a></li>
     <li><a href="#about">仕様 / 注意事項</a></li>
   </ul>
 
@@ -1148,18 +4498,65 @@ td:first-child {
       <div class="row">
         <label for="symbol">銘柄</label>
         <select id="symbol">
-          <option value="USDJPY">USD/JPY</option>
-          <option value="EURJPY">EUR/JPY</option>
-          <option value="GBPJPY">GBP/JPY</option>
-          <option value="EURUSD">EUR/USD</option>
-          <option value="GBPUSD">GBP/USD</option>
-          <option value="AUDUSD">AUD/USD</option>
-          <option value="XAUUSD">XAU/USD</option>
+          <optgroup label="JPY Pairs">
+            <option value="USDJPY">USD/JPY</option>
+            <option value="EURJPY">EUR/JPY</option>
+            <option value="GBPJPY">GBP/JPY</option>
+            <option value="AUDJPY">AUD/JPY</option>
+            <option value="NZDJPY">NZD/JPY</option>
+            <option value="CADJPY">CAD/JPY</option>
+            <option value="CHFJPY">CHF/JPY</option>
+          </optgroup>
+          <optgroup label="USD Pairs">
+            <option value="EURUSD">EUR/USD</option>
+            <option value="GBPUSD">GBP/USD</option>
+            <option value="AUDUSD">AUD/USD</option>
+            <option value="NZDUSD">NZD/USD</option>
+            <option value="USDCAD">USD/CAD</option>
+            <option value="USDCHF">USD/CHF</option>
+          </optgroup>
+          <optgroup label="EUR Crosses">
+            <option value="EURGBP">EUR/GBP</option>
+            <option value="EURAUD">EUR/AUD</option>
+            <option value="EURNZD">EUR/NZD</option>
+            <option value="EURCAD">EUR/CAD</option>
+            <option value="EURCHF">EUR/CHF</option>
+          </optgroup>
+          <optgroup label="GBP Crosses">
+            <option value="GBPAUD">GBP/AUD</option>
+            <option value="GBPNZD">GBP/NZD</option>
+            <option value="GBPCAD">GBP/CAD</option>
+            <option value="GBPCHF">GBP/CHF</option>
+          </optgroup>
+          <optgroup label="AUD / NZD / CAD Crosses">
+            <option value="AUDNZD">AUD/NZD</option>
+            <option value="AUDCAD">AUD/CAD</option>
+            <option value="AUDCHF">AUD/CHF</option>
+            <option value="NZDCAD">NZD/CAD</option>
+            <option value="NZDCHF">NZD/CHF</option>
+            <option value="CADCHF">CAD/CHF</option>
+          </optgroup>
+          <optgroup label="Metals">
+            <option value="XAUUSD" selected>XAU/USD</option>
+            <option value="XAGUSD">XAG/USD</option>
+          </optgroup>
+          <optgroup label="Indices / Energy">
+            <option value="WTI">WTI</option>
+            <option value="JP225">JP225</option>
+            <option value="NAS100">NAS100</option>
+          </optgroup>
+          <optgroup label="Crypto">
+            <option value="BTCUSD">BTC/USD</option>
+            <option value="ETHUSD">ETH/USD</option>
+          </optgroup>
         </select>
       </div>
       <div class="row">
         <label for="tf">トリガー時間足</label>
         <select id="tf">
+          <option value="M1">M1</option>
+          <option value="M3">M3</option>
+          <option value="M5">M5</option>
           <option value="M15">M15</option>
           <option value="H1" selected>H1</option>
           <option value="H4">H4</option>
@@ -1187,7 +4584,7 @@ td:first-child {
         <select id="depth">
           <option value="0.382">38.2%</option>
           <option value="0.5">50.0%</option>
-          <option value="0.618" selected>61.8%</option>
+          <option value="0.618">61.8%</option>
           <option value="0.786">78.6%</option>
         </select>
       </div>
@@ -1209,11 +4606,32 @@ td:first-child {
       <div class="row"><label for="riskPct">許容リスク %</label><input id="riskPct" type="number" step="any" value="1.0"></div>
       <div class="row"><label for="leverage">レバレッジ</label><input id="leverage" type="number" step="1" value="500"></div>
       <div class="row"><label for="spreadPips">スプレッド pips</label><input id="spreadPips" type="number" step="any" value="0.8"></div>
+      <div class="row"><label for="slippagePips">想定スリッページ pips</label><input id="slippagePips" type="number" step="any" value="0"></div>
       <div class="row"><label for="commission">手数料 /lot 往復</label><input id="commission" type="number" step="any" value="0"></div>
       <div class="row"><label for="stopLevelPips">ストップレベル pips</label><input id="stopLevelPips" type="number" step="any" value="0"></div>
+      <div class="row"><label for="freezeLevelPips">Freeze level pips</label><input id="freezeLevelPips" type="number" step="any" value="0"></div>
       <div class="row"><label for="minLot">最小ロット</label><input id="minLot" type="number" step="any" value="0.01"></div>
+      <div class="row"><label for="maxLot">最大ロット / 1注文</label><input id="maxLot" type="number" step="any" placeholder="空欄=上限未設定"></div>
       <div class="row"><label for="lotStep">ロット刻み</label><input id="lotStep" type="number" step="any" value="0.01"></div>
+      <div class="row"><label for="marginCapPct">証拠金上限 %残高</label><input id="marginCapPct" type="number" step="any" value="50"></div>
+      <div class="row"><label for="portfolioRiskCapPct">Portfolio Risk上限 %残高</label><input id="portfolioRiskCapPct" type="number" step="any" value="3.0"></div>
+      <div class="row"><label for="portfolioMarginCapPct">Portfolio証拠金上限 %残高</label><input id="portfolioMarginCapPct" type="number" step="any" value="60"></div>
+      <div class="row"><label for="currencyLegCap">同方向通貨Leg上限</label><input id="currencyLegCap" type="number" step="1" value="3"></div>
+      <div class="row"><label for="minRR">最低RR</label><input id="minRR" type="number" step="any" value="1.5"></div>
+      <div id="customSpecFields" style="display:none">
+        <div class="row"><label for="customPip">pip / 価格単位</label><input id="customPip" type="number" step="any" placeholder="ブローカー仕様を入力"></div>
+        <div class="row"><label for="customContract">1 lot 契約サイズ</label><input id="customContract" type="number" step="any" placeholder="ブローカー仕様を入力"></div>
+        <div class="row"><label for="customDigits">表示桁数</label><input id="customDigits" type="number" step="1" min="0" max="8" placeholder="例 2"></div>
+      </div>
     </fieldset>
+    <div id="customSpecNote" class="panelNote" style="display:none">
+      WTI / JP225 / NAS100 / BTCUSD / ETHUSD は、ブローカーによって契約サイズ・tick/pip・最小Lotが異なります。
+      正しいLot・損失・証拠金計算のため、使用ブローカーの銘柄仕様を入力してください。
+    </div>
+    <div class="panelNote">
+      Risk Engine v2では、SL本体に加えてスプレッド・往復手数料・想定スリッページを含めてLotを算出します。
+      手数料は「口座通貨 / 1lot / 往復」の金額として入力してください。Freeze levelは管理時の参考値で、初回建玉の合否には直接使用しません。
+    </div>
   </div>
 
   <!-- MARKET -->
@@ -1221,7 +4639,15 @@ td:first-child {
     <fieldset>
       <div class="row"><label for="price">現在値</label><input id="price" type="number" step="any" placeholder="—"></div>
       <div class="row"><label for="atr">ATR（価格単位）</label><input id="atr" type="number" step="any" placeholder="—"></div>
-      <div class="row"><label for="usdjpy">換算 USDJPY</label><input id="usdjpy" type="number" step="any" placeholder="不要なら空欄"></div>
+      <div class="row"><label for="usdjpy">換算 USDJPY</label><input id="usdjpy" type="number" step="any" placeholder="例 150.00"></div>
+      <div id="extraFxConversion">
+        <div class="row"><label for="eurusdConv">換算 EURUSD</label><input id="eurusdConv" type="number" step="any" placeholder="必要時のみ"></div>
+        <div class="row"><label for="gbpusdConv">換算 GBPUSD</label><input id="gbpusdConv" type="number" step="any" placeholder="必要時のみ"></div>
+        <div class="row"><label for="audusdConv">換算 AUDUSD</label><input id="audusdConv" type="number" step="any" placeholder="必要時のみ"></div>
+        <div class="row"><label for="nzdusdConv">換算 NZDUSD</label><input id="nzdusdConv" type="number" step="any" placeholder="必要時のみ"></div>
+        <div class="row"><label for="usdcadConv">換算 USDCAD</label><input id="usdcadConv" type="number" step="any" placeholder="必要時のみ"></div>
+        <div class="row"><label for="usdchfConv">換算 USDCHF</label><input id="usdchfConv" type="number" step="any" placeholder="必要時のみ"></div>
+      </div>
 
       <div id="swingFields">
         <div class="row"><label for="swingHigh">直近スイング高値</label><input id="swingHigh" type="number" step="any"></div>
@@ -1236,7 +4662,150 @@ td:first-child {
         <div class="row"><label for="gridMult">ロット倍率</label><input id="gridMult" type="number" step="any" value="1.0"></div>
       </div>
     </fieldset>
-    <div class="panelNote">確定足の値を入力してください。React版と同じく、入力が変わるたびに自動再計算します。</div>
+    <div class="panelNote">
+      現在値とATRは手入力のまま利用できます。Market Data画面からAPI取得した場合だけ、この2項目を同時更新します。
+      API取得に失敗した場合は既存の手入力値を上書きしません。<br>
+      クロス通貨では、口座通貨へpip価値を換算するために必要な換算レートだけ入力してください。
+      例：EUR/GBPなら GBPUSD、USD/CADなら USDCAD。JPY口座では必要に応じてUSDJPYも使用します。
+    </div>
+    <div class="actionPanel">
+      <button id="openMarketData" class="actionButton" type="button">Market Data 設定 / 取得</button>
+    </div>
+  </div>
+
+
+  <!-- MARKET DATA -->
+  <div id="marketdata" title="Market Data">
+    <div id="marketDataStatus" class="marketDataStatus">
+      <strong>MANUAL</strong><br>
+      API未取得。現在値とATRは手入力を使用します。
+    </div>
+
+    <fieldset>
+      <div class="row">
+        <label>Provider</label>
+        <strong>Twelve Data</strong>
+      </div>
+      <div class="row secretRow">
+        <label for="tdApiKey">API Key</label>
+        <input id="tdApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="端末内だけに保存可能">
+      </div>
+      <div class="row">
+        <label for="tdProviderSymbol">Provider Symbol</label>
+        <input id="tdProviderSymbol" type="text" maxlength="40" autocapitalize="off" spellcheck="false" placeholder="例 XAU/USD">
+      </div>
+      <div class="row">
+        <label for="atrPeriod">ATR Period</label>
+        <input id="atrPeriod" type="number" min="2" max="100" step="1" value="14">
+      </div>
+      <div class="row">
+        <label for="marketAutoRefreshSec">Auto Refresh</label>
+        <select id="marketAutoRefreshSec">
+          <option value="0" selected>OFF</option>
+          <option value="60">60秒</option>
+          <option value="300">5分</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <div id="providerSymbolHint" class="statusBox">
+      現在の銘柄に対応するProvider Symbolを表示します。
+    </div>
+
+    <div class="actionPanel">
+      <button id="tdFetchNow" class="actionButton primary" type="button">現在値 + ATR を取得</button>
+      <button id="tdSaveKey" class="actionButton" type="button">API Keyをこの端末に保存</button>
+      <button id="tdClearKey" class="actionButton danger" type="button">保存API Keyを削除</button>
+    </div>
+
+    <ul id="marketDataResult" class="resultList">
+      <li><span>銘柄</span><strong>—</strong></li>
+      <li><span>Timeframe</span><strong>—</strong></li>
+      <li><span>API Price</span><strong>—</strong></li>
+      <li><span>ATR</span><strong>—</strong></li>
+      <li><span>Bar Time</span><strong>—</strong></li>
+    </ul>
+
+    <div class="panelNote">
+      API Keyはソースコードへ埋め込みません。「この端末に保存」を押した場合だけ、このブラウザのlocalStorageへ保存します。
+      GitHub Pagesには送信しません。公開サイトに共通API Keyを埋め込む設計にはしていません。
+    </div>
+
+    <div class="panelNote">
+      ATRはWilder方式でローカル計算します。M3はProviderの1分足を3本ずつ集約して算出します。
+      APIの対応間隔は M1/M5/M15/H1/H4/D1 を直接使用し、M3だけローカル集約です。
+      APIデータのリアルタイム性・遅延・利用可能銘柄はProvider契約と市場に依存するため、「LIVE」とは表示しません。
+    </div>
+  </div>
+
+
+  <!-- WATCH / ALERTS -->
+  <div id="watch" title="WATCH / Alerts">
+    <div id="watchStatus" class="watchStatusBox">
+      <strong>OFF</strong><br>
+      現在WATCHは設定されていません。
+    </div>
+
+    <ul id="watchSummary" class="resultList">
+      <li><span>対象</span><strong>—</strong></li>
+      <li><span>状態</span><strong>OFF</strong></li>
+      <li><span>Entry距離</span><strong>—</strong></li>
+      <li><span>ENTRY Zone</span><strong>—</strong></li>
+    </ul>
+
+    <fieldset>
+      <div class="row">
+        <label for="watchZoneAtr">ENTRY Zone ATR</label>
+        <input id="watchZoneAtr" type="number" min="0.05" max="2" step="0.05" value="0.25">
+      </div>
+      <div class="row watchCheckRow">
+        <label for="watchNotifyZone">Zone到達を記録</label>
+        <input id="watchNotifyZone" type="checkbox" checked>
+      </div>
+      <div class="row watchCheckRow">
+        <label for="watchNotifyCross">Entry価格Cross</label>
+        <input id="watchNotifyCross" type="checkbox" checked>
+      </div>
+      <div class="row watchCheckRow">
+        <label for="watchNotifyGate">Gate変化を記録</label>
+        <input id="watchNotifyGate" type="checkbox" checked>
+      </div>
+      <div class="row watchCheckRow">
+        <label for="watchNotifyState">状態変化を記録</label>
+        <input id="watchNotifyState" type="checkbox" checked>
+      </div>
+    </fieldset>
+
+    <div class="actionPanel">
+      <button id="armCurrentWatch" class="actionButton primary" type="button">現在セットアップをARM</button>
+      <button id="disarmWatch" class="actionButton danger" type="button">WATCHを解除</button>
+      <button id="requestNotificationPermission" class="actionButton" type="button">通知許可を確認</button>
+    </div>
+
+    <ul id="watchNotificationState" class="resultList">
+      <li><span>Browser通知</span><strong>未確認</strong></li>
+      <li><span>監視方式</span><strong>APP OPEN</strong></li>
+      <li><span>データ源</span><strong>手入力 / API更新</strong></li>
+    </ul>
+
+    <div class="sech">Alert History</div>
+    <div id="watchEvents" class="watchEventList">
+      <div class="watchEvent"><strong>記録なし</strong><span class="time">—</span></div>
+    </div>
+
+    <div class="actionPanel">
+      <button id="clearWatchEvents" class="actionButton danger" type="button">Alert Historyをクリア</button>
+    </div>
+
+    <div class="panelNote">
+      WATCHは、アプリが開いている間に「手入力で現在値/ATRが変わった時」または「Market Dataの取得が成功した時」に再評価します。
+      このPhaseではバックグラウンド常時取得やサーバーPushは実装していません。アプリを完全に閉じている間の価格変化は検知できません。
+    </div>
+
+    <div class="panelNote">
+      ENTRY ZoneはEntryとの距離が設定ATR倍率以内に入ったかを検知します。Gate変化は現在の計算結果のPASS/FAIL遷移を記録します。
+      Swing・Risk・戦術など監視条件を変更した場合は、誤通知防止のためSETUP CHANGEDとして再ARMを要求します。
+    </div>
   </div>
 
   <!-- GATES -->
@@ -1245,11 +4814,166 @@ td:first-child {
     <div class="panelNote">初期状態は判定不能。全ゲート通過で初めて監視／エントリーに遷移します。</div>
   </div>
 
+
+
+  <!-- TRADE JOURNAL -->
+  <div id="journal" title="Trade Journal">
+    <ul id="journalStats" class="resultList">
+      <li><span>記録数</span><strong>0</strong></li>
+    </ul>
+
+    <div class="journalTableWrap">
+      <table class="journalTable" id="journalTable">
+        <thead>
+          <tr>
+            <th>日時</th><th>銘柄</th><th>TF</th><th>方向</th><th>Status</th>
+            <th>Entry</th><th>SL</th><th>RR</th><th>Risk</th><th>実現R</th><th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="journalEditorTitle">選択レコード編集</div>
+    <div id="journalEditorEmpty" class="statusBox">
+      Journalの「編集」を押すと、Status・実現R・メモを更新できます。
+    </div>
+
+    <div id="journalEditor" style="display:none">
+      <fieldset>
+        <div class="row">
+          <label for="journalEditStatus">Status</label>
+          <select id="journalEditStatus">
+            <option value="PLANNED">PLANNED</option>
+            <option value="OPEN">OPEN</option>
+            <option value="WIN">WIN</option>
+            <option value="LOSS">LOSS</option>
+            <option value="BE">BE</option>
+            <option value="CANCEL">CANCEL</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="journalEditR">実現R</label>
+          <input id="journalEditR" type="number" step="any" placeholder="例 1.25 / -1 / 0">
+        </div>
+        <div class="row" style="min-height:92px">
+          <label for="journalEditNotes">メモ</label>
+          <textarea id="journalEditNotes" class="journalNotes" maxlength="800" placeholder="根拠 / ミス / 気づき"></textarea>
+        </div>
+      </fieldset>
+
+      <div class="actionPanel">
+        <button id="journalUpdate" class="actionButton primary" type="button">更新</button>
+        <button id="journalDelete" class="actionButton danger" type="button">この記録を削除</button>
+      </div>
+    </div>
+
+    <div class="panelNote">
+      集計はJournalに実際に記録された結果だけを対象にします。WIN率* は WIN / (WIN + LOSS) の記述統計で、BE/CANCELは分母から除外します。
+      これ単独をEdgeの証拠とは扱いません。平均Rは「実現R」が入力されたレコードだけで計算します。
+      Journal保存時の価格・Lot・Riskはスナップショットであり、後から自動更新しません。
+    </div>
+
+    <div class="actionPanel">
+      <button id="clearJournal" class="actionButton danger" type="button">Journalを全削除</button>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO RISK -->
+  <div id="portfolio" title="Portfolio Risk">
+    <ul id="portfolioSummary" class="resultList">
+      <li><span>状態</span><strong>Risk予約なし</strong></li>
+    </ul>
+
+    <ul id="portfolioGates" class="gateList">
+      <li>
+        <span class="gateCode">PF-01</span>
+        <span class="gateState pass">PASS</span>
+        <span class="gateName">総リスク</span>
+        <span class="gateDetail">Risk予約なし</span>
+      </li>
+    </ul>
+
+    <div class="portfolioTableWrap">
+      <table class="portfolioTable" id="portfolioTable">
+        <thead>
+          <tr>
+            <th>銘柄</th><th>方向</th><th>State</th><th>Lot</th>
+            <th>Entry</th><th>SL</th><th>Risk</th><th>Margin*</th><th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="sech">FX通貨方向の集中</div>
+    <div id="currencyConcentration" class="concentrationGrid">
+      <div class="concentrationRow"><span class="ccy">—</span><span>FX予約なし</span><span></span><span></span></div>
+    </div>
+
+    <div class="panelNote">
+      「名目総リスク」は登録した各建玉のSL損失を単純合計した値です。相関・同時ギャップ・流動性悪化を含む真のPortfolio最大損失ではありません。
+      PF-03はFXの方向Leg数による集中チェックで、金額ベースの通貨VaRではありません。*Marginは登録時スナップショットです。
+    </div>
+
+    <div class="actionPanel">
+      <button id="clearPortfolio" class="actionButton danger" type="button">Portfolioを全削除</button>
+    </div>
+  </div>
+
+
+  <!-- POSITION MAP -->
+  <div id="positionmap" title="Position Map">
+    <ul id="positionMapSummary" class="resultList">
+      <li><span>状態</span><strong>入力待ち</strong></li>
+    </ul>
+
+    <div class="positionMapShell">
+      <div id="positionMapHeader" class="positionMapHeader">PRICE MAP</div>
+      <div id="positionMapCanvas" class="positionMapCanvas">
+        <div class="mapPlaceholder">相場・建玉条件を入力すると価格レベルを可視化します。</div>
+      </div>
+      <div class="mapLegend">
+        <span><i class="mapDot current"></i>Current</span>
+        <span><i class="mapDot entry"></i>Entry / Avg</span>
+        <span><i class="mapDot tp"></i>TP</span>
+        <span><i class="mapDot sl"></i>SL</span>
+        <span><i class="mapDot manage"></i>BE / Add / Avg</span>
+        <span><i class="mapDot grid"></i>GRID Levels</span>
+      </div>
+    </div>
+
+    <div class="panelNote">
+      これはローソク足チャートではありません。入力・計算済みの価格水準を同一価格軸上へ配置したPosition Mapです。
+      未取得の過去値動きや将来経路は描画しません。線の上下関係と距離を確認する用途です。
+    </div>
+  </div>
+
+  <!-- RISK ENGINE -->
+  <div id="riskengine" title="Risk Engine">
+    <ul id="riskList" class="resultList">
+      <li><span>状態</span><strong>入力待ち</strong></li>
+    </ul>
+    <div class="panelNote">
+      「実リスク」は、SL価格損失 + Spread + Commission + Slippage の合計。
+      Lotはこの合計が許容損失を超えないよう、ロット刻みに対して切り下げます。
+    </div>
+  </div>
+
   <!-- POSITION -->
   <div id="position" title="建玉設計">
     <ul id="positionList" class="resultList">
       <li><span>状態</span><strong>—</strong></li>
     </ul>
+    <div class="actionPanel">
+      <button id="addToPortfolio" class="actionButton primary" type="button">Risk予約としてPortfolioへ追加</button>
+      <button id="saveToJournal" class="actionButton" type="button">現在の建玉設計をJournalへ保存</button>
+      <button id="armWatchFromPosition" class="actionButton" type="button">このセットアップをWATCH</button>
+    </div>
+    <div class="panelNote">
+      これは約定確認ではありません。現在の建玉設計を「Risk予約」として登録し、総リスク上限に含めます。
+      WATCH状態とGRIDも予約できます。登録後に相場が変わっても、保存された損失額・証拠金は自動更新しません。
+    </div>
   </div>
 
   <!-- MANAGEMENT -->
@@ -1275,16 +4999,94 @@ td:first-child {
       グリッドでは、全段約定後に最終SLへ到達した場合の損失額を主要なリスク量として表示します。
       ロット倍率が1を超える場合は、段数増加に対してロット総量が非線形に増えます。
     </div>
+    <div class="actionPanel">
+      <button id="saveGridToJournal" class="actionButton" type="button">GRID設計をJournalへ保存</button>
+      <button id="armWatchFromGrid" class="actionButton" type="button">このGRIDをWATCH</button>
+    </div>
+  </div>
+
+
+  <!-- STORAGE / BROKER PRESET -->
+  <div id="storage" title="保存 / Preset">
+    <div id="storageStatus" class="statusBox">
+      <strong>Local Save</strong><br>
+      この端末のブラウザ内に自動保存します。
+    </div>
+
+    <fieldset>
+      <div class="row">
+        <label for="brokerPresetSelect">Preset</label>
+        <select id="brokerPresetSelect">
+          <option value="">-- 選択 --</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="brokerPresetName">Preset名</label>
+        <input id="brokerPresetName" type="text" maxlength="40" placeholder="例: MyBroker XAU">
+      </div>
+    </fieldset>
+
+    <div class="actionPanel">
+      <button id="saveBrokerPreset" class="actionButton primary" type="button">現在のBroker/銘柄設定を保存</button>
+      <button id="loadBrokerPreset" class="actionButton" type="button">選択Presetを読込</button>
+      <button id="deleteBrokerPreset" class="actionButton danger" type="button">選択Presetを削除</button>
+    </div>
+
+    <div class="panelNote">
+      Presetには「銘柄・口座通貨・レバレッジ・Spread・Commission・Slippage・Stop/Freeze・Lot仕様・Risk制限・銘柄固有仕様」を保存します。
+      残高や現在値、ATR、スイング値はBroker Presetには保存しません。
+    </div>
+
+    <div class="actionPanel">
+      <button id="clearMarketInputs" class="actionButton" type="button">市場入力だけクリア</button>
+      <button id="clearWorkspace" class="actionButton danger" type="button">この端末の自動保存を初期化</button>
+    </div>
+
+    <div class="panelNote">
+      自動保存は現在の入力全体をこのブラウザの localStorage に保持します。GitHubへ入力値を送信する機能はありません。
+      市場データも復元されるため、再利用時は価格・ATR・換算レート・Swingの鮮度を必ず確認してください。
+    </div>
+  </div>
+
+
+  <!-- PWA / OFFLINE -->
+  <div id="pwa" title="App / Offline">
+    <ul id="pwaStatusList" class="resultList">
+      <li><span>表示モード</span><strong id="pwaDisplayMode">WEB</strong></li>
+      <li><span>通信状態</span><strong id="pwaNetworkState">—</strong></li>
+      <li><span>Offline Cache</span><strong id="pwaCacheState">確認中</strong></li>
+    </ul>
+
+    <div class="panelNote">
+      iPhoneではSafariの共有メニューから「ホーム画面に追加」を選ぶと、DEPA FXをアプリ風のstandalone表示で起動できます。
+      初回はオンラインで1度開いてキャッシュを作成してください。
+    </div>
+
+    <div class="actionPanel">
+      <button id="pwaRefresh" class="actionButton primary" type="button">最新版を確認して再読込</button>
+    </div>
+
+    <div class="panelNote">
+      オフライン時も、保存済み設定・Portfolio・Journal・手入力計算は利用できます。
+      ただし将来の自動価格取得など、外部通信が必要な機能はオフラインでは利用できません。
+    </div>
   </div>
 
   <!-- ABOUT -->
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v1.01 — 建玉設計コンソール。</p>
-      <p>これはシグナル発生器ではありません。入力された相場・口座・ブローカー条件から、ゲート判定、建玉サイズ、管理価格を計算します。</p>
+      <p>ENTRY CONSOLE v2.7-P8 — 建玉設計コンソール。</p>
+      <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
+      <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
+      <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>
+      <p>Phase 5では、ホーム画面追加・standalone表示・Service Workerによるオフライン起動を追加しています。外部データ取得が必要な機能はオフライン利用の対象外です。</p>
+      <p>Phase 6では、Current / Entry / SL / TP / BE / Add / 平均建値 / GRID各段を同一価格軸へ配置するPosition Mapを追加しています。ローソク足や未取得の値動きは描画しません。</p>
+      <p>Phase 7では、ユーザー自身のTwelve Data API Keyを使った現在値とOHLC取得、Wilder ATRのローカル計算を追加しています。M3は1分足を3本ずつ集約します。取得失敗時は手入力値を維持します。</p>
+      <p>Phase 8では、現在セットアップのWATCH、ENTRY Zone到達、Entry価格Cross、Gate PASS/FAIL遷移、状態変化のAlert Historyと通知を追加しています。監視はアプリが開いている間の再計算時だけ行い、バックグラウンド常時監視は行いません。</p>
+      <p>これはシグナル発生器ではありません。入力された相場・口座・ブローカー条件から、ゲート判定、建玉サイズ、管理価格を計算します。Risk Engine v2では、SL・Spread・Commission・Slippageを合算した実リスクからLotを決定します。</p>
       <p>この配布物は、2007〜2009年頃の classic iUI のHTML構造・画面遷移・Settings風UIを再現するための、オフライン動作用互換レイヤーを同梱しています。元のiUIライブラリ本体は同梱していません。</p>
-      <p class="muted">実運用前に、使用ブローカーの契約サイズ、tick/pip、証拠金計算、手数料、最小ロット、ロット刻み、ストップ制約を確認してください。</p>
+      <p class="muted">実運用前に、使用ブローカーの契約サイズ、tick/pip、証拠金計算、手数料、最小ロット、ロット刻み、ストップ制約を確認してください。特に指数・原油・暗号資産はブローカー間差が大きいため、銘柄仕様の確認を必須としています。</p>
     </div>
   </div>
 
