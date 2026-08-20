@@ -1,4 +1,4 @@
-const CACHE_NAME = "depa-fx-p8-3-v1";
+const CACHE_NAME = "depa-fx-v3-1-v1";
 const APP_SHELL = [
   "./",
   "./index.html",

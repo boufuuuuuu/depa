@@ -655,14 +655,14 @@ textarea.journalNotes{
 }
 .miniChartCanvas{
   width:100%;
-  min-height:210px;
+  min-height:338px;
   background:#fff;
 }
 .miniChartCanvas svg{
   display:block;
   width:100%;
   height:auto;
-  min-height:210px;
+  min-height:338px;
 }
 .miniChartPlaceholder{
   padding:68px 14px;
@@ -681,6 +681,52 @@ textarea.journalNotes{
   font-size:10px;
   line-height:1.45;
 }
+
+
+.miniIndicatorLegend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 10px;
+  margin-top:3px;
+}
+.miniIndicatorLegend span{
+  white-space:nowrap;
+}
+.miniIndicatorKey{
+  display:inline-block;
+  width:10px;
+  height:2px;
+  margin-right:3px;
+  vertical-align:middle;
+}
+.miniIndicatorKey.ema20{background:#2e6da4;}
+.miniIndicatorKey.ema50{background:#a27613;}
+.miniIndicatorKey.ema200{background:#6b5d91;}
+.miniIndicatorKey.rsi13{background:#455a70;}
+
+
+/* ================= v3.0 RISK OPS ================= */
+.opsTableWrap{margin:12px 9px;border:1px solid #9da4aa;border-radius:10px;overflow-x:auto;background:#fff;}
+.opsTable{width:100%;min-width:720px;border-collapse:collapse;background:#fff;font-size:11px;}
+.opsTable th,.opsTable td{padding:7px 6px;border-bottom:1px solid #d0d0d0;text-align:right;white-space:nowrap;}
+.opsTable th{background:#eef0f2;color:#5e6872;font-size:10px;}
+.opsTable th:first-child,.opsTable td:first-child{text-align:left;}
+.qualityBadge{display:inline-block;padding:2px 7px;border-radius:8px;border:1px solid #9aa4ad;background:#fff;font-size:10px;font-weight:bold;}
+.qualityBadge.ok{border-color:#6f9e79;color:#18733a;background:#eef8f1;}
+.qualityBadge.adjusted{border-color:#a78b52;color:#8a650c;background:#fff9e7;}
+.qualityBadge.stale{border-color:#c18d49;color:#935e08;background:#fff3d8;}
+.qualityBadge.partial{border-color:#8b98a5;color:#5e6974;background:#f2f4f6;}
+.qualityBadge.error{border-color:#bf7771;color:#a32f28;background:#fff0ee;}
+.opsStatus{margin:12px 9px;padding:10px 12px;border:1px solid #9aa4ad;border-radius:9px;background:#f7f8f9;color:#56616c;font-size:12px;line-height:1.5;}
+.opsStatus.ok{border-color:#72a781;background:#eef8f1;}
+.opsStatus.warn{border-color:#c39a51;background:#fff8df;}
+.opsStatus.error{border-color:#c88d87;background:#fff0ee;}
+.tradeStatus{font-weight:bold;}
+.tradeStatus.PLANNED{color:#6a7380}.tradeStatus.WATCH{color:#a56d00}.tradeStatus.ENTRY{color:#18843a}.tradeStatus.OPEN{color:#216da0}.tradeStatus.MANAGE{color:#6b5d91}.tradeStatus.CLOSED{color:#18843a}.tradeStatus.CANCEL{color:#777;}
+.mtfChecks{margin:12px 9px;padding:8px 10px;border:1px solid #9da4aa;border-radius:9px;background:#fff;display:flex;flex-wrap:wrap;gap:8px 12px;font-size:12px;}
+.mtfChecks label{white-space:nowrap;}
+.mtfArrowUp{color:#18733a;font-weight:bold}.mtfArrowDown{color:#a32f28;font-weight:bold}.mtfArrowFlat{color:#7a848e;font-weight:bold}
+.backupFile{width:100%;box-sizing:border-box;padding:8px;background:#fff;border:1px solid #aaa;border-radius:6px;}
 
 </style>
 
@@ -815,7 +861,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v2.10-P8.3
+   DEPA FX SYSTEM — ENTRY CONSOLE v3.1
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -1002,6 +1048,12 @@ textarea.journalNotes{
     var d1bias = value("d1bias");
     var entryType = value("entryType");
     var depth = n("depth");
+    var counterDir = value("counterDir") === "BUY" ? 1 : -1;
+    var gridDirSel = value("gridDir") === "SELL" ? -1 : 1;
+    var slFloorAtr = n("slFloorAtr");
+    var counterSlAtr = n("counterSlAtr");
+    if (slFloorAtr == null || slFloorAtr < 0) slFloorAtr = 1;
+    if (counterSlAtr == null || counterSlAtr <= 0) counterSlAtr = 1;
 
     var gridStepAtr = n("gridStepAtr");
     var gridLevels = n("gridLevels");
@@ -1139,7 +1191,7 @@ textarea.journalNotes{
       var base = gridBaseLot == null ? minLot : gridBaseLot;
       var mult = gridMult == null ? 1 : gridMult;
       var stepPrice = atr * stepAtr;
-      var dir = d1bias === "DOWN" ? -1 : 1;
+      var dir = gridDirSel;
 
       var rows = [];
       var cumLot = 0;
@@ -1225,6 +1277,14 @@ textarea.journalNotes{
           " / 上限 " + marginCap.toFixed(1) + "% = " + commas(marginLimit) + " " + acctCcy
       );
 
+      push(
+        "GR-4",
+        "グリッド方向",
+        true,
+        (dir > 0 ? "買い下がり" : "売り上がり") +
+          " — 日足バイアスとは独立に選択されています（現在の日足: " + d1bias + "）"
+      );
+
       var gG3 = mult <= 1.0;
       push(
         "GR-3",
@@ -1299,26 +1359,28 @@ textarea.journalNotes{
         tp2 = swingLow - leg * 1.0;
       }
     } else {
-      dir2 = d1bias === "UP" ? -1 : 1;
+      dir2 = counterDir;
 
       var rangeOk = d1bias === "RANGE";
       push(
         "G-02",
         "日足バイアス",
         rangeOk,
-        rangeOk ? "レンジ＝逆張り可" : "日足にトレンドあり。逆張り禁止"
+        rangeOk
+          ? "レンジ＝逆張り可 / 方向は明示選択 " + (dir2 > 0 ? "BUY" : "SELL")
+          : "日足にトレンドあり。逆張り禁止"
       );
 
       if (dir2 < 0) {
         entry = swingHigh;
         slA = slAnchor == null ? swingHigh : slAnchor;
-        sl = slA + Math.max(atr * 0.5, toPrice(sp) * 2);
+        sl = slA + Math.max(atr * counterSlAtr, toPrice(sp) * 2);
         tp1 = swingHigh - leg * 0.382;
         tp2 = swingHigh - leg * 0.618;
       } else {
         entry = swingLow;
         slA = slAnchor == null ? swingLow : slAnchor;
-        sl = slA - Math.max(atr * 0.5, toPrice(sp) * 2);
+        sl = slA - Math.max(atr * counterSlAtr, toPrice(sp) * 2);
         tp1 = swingLow + leg * 0.382;
         tp2 = swingLow + leg * 0.618;
       }
@@ -1359,13 +1421,15 @@ textarea.journalNotes{
       "SL幅 " + slPips.toFixed(1) + "pips / ブローカー下限 " + slMin + "pips"
     );
 
-    var g07 = slPips >= toPips(atr * 1.0);
+    var slFloorPips = toPips(atr * slFloorAtr);
+    var g07 = slPips >= slFloorPips - 1e-9;
     push(
       "G-07",
       "SL幅の最低保証",
       g07,
       "SL幅 " + slPips.toFixed(1) +
-        "pips / 必要 " + toPips(atr).toFixed(1) + "pips (ATR×1.0)"
+        "pips / 必要 " + slFloorPips.toFixed(1) +
+        "pips (ATR×" + slFloorAtr.toFixed(2) + ")"
     );
 
     var g08 = netRR >= rrFloor;
@@ -1436,6 +1500,23 @@ textarea.journalNotes{
       ? (entry * lotOut + add1 * addLot + add2 * addLot) / (lotOut + addLot * 2)
       : entry;
 
+    var edge = evaluateEdge({
+      dir: dir2, price: price, atr: atr, leg: leg,
+      swingLow: swingLow, swingHigh: swingHigh,
+      netRR: netRR, depth: depth, mode: entryType
+    });
+
+    push(
+      "E-00",
+      "Edge Score",
+      edge.ok,
+      edge.active
+        ? ("Score " + edge.score + " / 必要 " + edge.threshold +
+           " / 発火 " + (edge.firedIds.length ? edge.firedIds.join(",") : "なし"))
+        : ("観測のみ（閾値" + edge.threshold + " / 採用ファクター" + edge.adopted +
+           "件） 発火 " + (edge.firedIds.length ? edge.firedIds.join(",") : "なし"))
+    );
+
     var allOk = allGatesOk(gates);
     var nearEntry = Math.abs(price - entry) <= atr * 0.25;
     var state = !allOk ? "NO-TRADE" : (nearEntry ? "ENTRY" : "WATCH");
@@ -1488,8 +1569,203 @@ textarea.journalNotes{
       leg: leg,
       nearEntry: nearEntry,
       px: price,
+      edge: edge,
+      slFloorAtr: slFloorAtr,
+      counterSlAtr: counterSlAtr,
       fmt: fmt
     };
+  }
+
+  /* ---------- EDGE SCORE LAYER ---------- */
+
+  var EDGE_KEY = "depaFX.edge";
+
+  var EDGE_SPECS = [
+    { id:"E-01", name:"D1 EMA整合（close/EMA200 + EMA20/50）", src:"MTF" },
+    { id:"E-02", name:"H4 EMA整合（close/EMA200 + EMA20/50）", src:"MTF" },
+    { id:"E-03", name:"現TF EMA200 位置一致", src:"META" },
+    { id:"E-04", name:"現TF RSI13 が押し目/戻り側", src:"META" },
+    { id:"E-05", name:"スイングレンジ位置が優位側", src:"LOCAL" },
+    { id:"E-06", name:"レッグ ≥ ATR×3（波動が十分）", src:"LOCAL" },
+    { id:"E-07", name:"RR ≥ 2.0（余裕あり）", src:"LOCAL" },
+    { id:"E-08", name:"押し目深度 ≥ 61.8%", src:"LOCAL" }
+  ];
+
+  function defaultEdgeConfig() {
+    var cfg = { schema:1, threshold:0, factors:{} }, i;
+    for (i = 0; i < EDGE_SPECS.length; i++) {
+      cfg.factors[EDGE_SPECS[i].id] = { w:1, status:"未検証" };
+    }
+    return cfg;
+  }
+
+  function getEdgeConfig() {
+    var d = storageRead(EDGE_KEY, null), base = defaultEdgeConfig(), i, id;
+    if (!d || !d.factors) return base;
+    for (i = 0; i < EDGE_SPECS.length; i++) {
+      id = EDGE_SPECS[i].id;
+      if (d.factors[id]) {
+        base.factors[id].w = isFinite(Number(d.factors[id].w)) ? Number(d.factors[id].w) : 1;
+        base.factors[id].status = d.factors[id].status || "未検証";
+      }
+    }
+    base.threshold = isFinite(Number(d.threshold)) ? Number(d.threshold) : 0;
+    return base;
+  }
+
+  function saveEdgeConfig(cfg) { return storageWrite(EDGE_KEY, cfg); }
+
+  function edgeMtfFrame(tf) {
+    var c = getMtfCache();
+    if (!c || c.symbol !== value("symbol") || !c.frames) return null;
+    return c.frames[tf] || null;
+  }
+
+  function edgeEmaAligned(f, dir) {
+    if (!f) return null;
+    var close = Number(f.close), e20 = Number(f.ema20), e50 = Number(f.ema50), e200 = Number(f.ema200);
+    if (!isFinite(close) || !isFinite(e20) || !isFinite(e50) || !isFinite(e200)) return null;
+    if (dir > 0) return (close > e200 && e20 > e50);
+    return (close < e200 && e20 < e50);
+  }
+
+  function edgeCurrentIndicators() {
+    var mds = getMarketDataSettings(), meta = mds ? mds.lastMeta : null;
+    if (!meta) return null;
+    if (meta.localSymbol !== value("symbol") || meta.timeframe !== value("tf")) return null;
+    if (!meta.indicatorLatest) return null;
+    return meta.indicatorLatest;
+  }
+
+  function evaluateEdge(ctx) {
+    var cfg = getEdgeConfig();
+    var fired = {}, i, spec, v;
+    var ind = edgeCurrentIndicators();
+
+    fired["E-01"] = edgeEmaAligned(edgeMtfFrame("D1"), ctx.dir);
+    fired["E-02"] = edgeEmaAligned(edgeMtfFrame("H4"), ctx.dir);
+
+    if (ind && isFinite(Number(ind.ema200)) && isFinite(Number(ctx.price))) {
+      fired["E-03"] = ctx.dir > 0 ? (ctx.price > Number(ind.ema200)) : (ctx.price < Number(ind.ema200));
+    } else fired["E-03"] = null;
+
+    if (ind && isFinite(Number(ind.rsi13))) {
+      fired["E-04"] = ctx.dir > 0 ? (Number(ind.rsi13) < 50) : (Number(ind.rsi13) > 50);
+    } else fired["E-04"] = null;
+
+    if (isFinite(ctx.leg) && ctx.leg > 0) {
+      v = ((ctx.price - ctx.swingLow) / ctx.leg) * 100;
+      fired["E-05"] = ctx.dir > 0 ? (v < 50) : (v > 50);
+      fired["E-06"] = ctx.leg >= ctx.atr * 3;
+    } else { fired["E-05"] = null; fired["E-06"] = null; }
+
+    fired["E-07"] = isFinite(ctx.netRR) ? (ctx.netRR >= 2.0) : null;
+    fired["E-08"] = ctx.mode === "TREND" ? (ctx.depth >= 0.618 - 1e-9) : null;
+
+    var score = 0, maxScore = 0, adopted = 0, firedIds = [], rows = [];
+    for (i = 0; i < EDGE_SPECS.length; i++) {
+      spec = EDGE_SPECS[i];
+      var f = cfg.factors[spec.id];
+      var isAdopted = f.status === "採用";
+      if (isAdopted) adopted++;
+      if (fired[spec.id] === true) firedIds.push(spec.id);
+      if (isAdopted && fired[spec.id] !== null) {
+        maxScore += f.w;
+        if (fired[spec.id] === true) score += f.w;
+      }
+      rows.push({ id:spec.id, name:spec.name, fired:fired[spec.id], w:f.w, status:f.status });
+    }
+
+    var active = cfg.threshold > 0 && adopted > 0;
+    return {
+      rows:rows, score:score, maxScore:maxScore, threshold:cfg.threshold,
+      active:active, adopted:adopted, firedIds:firedIds,
+      ok: !active || score >= cfg.threshold
+    };
+  }
+
+  function renderEdge(R) {
+    if (!el("edgeTable")) return;
+    var tbody = el("edgeTable").getElementsByTagName("tbody")[0];
+    var E = R && R.edge ? R.edge : null;
+    var cfg = getEdgeConfig();
+
+    if (el("edgeThreshold") && document.activeElement !== el("edgeThreshold")) {
+      el("edgeThreshold").value = String(cfg.threshold);
+    }
+
+    var rows = E ? E.rows : null, html = "", i, r, ftxt, fcls;
+    if (!rows) {
+      rows = [];
+      for (i = 0; i < EDGE_SPECS.length; i++) {
+        rows.push({ id:EDGE_SPECS[i].id, name:EDGE_SPECS[i].name, fired:null,
+          w:cfg.factors[EDGE_SPECS[i].id].w, status:cfg.factors[EDGE_SPECS[i].id].status });
+      }
+    }
+
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      ftxt = r.fired === true ? "YES" : (r.fired === false ? "no" : "—");
+      fcls = r.fired === true ? "go" : (r.fired === false ? "" : "");
+      html += '<tr><td>' + esc(r.id) + '</td><td style="text-align:left">' + esc(r.name) + '</td>' +
+        '<td class="' + fcls + '">' + ftxt + '</td>' +
+        '<td><input class="edgeW" data-fid="' + esc(r.id) + '" type="number" step="1" style="width:64px" value="' + r.w + '"></td>' +
+        '<td><select class="edgeS" data-fid="' + esc(r.id) + '">' +
+        '<option value="未検証"' + (r.status === "未検証" ? " selected" : "") + '>未検証</option>' +
+        '<option value="検証中"' + (r.status === "検証中" ? " selected" : "") + '>検証中</option>' +
+        '<option value="採用"' + (r.status === "採用" ? " selected" : "") + '>採用</option>' +
+        '</select></td></tr>';
+    }
+    tbody.innerHTML = html;
+
+    var sum = "";
+    if (E) {
+      sum += resultRow("Score", E.score + " / " + E.maxScore + "（採用ファクターのみ）");
+      sum += resultRow("必要スコア", E.threshold === 0 ? "0 — 判定に非関与" : String(E.threshold));
+      sum += resultRow("採用ファクター数", String(E.adopted));
+      sum += resultRow("発火中", E.firedIds.length ? E.firedIds.join(", ") : "なし");
+      sum += resultRow("判定への影響", E.active ? (E.ok ? "PASS" : "FAIL — ENTRYを止めています") : "なし（観測のみ）", E.active ? (E.ok ? "go" : "stop") : "");
+    } else {
+      sum += resultRow("状態", "入力待ち");
+    }
+    el("edgeSummary").innerHTML = sum;
+
+    var box = el("edgeStatus");
+    if (box) {
+      if (!E) { box.className = "opsStatus"; box.innerHTML = "<strong>WAIT</strong><br>有効な建玉設計が出ると発火状況を表示します。"; }
+      else if (!E.active) { box.className = "opsStatus"; box.innerHTML = "<strong>OBSERVE</strong><br>閾値0または採用ファクター0のため、Edge Scoreは判定を一切動かしません。発火の記録のみ行います。"; }
+      else { box.className = "opsStatus " + (E.ok ? "ok" : "error"); box.innerHTML = "<strong>" + (E.ok ? "PASS" : "BLOCK") + "</strong><br>Score " + E.score + " / 必要 " + E.threshold; }
+    }
+    if (el("navEdge")) el("navEdge").innerHTML = E ? (E.active ? (E.score + "/" + E.threshold) : "OBS " + E.firedIds.length) : "—";
+  }
+
+  function hookEdgeControls() {
+    var t = el("edgeThreshold"), b = el("edgeSave"), tb = el("edgeTable");
+    if (t) t.addEventListener("change", function () {
+      var cfg = getEdgeConfig();
+      var v = parseFloat(t.value);
+      cfg.threshold = isFinite(v) && v > 0 ? v : 0;
+      saveEdgeConfig(cfg); render();
+    }, false);
+    if (tb) tb.addEventListener("change", function (e) {
+      var node = e.target || e.srcElement;
+      if (!node || !node.getAttribute) return;
+      var fid = node.getAttribute("data-fid");
+      if (!fid) return;
+      var cfg = getEdgeConfig();
+      if (!cfg.factors[fid]) return;
+      if (node.className === "edgeW") {
+        var w = parseFloat(node.value);
+        cfg.factors[fid].w = isFinite(w) ? w : 1;
+      } else {
+        cfg.factors[fid].status = node.value;
+      }
+      saveEdgeConfig(cfg); render(); renderAnalytics();
+    }, false);
+    if (b) b.addEventListener("click", function () {
+      saveEdgeConfig(getEdgeConfig());
+      setStorageStatus("Edge設定を保存しました。", true);
+    }, false);
   }
 
   function allGatesOk(gates) {
@@ -1519,9 +1795,13 @@ textarea.journalNotes{
 
     renderNavigation(R);
     renderGates(R);
+    renderEdge(R);
     renderModeVisibility(R);
     renderPositionMap(R);
     renderStrategyMiniChart();
+    renderDataQuality();
+    renderMtfDashboard();
+    renderStressTest();
 
     if (R.state === "INVALID") {
       el("positionList").innerHTML = '<li><span>状態</span><strong>判定不能</strong></li>';
@@ -1581,6 +1861,9 @@ textarea.journalNotes{
     el("customSpecNote").style.display = showCustom ? "block" : "none";
 
     el("depthRow").style.display = mode === "TREND" ? "block" : "none";
+    if (el("counterDirRow")) el("counterDirRow").style.display = mode === "COUNTER" ? "block" : "none";
+    if (el("counterSlRow")) el("counterSlRow").style.display = mode === "COUNTER" ? "block" : "none";
+    if (el("gridDirRow")) el("gridDirRow").style.display = mode === "GRID" ? "block" : "none";
     el("swingFields").style.display = mode === "GRID" ? "none" : "block";
     el("gridFields").style.display = mode === "GRID" ? "block" : "none";
 
@@ -1719,6 +2002,556 @@ textarea.journalNotes{
 
 
 
+
+  /* ================= v3.0 RISK OPS ================= */
+
+  var DQ_SETTINGS_KEY = "depaFX.dataQuality.v9";
+  var TRADE_KEY = "depaFX.tradeLifecycle.v10";
+  var MTF_KEY = "depaFX.mtfCache.v12";
+  var selectedTradeId = null;
+  var pendingBackup = null;
+
+  /* ---------- DATA QUALITY GUARD ---------- */
+
+  function tfMinutes(tf) {
+    if (tf === "M1") return 1;
+    if (tf === "M3") return 3;
+    if (tf === "M5") return 5;
+    if (tf === "M15") return 15;
+    if (tf === "M30") return 30;
+    if (tf === "H1") return 60;
+    if (tf === "H4") return 240;
+    if (tf === "D1") return 1440;
+    return null;
+  }
+
+  function providerUtcMs(text) {
+    if (!text) return null;
+    var m = String(text).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (!m) return null;
+    return Date.UTC(
+      parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10),
+      parseInt(m[4] || "0",10), parseInt(m[5] || "0",10), parseInt(m[6] || "0",10)
+    );
+  }
+
+  function ageMinutes(ms) {
+    if (ms == null || !isFinite(Number(ms))) return null;
+    return Math.max(0, (new Date().getTime() - Number(ms)) / 60000);
+  }
+
+  function getDqSettings() {
+    var d = storageRead(DQ_SETTINGS_KEY, null);
+    if (!d || typeof d !== "object") d = { schema:9, staleBars:3, conversionMaxMin:60 };
+    if (!isFinite(Number(d.staleBars)) || Number(d.staleBars) < 1) d.staleBars = 3;
+    if (!isFinite(Number(d.conversionMaxMin)) || Number(d.conversionMaxMin) < 1) d.conversionMaxMin = 60;
+    return d;
+  }
+
+  function saveDqSettingsFromUi() {
+    var d = getDqSettings();
+    var b = parseFloat(el("dqStaleBars").value);
+    var c = parseFloat(el("dqConversionMaxMin").value);
+    if (!isFinite(b) || b < 1) b = 3;
+    if (!isFinite(c) || c < 1) c = 60;
+    d.staleBars = b;
+    d.conversionMaxMin = c;
+    storageWrite(DQ_SETTINGS_KEY, d);
+    renderDataQuality();
+  }
+
+  function getDataQuality() {
+    var dqs = getDqSettings();
+    var mds = getMarketDataSettings();
+    var meta = mds.lastMeta;
+    var symbol = value("symbol");
+    var tf = value("tf");
+    var same = !!(meta && meta.localSymbol === symbol && meta.timeframe === tf);
+    var frameMin = tfMinutes(tf);
+    var staleLimit = frameMin == null ? null : frameMin * Number(dqs.staleBars);
+    var fetchAge = same ? ageMinutes(meta.fetchedAt) : null;
+    var barMs = same ? providerUtcMs(meta.barTime) : null;
+    var barAge = barMs == null ? null : ageMinutes(barMs);
+    var sourceBars = same ? Number(meta.indicatorSourceBars || meta.sourceBars || 0) : 0;
+    var barsOk = sourceBars >= 300;
+    var indicatorsOk = !!(same && meta.indicatorLatest &&
+      isFinite(Number(meta.indicatorLatest.ema20)) &&
+      isFinite(Number(meta.indicatorLatest.ema50)) &&
+      isFinite(Number(meta.indicatorLatest.ema200)) &&
+      isFinite(Number(meta.indicatorLatest.rsi13)) &&
+      isFinite(Number(meta.atr)));
+
+    var required = requiredConversionFields(symbol, value("acctCcy"));
+    var convMissing = [];
+    var convUnknown = [];
+    var convStale = [];
+    var convAdjusted = [];
+    var i, field, cm, stamp, ca;
+
+    for (i = 0; i < required.length; i++) {
+      field = required[i];
+      if (n(field) == null || n(field) <= 0) {
+        convMissing.push(CONVERSION_SPECS[field].label);
+        continue;
+      }
+      cm = mds.conversionMeta ? mds.conversionMeta[field] : null;
+      if (!cm) {
+        convUnknown.push(CONVERSION_SPECS[field].label);
+        continue;
+      }
+      if (cm.adjusted) convAdjusted.push(CONVERSION_SPECS[field].label);
+      stamp = cm.adjusted ? cm.adjustedAt : cm.fetchedAt;
+      ca = ageMinutes(stamp);
+      if (ca == null) convUnknown.push(CONVERSION_SPECS[field].label);
+      else if (ca > Number(dqs.conversionMaxMin)) convStale.push(CONVERSION_SPECS[field].label);
+    }
+
+    var currentMissing = [];
+    if (n("price") == null || n("price") <= 0) currentMissing.push("Price");
+    if (n("atr") == null || n("atr") <= 0) currentMissing.push("ATR");
+    if (value("entryType") !== "GRID") {
+      if (n("swingHigh") == null || n("swingHigh") <= 0) currentMissing.push("Swing High");
+      if (n("swingLow") == null || n("swingLow") <= 0) currentMissing.push("Swing Low");
+    }
+
+    var stale = false;
+    if (same && staleLimit != null) {
+      if (fetchAge != null && fetchAge > staleLimit) stale = true;
+      if (barAge != null && barAge > staleLimit) stale = true;
+    }
+    if (convStale.length) stale = true;
+    if (meta && meta.localSymbol && !same) stale = true;
+
+    var adjusted = marketDataMode === "ADJUSTED" || convAdjusted.length > 0;
+    var partial = !same || !barsOk || !indicatorsOk || convUnknown.length > 0;
+    var error = currentMissing.length > 0 || convMissing.length > 0 || marketDataMode === "ERROR";
+    var status = error ? "ERROR" : stale ? "STALE" : partial ? "PARTIAL" : adjusted ? "ADJUSTED" : "OK";
+
+    return {
+      status:status, same:same, barsOk:barsOk, indicatorsOk:indicatorsOk,
+      sourceBars:sourceBars, fetchAge:fetchAge, barAge:barAge, staleLimit:staleLimit,
+      requiredConversions:required, convMissing:convMissing, convUnknown:convUnknown,
+      convStale:convStale, convAdjusted:convAdjusted, currentMissing:currentMissing,
+      adjusted:adjusted, settings:dqs
+    };
+  }
+
+  function dqBadge(status) {
+    var cls = String(status || "partial").toLowerCase();
+    return '<span class="qualityBadge ' + cls + '">' + esc(status) + '</span>';
+  }
+
+  function dqAgeText(v) {
+    return v == null ? "—" : v.toFixed(1) + " min";
+  }
+
+  function renderDataQuality() {
+    if (!el("dqSummary")) return;
+    var q = getDataQuality();
+    var box = el("dqStatus");
+    var nav = el("navQuality");
+    var cls = q.status === "OK" ? "ok" : (q.status === "ERROR" ? "error" : "warn");
+    box.className = "opsStatus " + cls;
+    box.innerHTML = "<strong>" + esc(q.status) + "</strong><br>" +
+      (q.status === "OK" ? "API市場データ・指標・必要換算が既知の鮮度範囲内です。" :
+       q.status === "ADJUSTED" ? "API基準取得後にブローカー手修正があります。" :
+       q.status === "STALE" ? "既知のデータ時刻が設定した許容範囲を超えています。" :
+       q.status === "ERROR" ? "必要値欠落またはMarket Dataエラーがあります。" :
+       "API由来の鮮度/履歴を完全には確認できません。手入力は利用可能です。");
+
+    var html = "";
+    html += resultRow("Overall", q.status);
+    html += resultRow("Market Context", q.same ? "MATCH" : "NO API META", q.same ? "go" : "");
+    html += resultRow("Indicator Source Bars", String(q.sourceBars) + " / need >=300", q.barsOk ? "go" : "stop");
+    html += resultRow("EMA/RSI/ATR", q.indicatorsOk ? "READY" : "PARTIAL", q.indicatorsOk ? "go" : "stop");
+    html += resultRow("Price Fetch Age", dqAgeText(q.fetchAge));
+    html += resultRow("Latest Bar Age", dqAgeText(q.barAge));
+    html += resultRow("Timeframe STALE limit", q.staleLimit == null ? "—" : q.staleLimit.toFixed(1) + " min");
+    html += resultRow("Required FX Conversion", q.requiredConversions.length ? requiredConversionSummary() : "不要");
+    html += resultRow("Conversion Missing", q.convMissing.length ? q.convMissing.join(", ") : "なし", q.convMissing.length ? "stop" : "go");
+    html += resultRow("Conversion Unknown Age", q.convUnknown.length ? q.convUnknown.join(", ") : "なし");
+    html += resultRow("Conversion STALE", q.convStale.length ? q.convStale.join(", ") : "なし", q.convStale.length ? "stop" : "go");
+    html += resultRow("Broker Adjusted", q.adjusted ? "YES" : "NO");
+    el("dqSummary").innerHTML = html;
+    if (nav) nav.innerHTML = q.status;
+  }
+
+  /* ---------- TRADE LIFECYCLE ---------- */
+
+  function getTrades() {
+    var d = storageRead(TRADE_KEY, { schema:10, items:[] });
+    if (!d || !d.items || typeof d.items.length !== "number") d = { schema:10, items:[] };
+    return d;
+  }
+
+  function saveTrades(d) { return storageWrite(TRADE_KEY, d); }
+  function makeTradeId() { return "TR-" + new Date().getTime() + "-" + Math.floor(Math.random()*10000); }
+
+  function createTradePlanFromCurrent() {
+    var R = lastResult;
+    if (!R || R.state === "INVALID" || R.state === "NO-TRADE") {
+      setStorageStatus("Trade作成にはGate通過済みの有効な建玉設計が必要です。", false);
+      return;
+    }
+
+    var q = getDataQuality();
+    if (q.status === "ERROR" || q.status === "STALE") {
+      setStorageStatus("Data Qualityが " + q.status + " のためTrade作成を停止しました。市場データを確認してください。", false);
+      return;
+    }
+
+    var pSnap = currentPortfolioSnapshot();
+    var jSnap = journalSnapshotFromCurrent();
+    if (!pSnap || !jSnap) {
+      setStorageStatus("Tradeスナップショットを作成できません。", false);
+      return;
+    }
+
+    var pData = getPortfolio();
+    if (pData.items.length && pData.items[0].acctCcy !== pSnap.acctCcy) {
+      setStorageStatus("Portfolio口座通貨が一致しません。", false);
+      return;
+    }
+    var pg = prospectivePortfolioGate(pSnap);
+    if (!pg.currencyOk || !pg.riskOk || !pg.marginOk || !pg.legOk) {
+      setStorageStatus("Trade作成するとPortfolio Gateを超過します。", false);
+      return;
+    }
+
+    var id = makeTradeId();
+    pSnap.tradeId = id;
+    jSnap.tradeId = id;
+    jSnap.d1bias = value("d1bias");
+    jSnap.depth = value("depth");
+
+    var trade = {
+      id:id, createdAt:new Date().getTime(), updatedAt:new Date().getTime(),
+      symbol:pSnap.symbol, label:pSnap.label, timeframe:pSnap.timeframe,
+      mode:pSnap.entryType, direction:pSnap.direction, acctCcy:pSnap.acctCcy,
+      plannedEntry:pSnap.entry, plannedSl:pSnap.sl, plannedTp1:pSnap.tp1, plannedTp2:pSnap.tp2,
+      plannedLot:pSnap.lot, plannedRisk:pSnap.risk, plannedMargin:pSnap.margin,
+      d1bias:value("d1bias"), depth:value("depth"),
+      status:"PLANNED", actualEntry:null, actualExit:null, realizedR:null, notes:"",
+      journalId:jSnap.id, portfolioId:pSnap.id
+    };
+
+    var jData = getJournal();
+    var tData = getTrades();
+    var oldP = JSON.stringify(pData), oldJ = JSON.stringify(jData), oldT = JSON.stringify(tData);
+    pData.items.push(pSnap);
+    jData.items.unshift(jSnap);
+    tData.items.unshift(trade);
+
+    if (!savePortfolio(pData) || !saveJournal(jData) || !saveTrades(tData)) {
+      savePortfolio(JSON.parse(oldP)); saveJournal(JSON.parse(oldJ)); saveTrades(JSON.parse(oldT));
+      setStorageStatus("Trade作成の保存に失敗し、変更をロールバックしました。", false);
+      return;
+    }
+
+    selectedTradeId = id;
+    renderPortfolio(); renderJournal(); renderTradeLifecycle(); openTradeEditor(id); renderAnalytics();
+    setStorageStatus("Trade " + id + " を作成し、Portfolio/Journalへリンクしました。", true);
+  }
+
+  function getTradeById(id) {
+    var d = getTrades(), i;
+    for (i=0;i<d.items.length;i++) if (d.items[i].id === id) return d.items[i];
+    return null;
+  }
+
+  function tradeTransitionAllowed(from, to) {
+    if (from === to) return true;
+    var map = {
+      PLANNED:{WATCH:1,OPEN:1,CANCEL:1},
+      WATCH:{ENTRY:1,OPEN:1,CANCEL:1},
+      ENTRY:{OPEN:1,CANCEL:1},
+      OPEN:{MANAGE:1,CLOSED:1},
+      MANAGE:{CLOSED:1},
+      CLOSED:{}, CANCEL:{}
+    };
+    return !!(map[from] && map[from][to]);
+  }
+
+  function syncLinkedJournalAndPortfolio(trade) {
+    var jData = getJournal(), pData = getPortfolio();
+    var i, j;
+    for (i=0;i<jData.items.length;i++) {
+      if (jData.items[i].id === trade.journalId) {
+        j = jData.items[i];
+        if (trade.status === "CLOSED") {
+          j.status = trade.realizedR > 0 ? "WIN" : (trade.realizedR < 0 ? "LOSS" : "BE");
+          j.realizedR = trade.realizedR;
+        } else if (trade.status === "CANCEL") {
+          j.status = "CANCEL"; j.realizedR = null;
+        } else if (trade.status === "OPEN" || trade.status === "MANAGE") {
+          j.status = "OPEN"; j.realizedR = null;
+        } else {
+          j.status = "PLANNED"; j.realizedR = null;
+        }
+        if (trade.notes) j.notes = trade.notes;
+        j.updatedAt = new Date().getTime();
+        j.actualEntry = trade.actualEntry;
+        j.actualExit = trade.actualExit;
+        break;
+      }
+    }
+
+    if (trade.status === "CLOSED" || trade.status === "CANCEL") {
+      var next=[];
+      for (i=0;i<pData.items.length;i++) if (pData.items[i].id !== trade.portfolioId) next.push(pData.items[i]);
+      pData.items = next;
+    }
+    return saveJournal(jData) && savePortfolio(pData);
+  }
+
+  function openTradeEditor(id) {
+    var t = getTradeById(id);
+    if (!t) {
+      selectedTradeId=null; el("tradeEditor").style.display="none"; el("tradeEditorEmpty").style.display="block"; return;
+    }
+    selectedTradeId=id;
+    el("tradeEditStatus").value=t.status;
+    el("tradeActualEntry").value=t.actualEntry==null?"":String(t.actualEntry);
+    el("tradeActualExit").value=t.actualExit==null?"":String(t.actualExit);
+    el("tradeRealizedR").value=t.realizedR==null?"":String(t.realizedR);
+    el("tradeNotes").value=t.notes||"";
+    el("tradeEditorEmpty").style.display="none"; el("tradeEditor").style.display="block";
+  }
+
+  function updateSelectedTrade() {
+    if (!selectedTradeId) return;
+    var d=getTrades(), i, t=null;
+    for(i=0;i<d.items.length;i++) if(d.items[i].id===selectedTradeId){t=d.items[i];break;}
+    if(!t) return;
+    var nextStatus=value("tradeEditStatus");
+    if(!tradeTransitionAllowed(t.status,nextStatus)) {
+      el("tradeStatusBox").className="opsStatus error";
+      el("tradeStatusBox").innerHTML="<strong>INVALID TRANSITION</strong><br>"+esc(t.status+" → "+nextStatus+" は許可していません。");
+      return;
+    }
+    var ae=el("tradeActualEntry").value===""?null:parseFloat(el("tradeActualEntry").value);
+    var ax=el("tradeActualExit").value===""?null:parseFloat(el("tradeActualExit").value);
+    var rr=el("tradeRealizedR").value===""?null:parseFloat(el("tradeRealizedR").value);
+    if ((nextStatus==="OPEN"||nextStatus==="MANAGE"||nextStatus==="CLOSED") && (!isFinite(ae)||ae<=0)) {
+      el("tradeStatusBox").className="opsStatus error"; el("tradeStatusBox").innerHTML="<strong>INPUT</strong><br>OPEN以降は実Entryが必要です。"; return;
+    }
+    if (nextStatus==="CLOSED" && (!isFinite(ax)||ax<=0 || !isFinite(rr))) {
+      el("tradeStatusBox").className="opsStatus error"; el("tradeStatusBox").innerHTML="<strong>INPUT</strong><br>CLOSEDには実Exitと実現Rが必要です。"; return;
+    }
+    t.status=nextStatus; t.actualEntry=ae; t.actualExit=ax; t.realizedR=rr;
+    t.notes=String(el("tradeNotes").value||"").substring(0,800); t.updatedAt=new Date().getTime();
+    if(!saveTrades(d) || !syncLinkedJournalAndPortfolio(t)) {
+      el("tradeStatusBox").className="opsStatus error"; el("tradeStatusBox").innerHTML="<strong>SAVE ERROR</strong><br>Trade同期に失敗しました。"; return;
+    }
+    renderTradeLifecycle(); renderJournal(); renderPortfolio(); renderAnalytics(); openTradeEditor(t.id);
+  }
+
+  function renderTradeLifecycle() {
+    if(!el("tradeTable")) return;
+    var d=getTrades(), active=0, closed=0, i,t,html="";
+    for(i=0;i<d.items.length;i++) {
+      t=d.items[i];
+      if(t.status==="CLOSED"||t.status==="CANCEL") closed++; else active++;
+      html += '<tr><td>'+esc(t.id)+'</td><td>'+esc(t.label||t.symbol)+'</td><td>'+esc(t.timeframe)+'</td><td>'+esc(t.direction)+'</td><td><span class="tradeStatus '+esc(t.status)+'">'+esc(t.status)+'</span></td><td>'+commas(t.plannedRisk)+' '+esc(t.acctCcy||'')+'</td><td><button type="button" class="smallDanger" data-trade-edit="'+esc(t.id)+'">編集</button></td></tr>';
+    }
+    var tbody=el("tradeTable").getElementsByTagName("tbody")[0];
+    tbody.innerHTML=html||'<tr><td colspan="7" style="text-align:center;color:#77818c">Tradeなし</td></tr>';
+    if(tbody.querySelectorAll){var btns=tbody.querySelectorAll("[data-trade-edit]");for(i=0;i<btns.length;i++)btns[i].onclick=function(){openTradeEditor(this.getAttribute("data-trade-edit"));};}
+    el("tradeSummary").innerHTML=resultRow("Active",String(active))+resultRow("Closed/Cancel",String(closed))+resultRow("Total",String(d.items.length));
+    el("tradeStatusBox").className="opsStatus"; el("tradeStatusBox").innerHTML="<strong>TRADE ID</strong><br>Active "+active+" / Total "+d.items.length;
+    if(el("navTrades")) el("navTrades").innerHTML=String(active);
+  }
+
+  /* ---------- JOURNAL ANALYTICS ---------- */
+
+  function renderEdgeFactorAnalytics(items) {
+    if (!el("edgeFactorTable")) return;
+    var tbody = el("edgeFactorTable").getElementsByTagName("tbody")[0];
+    var real = realizedJournal(items);
+    var base = analyticsStats(real);
+    var html = "", i, j, spec, sub, st, diff;
+
+    if (!real.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#77818c">実現R記録なし</td></tr>';
+      return;
+    }
+
+    html += '<tr><td style="text-align:left">BASELINE 全体</td><td>' + base.n + '</td><td>' +
+      (base.avg == null ? "—" : base.avg.toFixed(2)) + '</td><td>' +
+      (base.winRate == null ? "—" : base.winRate.toFixed(0) + "%") + '</td><td>—</td></tr>';
+
+    for (i = 0; i < EDGE_SPECS.length; i++) {
+      spec = EDGE_SPECS[i];
+      sub = [];
+      for (j = 0; j < real.length; j++) {
+        if (real[j].edgeFactors && real[j].edgeFactors.indexOf) {
+          if (real[j].edgeFactors.indexOf(spec.id) >= 0) sub.push(real[j]);
+        }
+      }
+      if (!sub.length) {
+        html += '<tr><td style="text-align:left">' + esc(spec.id) + '</td><td>0</td><td>—</td><td>—</td><td>—</td></tr>';
+        continue;
+      }
+      st = analyticsStats(sub);
+      diff = (st.avg == null || base.avg == null) ? null : (st.avg - base.avg);
+      html += '<tr><td style="text-align:left">' + esc(spec.id) + '</td><td>' + st.n + '</td><td>' +
+        (st.avg == null ? "—" : st.avg.toFixed(2)) + '</td><td>' +
+        (st.winRate == null ? "—" : st.winRate.toFixed(0) + "%") + '</td><td class="' +
+        (st.n >= 20 && diff != null ? (diff > 0 ? "go" : "stop") : "") + '">' +
+        (diff == null ? "—" : ((diff >= 0 ? "+" : "") + diff.toFixed(2))) +
+        (st.n < 20 ? " (N<20)" : "") + '</td></tr>';
+    }
+    tbody.innerHTML = html;
+  }
+
+  function uniqueJournalValues(items,key) {
+    var map={}, out=[], i,v;
+    for(i=0;i<items.length;i++){v=items[i][key];if(v!=null&&String(v)!=="")map[String(v)]=1;}
+    for(v in map)if(Object.prototype.hasOwnProperty.call(map,v))out.push(v);
+    out.sort(); return out;
+  }
+
+  function setAnalyticsOptions(id, vals) {
+    var node=el(id), keep=node?node.value:"ALL", html='<option value="ALL">ALL</option>',i;
+    if(!node)return;
+    for(i=0;i<vals.length;i++)html+='<option value="'+esc(vals[i])+'">'+esc(vals[i])+'</option>';
+    node.innerHTML=html;
+    var found=false;for(i=0;i<node.options.length;i++)if(node.options[i].value===keep)found=true;
+    node.value=found?keep:"ALL";
+  }
+
+  function populateAnalyticsFilters() {
+    if(!el("analyticsSymbol"))return;
+    var items=getJournal().items;
+    setAnalyticsOptions("analyticsSymbol",uniqueJournalValues(items,"symbol"));
+    setAnalyticsOptions("analyticsTf",uniqueJournalValues(items,"timeframe"));
+    setAnalyticsOptions("analyticsMode",uniqueJournalValues(items,"mode"));
+  }
+
+  function analyticsFilteredItems() {
+    var items=getJournal().items, out=[],i,x;
+    var s=value("analyticsSymbol"),tf=value("analyticsTf"),m=value("analyticsMode");
+    for(i=0;i<items.length;i++){
+      x=items[i];
+      if(s!=="ALL"&&x.symbol!==s)continue;
+      if(tf!=="ALL"&&x.timeframe!==tf)continue;
+      if(m!=="ALL"&&x.mode!==m)continue;
+      out.push(x);
+    }
+    return out;
+  }
+
+  function realizedJournal(items) {
+    var out=[],i,r;
+    for(i=0;i<items.length;i++){r=items[i].realizedR;if(r!=null&&isFinite(Number(r)))out.push(items[i]);}
+    out.sort(function(a,b){return Number(a.createdAt||0)-Number(b.createdAt||0);});
+    return out;
+  }
+
+  function analyticsStats(items) {
+    var ritems=realizedJournal(items),i,r,total=0,pos=0,neg=0,wins=0,losses=0,peak=0,equity=0,maxDD=0;
+    var winRun=0,lossRun=0,maxWinRun=0,maxLossRun=0;
+    for(i=0;i<ritems.length;i++){
+      r=Number(ritems[i].realizedR); total+=r; equity+=r; if(equity>peak)peak=equity; if(peak-equity>maxDD)maxDD=peak-equity;
+      if(r>0){pos+=r;wins++;winRun++;lossRun=0;if(winRun>maxWinRun)maxWinRun=winRun;}
+      else if(r<0){neg+=Math.abs(r);losses++;lossRun++;winRun=0;if(lossRun>maxLossRun)maxLossRun=lossRun;}
+      else {winRun=0;lossRun=0;}
+    }
+    return {n:ritems.length,total:total,avg:ritems.length?total/ritems.length:null,wins:wins,losses:losses,
+      winRate:(wins+losses)?wins/(wins+losses)*100:null,avgWin:wins?pos/wins:null,avgLoss:losses?-neg/losses:null,
+      pf:neg>0?pos/neg:(pos>0?Infinity:null),maxDD:maxDD,maxWinRun:maxWinRun,maxLossRun:maxLossRun};
+  }
+
+  function renderAnalytics() {
+    if(!el("analyticsSummary"))return;
+    populateAnalyticsFilters();
+    var items=analyticsFilteredItems(), s=analyticsStats(items), html="";
+    renderEdgeFactorAnalytics(items);
+    html+=resultRow("対象Journal",String(items.length));
+    html+=resultRow("実現R件数 N",String(s.n));
+    html+=resultRow("累計実現R",s.n?s.total.toFixed(2)+"R":"—",s.n?(s.total>=0?"go":"stop"):"");
+    html+=resultRow("平均実現R / observed expectancy",s.avg==null?"—":s.avg.toFixed(3)+"R");
+    html+=resultRow("平均WIN R",s.avgWin==null?"—":s.avgWin.toFixed(2)+"R");
+    html+=resultRow("平均LOSS R",s.avgLoss==null?"—":s.avgLoss.toFixed(2)+"R");
+    html+=resultRow("Win %",s.winRate==null?"—":s.winRate.toFixed(1)+"%");
+    html+=resultRow("Profit Factor",s.pf==null?"—":(s.pf===Infinity?"∞":s.pf.toFixed(2)));
+    html+=resultRow("Max Drawdown",s.n?s.maxDD.toFixed(2)+"R":"—");
+    html+=resultRow("Max Win/Loss Streak",s.maxWinRun+" / "+s.maxLossRun);
+    el("analyticsSummary").innerHTML=html;
+    if(el("navAnalytics"))el("navAnalytics").innerHTML=String(s.n);
+
+    var group=value("analyticsGroupBy"), groups={},i,x,k;
+    for(i=0;i<items.length;i++){x=items[i];k=String(x[group]||"UNKNOWN");if(!groups[k])groups[k]=[];groups[k].push(x);}
+    var keys=[];for(k in groups)if(Object.prototype.hasOwnProperty.call(groups,k))keys.push(k);keys.sort();
+    html="";
+    for(i=0;i<keys.length;i++){var gs=analyticsStats(groups[keys[i]]);html+='<tr><td>'+esc(keys[i])+'</td><td>'+gs.n+'</td><td>'+(gs.n?gs.total.toFixed(2):'—')+'</td><td>'+(gs.avg==null?'—':gs.avg.toFixed(3))+'</td><td>'+(gs.winRate==null?'—':gs.winRate.toFixed(1)+'%')+'</td></tr>';}
+    el("analyticsTable").getElementsByTagName("tbody")[0].innerHTML=html||'<tr><td colspan="5" style="text-align:center;color:#77818c">データなし</td></tr>';
+  }
+
+  /* ---------- MULTI-TIMEFRAME DASHBOARD ---------- */
+
+  function getMtfCache(){var d=storageRead(MTF_KEY,{schema:12,symbol:null,frames:{}});if(!d||!d.frames)d={schema:12,symbol:null,frames:{}};return d;}
+  function selectedMtfFrames(){var pairs=[["M1","mtfM1"],["M3","mtfM3"],["M5","mtfM5"],["M15","mtfM15"],["M30","mtfM30"],["H1","mtfH1"],["H4","mtfH4"],["D1","mtfD1"]],out=[],i;for(i=0;i<pairs.length;i++)if(el(pairs[i][1])&&el(pairs[i][1]).checked)out.push(pairs[i][0]);return out;}
+
+  function mtfFrameCalc(tf,bars) {
+    if(!bars||bars.length<300)return null;
+    var e20=emaSeries(bars,20),e50=emaSeries(bars,50),e200=emaSeries(bars,200),r13=wilderRsiSeries(bars,13),a=wilderAtr(bars,14),sw=swingWindowStats(bars,100);
+    var close=Number(bars[bars.length-1].close),l20=lastFiniteSeriesValue(e20),l50=lastFiniteSeriesValue(e50),l200=lastFiniteSeriesValue(e200),lr=lastFiniteSeriesValue(r13);
+    if(!isFinite(close)||l20==null||l50==null||l200==null||lr==null||a==null||!sw)return null;
+    return {tf:tf,close:close,ema20:l20,ema50:l50,ema200:l200,rsi13:lr,atr14:a,rangePos:(close-sw.low)/(sw.high-sw.low)*100,barTime:bars[bars.length-1].datetime,bars:bars.length};
+  }
+
+  function fetchOneMtf(tf,provider,key){var iv=marketDataInterval(tf);if(!iv)return Promise.resolve({tf:tf,error:"interval"});var url="https://api.twelvedata.com/time_series?symbol="+encodeURIComponent(provider)+"&interval="+encodeURIComponent(iv.api)+"&outputsize="+encodeURIComponent(String(iv.output))+"&timezone=UTC&apikey="+encodeURIComponent(key);return fetchTwelveJson(url).then(function(res){var raw=parseTwelveBars(res.data.values),bars=iv.aggregate===3?aggregateThreeMinuteBars(raw):raw,frame=mtfFrameCalc(tf,bars);if(!frame)throw new Error("insufficient/invalid bars");return {tf:tf,frame:frame};}).catch(function(err){return {tf:tf,error:err&&err.message?err.message:String(err)};});}
+
+  function fetchMtfDashboard(){var key=getMarketApiKey(),frames=selectedMtfFrames();if(!key){el("mtfStatus").className="opsStatus error";el("mtfStatus").innerHTML="<strong>API KEY</strong><br>Twelve Data API Keyが必要です。";return;}if(!frames.length){el("mtfStatus").className="opsStatus warn";el("mtfStatus").innerHTML="<strong>SELECT</strong><br>時間足を1つ以上選択してください。";return;}var provider=currentProviderSymbol(getMarketDataSettings()),symbol=value("symbol"),req=[],i;el("mtfStatus").className="opsStatus warn";el("mtfStatus").innerHTML="<strong>FETCHING</strong><br>"+frames.length+"時間足を取得中。";for(i=0;i<frames.length;i++)req.push(fetchOneMtf(frames[i],provider,key));Promise.all(req).then(function(results){var cache={schema:12,symbol:symbol,providerSymbol:provider,fetchedAt:new Date().getTime(),frames:{}},errs=[],j,r;for(j=0;j<results.length;j++){r=results[j];if(r.frame)cache.frames[r.tf]=r.frame;else errs.push(r.tf+": "+r.error);}storageWrite(MTF_KEY,cache);renderMtfDashboard();el("mtfStatus").className=errs.length?"opsStatus warn":"opsStatus ok";el("mtfStatus").innerHTML="<strong>"+(errs.length?"PARTIAL":"READY")+"</strong><br>取得 "+Object.keys(cache.frames).length+" / "+frames.length+(errs.length?"<br>"+esc(errs.join(" / ")):"");});}
+
+  function rel(a,b){if(a>b)return '<span class="mtfArrowUp">↑</span>';if(a<b)return '<span class="mtfArrowDown">↓</span>';return '<span class="mtfArrowFlat">=</span>';}
+  function renderMtfDashboard(){if(!el("mtfTable"))return;var c=getMtfCache(),tbody=el("mtfTable").getElementsByTagName("tbody")[0],html="",order=["M1","M3","M5","M15","M30","H1","H4","D1"],i,f,S=SYMBOLS[value("symbol")],digits=S.customSpec?(n("customDigits")==null?S.digits:Math.max(0,Math.round(n("customDigits")))):S.digits;if(c.symbol!==value("symbol")){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#77818c">現在銘柄のMTFデータなし</td></tr>';if(el("navMtf"))el("navMtf").innerHTML="—";return;}for(i=0;i<order.length;i++){f=c.frames[order[i]];if(!f)continue;html+='<tr><td>'+order[i]+'</td><td>'+Number(f.close).toFixed(digits)+'</td><td>'+rel(f.close,f.ema20)+'</td><td>'+rel(f.close,f.ema50)+'</td><td>'+rel(f.close,f.ema200)+'</td><td>'+rel(f.ema20,f.ema50)+'</td><td>'+rel(f.ema50,f.ema200)+'</td><td>'+Number(f.rsi13).toFixed(1)+'</td><td>'+Number(f.atr14).toFixed(Math.max(digits,4))+'</td><td>'+Number(f.rangePos).toFixed(0)+'%</td></tr>';}tbody.innerHTML=html||'<tr><td colspan="10" style="text-align:center;color:#77818c">データなし</td></tr>';if(el("navMtf"))el("navMtf").innerHTML=Object.keys(c.frames).length+" TF";}
+
+  /* ---------- SCENARIO STRESS TEST ---------- */
+
+  function stressedLoss(R, spreadMult, extraSlip, gapAtr) {
+    var lot=R.mode==="GRID"?R.cumLot:R.lot;
+    if(!lot||lot<=0||!R.pipVal||!R.S||!R.S.pip)return null;
+    var slPips=R.mode==="GRID"?Math.abs(R.avg-R.finalSL)/R.S.pip:R.slPips;
+    var spread=Math.max(0,n("spreadPips")||0)*spreadMult;
+    var slip=Math.max(0,n("slippagePips")||0)+Math.max(0,extraSlip||0);
+    var atrPips=(n("atr")||0)/R.S.pip;
+    var commission=Math.max(0,n("commission")||0)*lot;
+    return (slPips+spread+slip+Math.max(0,gapAtr||0)*atrPips)*R.pipVal*lot+commission;
+  }
+
+  function renderStressTest(){if(!el("stressSummary"))return;var R=lastResult;if(!R||R.state==="INVALID"){el("stressSummary").innerHTML=resultRow("状態","入力待ち");if(el("navStress"))el("navStress").innerHTML="—";return;}var sm=parseFloat(el("stressSpreadMult").value),xs=parseFloat(el("stressExtraSlip").value),ga=parseFloat(el("stressGapAtr").value);if(!isFinite(sm)||sm<1)sm=1;if(!isFinite(xs)||xs<0)xs=0;if(!isFinite(ga)||ga<0)ga=0;var base=R.mode==="GRID"?R.worstLoss:R.riskReal;var sSpread=stressedLoss(R,sm,0,0),sSlip=stressedLoss(R,1,xs,0),sGap=stressedLoss(R,1,0,ga),combined=stressedLoss(R,sm,xs,ga),bal=n("balance")||0;function txt(v){return v==null?"—":commas(v)+" "+R.acctCcy+(bal>0?" ("+(v/bal*100).toFixed(2)+"%)":"");}var p=portfolioTotals(getPortfolio().items);var html="";html+=resultRow("Base Risk",txt(base));html+=resultRow("Spread x"+sm.toFixed(1),txt(sSpread));html+=resultRow("Extra Slippage +"+xs.toFixed(1)+"p",txt(sSlip));html+=resultRow("Gap +"+ga.toFixed(2)+" ATR",txt(sGap));html+=resultRow("Combined",txt(combined),combined!=null&&R.riskAmt&&combined<=R.riskAmt?"go":"stop");html+=resultRow("許容Risk",txt(R.riskAmt));html+=resultRow("Portfolio名目SL合計",p.mixedCurrency?"— CCY MIXED":((p.acctCcy&&p.acctCcy!==R.acctCcy)?("— "+p.acctCcy+" / current "+R.acctCcy):txt(p.risk)));el("stressSummary").innerHTML=html;if(el("navStress"))el("navStress").innerHTML=bal>0&&combined!=null?(combined/bal*100).toFixed(1)+"%":"—";}
+
+  /* ---------- BACKUP / RESTORE ---------- */
+
+  function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
+
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.1",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+
+  function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
+
+  function handleBackupFile(e){var file=e&&e.target&&e.target.files?e.target.files[0]:null;if(!file)return;var reader=new FileReader();reader.onload=function(){try{var p=JSON.parse(reader.result);if(!validateBackupPayload(p))throw new Error("DEPA FX Backup形式ではありません");pendingBackup=p;el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>READY TO RESTORE</strong><br>"+Object.keys(p.keys).length+" keys / exported "+formatLocalStamp(p.exportedAt)+" / app "+esc(p.appVersion||"?");}catch(err){pendingBackup=null;el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>INVALID BACKUP</strong><br>"+esc(err.message||String(err));}};reader.readAsText(file);}
+
+  function applyDepaBackup(){if(!pendingBackup||!validateBackupPayload(pendingBackup)){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>NO BACKUP</strong><br>先に有効なJSONを選択してください。";return;}var replace=!!el("backupReplaceExisting").checked,preserveKey=null,i,k,keys;if(replace){if(!pendingBackup.secretIncluded)preserveKey=window.localStorage.getItem(MARKET_DATA_API_KEY);keys=depaStorageKeys();for(i=0;i<keys.length;i++)window.localStorage.removeItem(keys[i]);if(preserveKey!=null)window.localStorage.setItem(MARKET_DATA_API_KEY,preserveKey);}for(k in pendingBackup.keys)if(Object.prototype.hasOwnProperty.call(pendingBackup.keys,k))window.localStorage.setItem(k,pendingBackup.keys[k]);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>RESTORED</strong><br>復元完了。再読込します。";window.setTimeout(function(){window.location.reload();},350);}
+
+  function hookV3ControlsEdgeBridge(){ hookEdgeControls(); }
+
+  function hookV3Controls(){
+    if(el("dqStaleBars")){var d=getDqSettings();el("dqStaleBars").value=String(d.staleBars);el("dqConversionMaxMin").value=String(d.conversionMaxMin);el("dqStaleBars").onchange=saveDqSettingsFromUi;el("dqConversionMaxMin").onchange=saveDqSettingsFromUi;}
+    if(el("createTradePlan"))el("createTradePlan").onclick=createTradePlanFromCurrent;
+    if(el("createTradeFromPosition"))el("createTradeFromPosition").onclick=createTradePlanFromCurrent;
+    if(el("createTradeFromGrid"))el("createTradeFromGrid").onclick=createTradePlanFromCurrent;
+    if(el("updateTrade"))el("updateTrade").onclick=updateSelectedTrade;
+    var af=["analyticsSymbol","analyticsTf","analyticsMode","analyticsGroupBy"],i;if(el("analyticsSymbol"))for(i=0;i<af.length;i++)el(af[i]).onchange=renderAnalytics;
+    if(el("fetchMtf"))el("fetchMtf").onclick=fetchMtfDashboard;
+    var sf=["stressSpreadMult","stressExtraSlip","stressGapAtr"];for(i=0;i<sf.length;i++)if(el(sf[i])){el(sf[i]).onchange=renderStressTest;el(sf[i]).oninput=renderStressTest;}
+    if(el("exportBackup"))el("exportBackup").onclick=exportDepaBackup;
+    if(el("backupFile"))el("backupFile").onchange=handleBackupFile;
+    if(el("applyBackup"))el("applyBackup").onclick=applyDepaBackup;
+  }
+
+
   /* ================= PHASE 8: WATCH / ALERTS ================= */
 
   var WATCH_KEY = "depaFX.activeWatch.v8";
@@ -1728,6 +2561,7 @@ textarea.journalNotes{
 
   var WATCH_SIGNATURE_IDS = [
     "symbol", "tf", "d1bias", "entryType", "depth",
+    "counterDir", "gridDir", "slFloorAtr", "counterSlAtr",
     "acctCcy", "balance", "riskPct", "leverage",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
@@ -1735,7 +2569,8 @@ textarea.journalNotes{
     "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
     "customPip", "customContract", "customDigits",
     "swingHigh", "swingLow", "slAnchor",
-    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult",
+    "stressSpreadMult", "stressExtraSlip", "stressGapAtr"
   ];
 
   function defaultWatchSettings() {
@@ -1925,6 +2760,12 @@ textarea.journalNotes{
 
   function armCurrentWatch() {
     var R = lastResult;
+
+    var dq = getDataQuality();
+    if (dq.status === "ERROR" || dq.status === "STALE") {
+      setStorageStatus("Data Qualityが " + dq.status + " のためWATCHをARMできません。", false);
+      return;
+    }
 
     if (!R || R.state === "INVALID") {
       setStorageStatus("WATCH前に必須入力を完了してください。", false);
@@ -2598,15 +3439,15 @@ textarea.journalNotes{
   }
 
   function marketDataInterval(tf) {
-    // Fetch more than 100 bars so ATR14 has warm-up history.
-    if (tf === "M1") return { api:"1min", aggregate:1, output:150 };
-    if (tf === "M3") return { api:"1min", aggregate:3, output:450 };
-    if (tf === "M5") return { api:"5min", aggregate:1, output:150 };
-    if (tf === "M15") return { api:"15min", aggregate:1, output:150 };
-    if (tf === "M30") return { api:"30min", aggregate:1, output:150 };
-    if (tf === "H1") return { api:"1h", aggregate:1, output:150 };
-    if (tf === "H4") return { api:"4h", aggregate:1, output:150 };
-    if (tf === "D1") return { api:"1day", aggregate:1, output:150 };
+    // 350 effective bars gives EMA200 enough warm-up while still displaying only the latest 100.
+    if (tf === "M1") return { api:"1min", aggregate:1, output:350 };
+    if (tf === "M3") return { api:"1min", aggregate:3, output:1050 };
+    if (tf === "M5") return { api:"5min", aggregate:1, output:350 };
+    if (tf === "M15") return { api:"15min", aggregate:1, output:350 };
+    if (tf === "M30") return { api:"30min", aggregate:1, output:350 };
+    if (tf === "H1") return { api:"1h", aggregate:1, output:350 };
+    if (tf === "H4") return { api:"4h", aggregate:1, output:350 };
+    if (tf === "D1") return { api:"1day", aggregate:1, output:350 };
     return null;
   }
 
@@ -2723,6 +3564,89 @@ textarea.journalNotes{
       from:bars[start].datetime,
       to:bars[bars.length - 1].datetime
     };
+  }
+
+
+  function emaSeries(bars, period) {
+    var out = [];
+    var i, sum = 0, close, alpha, prev;
+
+    if (!bars || bars.length < period || period <= 0) return out;
+
+    for (i = 0; i < bars.length; i++) out.push(null);
+
+    for (i = 0; i < period; i++) {
+      close = Number(bars[i].close);
+      if (!isFinite(close)) return [];
+      sum += close;
+    }
+
+    prev = sum / period;
+    out[period - 1] = prev;
+    alpha = 2 / (period + 1);
+
+    for (i = period; i < bars.length; i++) {
+      close = Number(bars[i].close);
+      if (!isFinite(close)) return [];
+      prev = (close - prev) * alpha + prev;
+      out[i] = prev;
+    }
+
+    return out;
+  }
+
+  function wilderRsiSeries(bars, period) {
+    var out = [];
+    var i, change, gain, loss;
+    var avgGain = 0, avgLoss = 0, rs, rsi;
+
+    if (!bars || bars.length < period + 1 || period <= 0) return out;
+
+    for (i = 0; i < bars.length; i++) out.push(null);
+
+    for (i = 1; i <= period; i++) {
+      change = Number(bars[i].close) - Number(bars[i - 1].close);
+      if (!isFinite(change)) return [];
+      if (change > 0) avgGain += change;
+      else avgLoss += Math.abs(change);
+    }
+
+    avgGain /= period;
+    avgLoss /= period;
+
+    if (avgLoss === 0) rsi = avgGain === 0 ? 50 : 100;
+    else {
+      rs = avgGain / avgLoss;
+      rsi = 100 - (100 / (1 + rs));
+    }
+    out[period] = rsi;
+
+    for (i = period + 1; i < bars.length; i++) {
+      change = Number(bars[i].close) - Number(bars[i - 1].close);
+      gain = change > 0 ? change : 0;
+      loss = change < 0 ? Math.abs(change) : 0;
+
+      avgGain = ((avgGain * (period - 1)) + gain) / period;
+      avgLoss = ((avgLoss * (period - 1)) + loss) / period;
+
+      if (avgLoss === 0) rsi = avgGain === 0 ? 50 : 100;
+      else {
+        rs = avgGain / avgLoss;
+        rsi = 100 - (100 / (1 + rs));
+      }
+      out[i] = rsi;
+    }
+
+    return out;
+  }
+
+  function lastFiniteSeriesValue(series) {
+    var i;
+    if (!series) return null;
+    for (i = series.length - 1; i >= 0; i--) {
+      if (series[i] != null && isFinite(Number(series[i]))) return Number(series[i]);
+    }
+    return null;
   }
 
   function wilderAtr(bars, period) {
@@ -3133,7 +4057,7 @@ textarea.journalNotes{
 
       var rawBars = parseTwelveBars(responses[1].data.values);
       var bars = interval.aggregate === 3 ? aggregateThreeMinuteBars(rawBars) : rawBars;
-      var requiredBars = Math.max(period + 1, 100);
+      var requiredBars = Math.max(period + 1, 300);
 
       if (bars.length < requiredBars) {
         throw new Error(
@@ -3150,6 +4074,18 @@ textarea.journalNotes{
       var swing100 = swingWindowStats(bars, 100);
       if (!swing100) {
         throw new Error("直近100本のSwing High/Lowを計算できません。");
+      }
+
+      var ema20All = emaSeries(bars, 20);
+      var ema50All = emaSeries(bars, 50);
+      var ema200All = emaSeries(bars, 200);
+      var rsi13All = wilderRsiSeries(bars, 13);
+
+      if (ema20All.length !== bars.length ||
+          ema50All.length !== bars.length ||
+          ema200All.length !== bars.length ||
+          rsi13All.length !== bars.length) {
+        throw new Error("EMA / RSIを計算できません。");
       }
 
       var lastBar = bars[bars.length - 1];
@@ -3189,6 +4125,20 @@ textarea.journalNotes{
         bars100:bars.slice(Math.max(0, bars.length - 100)).map(function (b) {
           return [b.datetime, b.open, b.high, b.low, b.close];
         }),
+        indicators100:{
+          ema20:ema20All.slice(Math.max(0, ema20All.length - 100)),
+          ema50:ema50All.slice(Math.max(0, ema50All.length - 100)),
+          ema200:ema200All.slice(Math.max(0, ema200All.length - 100)),
+          rsi13:rsi13All.slice(Math.max(0, rsi13All.length - 100))
+        },
+        indicatorLatest:{
+          ema20:lastFiniteSeriesValue(ema20All),
+          ema50:lastFiniteSeriesValue(ema50All),
+          ema200:lastFiniteSeriesValue(ema200All),
+          rsi13:lastFiniteSeriesValue(rsi13All)
+        },
+        indicatorPeriods:{ ema20:20, ema50:50, ema200:200, rsi13:13 },
+        indicatorSourceBars:bars.length,
         creditsUsed:responses[0].creditsUsed || responses[1].creditsUsed || null,
         creditsLeft:responses[1].creditsLeft || responses[0].creditsLeft || null
       };
@@ -3263,7 +4213,16 @@ textarea.journalNotes{
     }, 550);
   }
 
+  function clearMarketInputs() {
+    var ids = ["price", "atr", "swingHigh", "swingLow", "slAnchor"], i, node;
+    for (i = 0; i < ids.length; i++) {
+      node = el(ids[i]);
+      if (node) node.value = "";
+    }
+  }
+
   function marketContextChanged() {
+    clearMarketInputs();
     marketDataMode = "MANUAL";
     syncProviderSymbolField();
     renderMarketDataStatus();
@@ -3412,6 +4371,45 @@ textarea.journalNotes{
     return { min:min - pad, max:max + pad, span:(max - min) + pad * 2 };
   }
 
+  function miniChartIndicatorSeries(meta, name, count) {
+    var out = [];
+    var source = meta && meta.indicators100 ? meta.indicators100[name] : null;
+    var i;
+
+    if (!source || typeof source.length !== "number") return out;
+
+    for (i = 0; i < source.length; i++) {
+      if (source[i] == null || !isFinite(Number(source[i]))) out.push(null);
+      else out.push(Number(source[i]));
+    }
+
+    if (out.length > count) out = out.slice(out.length - count);
+    while (out.length < count) out.unshift(null);
+    return out;
+  }
+
+  function miniSvgPath(series, xFor, yFor) {
+    var d = "";
+    var drawing = false;
+    var i, v;
+
+    for (i = 0; i < series.length; i++) {
+      v = series[i];
+      if (v == null || !isFinite(Number(v))) {
+        drawing = false;
+        continue;
+      }
+
+      if (!drawing) {
+        d += "M" + xFor(i).toFixed(2) + "," + yFor(v).toFixed(2);
+        drawing = true;
+      } else {
+        d += "L" + xFor(i).toFixed(2) + "," + yFor(v).toFixed(2);
+      }
+    }
+    return d;
+  }
+
   function miniChartSvg(R, bars, meta) {
     if (!bars || bars.length === 0) return "";
 
@@ -3421,75 +4419,123 @@ textarea.journalNotes{
     var range = miniChartRange(bars, currentPrice, swingHigh, swingLow);
     if (!range) return "";
 
-    var W = 390, H = 218;
-    var left = 8, right = 56, top = 12, bottom = 192;
+    var W = 390, H = 338;
+    var left = 8, right = 56;
+    var priceTop = 12, priceBottom = 218;
+    var rsiTop = 246, rsiBottom = 316;
     var plotW = W - left - right;
-    var plotH = bottom - top;
+    var priceH = priceBottom - priceTop;
+    var rsiH = rsiBottom - rsiTop;
     var count = bars.length;
     var slot = plotW / count;
     var bodyW = Math.max(1.1, Math.min(3.4, slot * 0.62));
 
-    function y(v) {
-      return top + ((range.max - Number(v)) / range.span) * plotH;
+    var ema20 = miniChartIndicatorSeries(meta, "ema20", count);
+    var ema50 = miniChartIndicatorSeries(meta, "ema50", count);
+    var ema200 = miniChartIndicatorSeries(meta, "ema200", count);
+    var rsi13 = miniChartIndicatorSeries(meta, "rsi13", count);
+
+    function yPrice(v) {
+      return priceTop + ((range.max - Number(v)) / range.span) * priceH;
     }
 
-    var svg = '';
-    svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Mini candlestick chart">';
+    function yRsi(v) {
+      v = Math.max(0, Math.min(100, Number(v)));
+      return rsiTop + ((100 - v) / 100) * rsiH;
+    }
+
+    function xFor(i) {
+      return left + slot * i + slot * 0.5;
+    }
+
+    var svg = "";
+    svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Mini candlestick chart with EMA20 EMA50 EMA200 and RSI13">';
     svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#ffffff"/>';
 
-    // Grid and price scale
+    // Price grid and scale.
     var t, tv, ty;
     for (t = 0; t <= 4; t++) {
       tv = range.max - (range.span * t / 4);
-      ty = top + (plotH * t / 4);
+      ty = priceTop + (priceH * t / 4);
       svg += '<line x1="' + left + '" y1="' + ty.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ty.toFixed(1) + '" stroke="#edf0f2" stroke-width="1"/>';
       svg += '<text x="' + (W-4) + '" y="' + (ty+3).toFixed(1) + '" text-anchor="end" fill="#89939c" font-size="8.5" font-family="Helvetica,Arial,sans-serif">' + esc(R.fmt(tv)) + '</text>';
     }
 
-    // Candles
+    // Candles.
     var i, b, x, yo, yc, yh, yl, up, stroke, fill, by, bh;
     for (i = 0; i < count; i++) {
       b = bars[i];
-      x = left + slot * i + slot * 0.5;
-      yo = y(b.open);
-      yc = y(b.close);
-      yh = y(b.high);
-      yl = y(b.low);
+      x = xFor(i);
+      yo = yPrice(b.open);
+      yc = yPrice(b.close);
+      yh = yPrice(b.high);
+      yl = yPrice(b.low);
       up = b.close >= b.open;
-      stroke = up ? '#2f7b49' : '#a64039';
-      fill = up ? '#dfeee4' : '#f2dfdd';
+      stroke = up ? "#2f7b49" : "#a64039";
+      fill = up ? "#dfeee4" : "#f2dfdd";
       by = Math.min(yo, yc);
       bh = Math.max(1.2, Math.abs(yo - yc));
 
-      svg += '<line x1="' + x.toFixed(2) + '" y1="' + yh.toFixed(1) + '" x2="' + x.toFixed(2) + '" y2="' + yl.toFixed(1) + '" stroke="' + stroke + '" stroke-width="0.8"/>';
-      svg += '<rect x="' + (x-bodyW/2).toFixed(2) + '" y="' + by.toFixed(1) + '" width="' + bodyW.toFixed(2) + '" height="' + bh.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="0.7"/>';
+      svg += '<line x1="' + x.toFixed(2) + '" y1="' + yh.toFixed(1) + '" x2="' + x.toFixed(2) + '" y2="' + yl.toFixed(1) + '" stroke="' + stroke + '" stroke-width="0.75"/>';
+      svg += '<rect x="' + (x-bodyW/2).toFixed(2) + '" y="' + by.toFixed(1) + '" width="' + bodyW.toFixed(2) + '" height="' + bh.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="0.65"/>';
     }
 
-    // Swing high / low lines
+    // EMA overlays.
+    var p20 = miniSvgPath(ema20, xFor, yPrice);
+    var p50 = miniSvgPath(ema50, xFor, yPrice);
+    var p200 = miniSvgPath(ema200, xFor, yPrice);
+
+    if (p20) svg += '<path d="' + p20 + '" fill="none" stroke="#2e6da4" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>';
+    if (p50) svg += '<path d="' + p50 + '" fill="none" stroke="#a27613" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>';
+    if (p200) svg += '<path d="' + p200 + '" fill="none" stroke="#6b5d91" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    // Swing high / low.
     if (swingHigh != null && isFinite(Number(swingHigh))) {
-      var ySh = y(swingHigh);
-      svg += '<line x1="' + left + '" y1="' + ySh.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySh.toFixed(1) + '" stroke="#6b5d91" stroke-width="1" stroke-dasharray="4 3"/>';
-      svg += '<text x="' + (W-right) + '" y="' + (ySh-3).toFixed(1) + '" text-anchor="end" fill="#6b5d91" font-size="8.5" font-family="Helvetica,Arial,sans-serif">H100</text>';
+      var ySh = yPrice(swingHigh);
+      svg += '<line x1="' + left + '" y1="' + ySh.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySh.toFixed(1) + '" stroke="#6e7780" stroke-width="0.9" stroke-dasharray="4 3"/>';
+      svg += '<text x="' + (W-right) + '" y="' + (ySh-3).toFixed(1) + '" text-anchor="end" fill="#6e7780" font-size="8" font-family="Helvetica,Arial,sans-serif">H100</text>';
     }
     if (swingLow != null && isFinite(Number(swingLow))) {
-      var ySl = y(swingLow);
-      svg += '<line x1="' + left + '" y1="' + ySl.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySl.toFixed(1) + '" stroke="#6b5d91" stroke-width="1" stroke-dasharray="4 3"/>';
-      svg += '<text x="' + (W-right) + '" y="' + (ySl+10).toFixed(1) + '" text-anchor="end" fill="#6b5d91" font-size="8.5" font-family="Helvetica,Arial,sans-serif">L100</text>';
+      var ySl = yPrice(swingLow);
+      svg += '<line x1="' + left + '" y1="' + ySl.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySl.toFixed(1) + '" stroke="#6e7780" stroke-width="0.9" stroke-dasharray="4 3"/>';
+      svg += '<text x="' + (W-right) + '" y="' + (ySl+10).toFixed(1) + '" text-anchor="end" fill="#6e7780" font-size="8" font-family="Helvetica,Arial,sans-serif">L100</text>';
     }
 
-    // Current price line
+    // Current price.
     if (currentPrice != null && isFinite(Number(currentPrice))) {
-      var yPx = y(currentPrice);
-      svg += '<line x1="' + left + '" y1="' + yPx.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + yPx.toFixed(1) + '" stroke="#325f87" stroke-width="1.2"/>';
+      var yPx = yPrice(currentPrice);
+      svg += '<line x1="' + left + '" y1="' + yPx.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + yPx.toFixed(1) + '" stroke="#325f87" stroke-width="1.05"/>';
       svg += '<rect x="' + (W-right+6) + '" y="' + (yPx-8).toFixed(1) + '" width="' + (right-10) + '" height="16" rx="3" fill="#325f87"/>';
       svg += '<text x="' + (W-5) + '" y="' + (yPx+3).toFixed(1) + '" text-anchor="end" fill="#fff" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">' + esc(R.fmt(currentPrice)) + '</text>';
     }
 
-    // Bottom labels: oldest / latest
-    var first = bars[0].datetime || '';
-    var last = bars[bars.length-1].datetime || '';
-    svg += '<text x="' + left + '" y="210" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(first) + '</text>';
-    svg += '<text x="' + (W-right+4) + '" y="210" text-anchor="end" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(last) + '</text>';
+    // Separator and RSI panel.
+    svg += '<line x1="' + left + '" y1="233" x2="' + (W-right+4) + '" y2="233" stroke="#cfd5da" stroke-width="1"/>';
+    svg += '<text x="' + left + '" y="242" fill="#596673" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">RSI13</text>';
+
+    var rsiLevels = [70, 50, 30];
+    for (i = 0; i < rsiLevels.length; i++) {
+      var rv = rsiLevels[i];
+      var ry = yRsi(rv);
+      svg += '<line x1="' + left + '" y1="' + ry.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ry.toFixed(1) + '" stroke="' + (rv === 50 ? "#d8dde1" : "#c6cdd3") + '" stroke-width="0.9"' + (rv === 50 ? '' : ' stroke-dasharray="4 3"') + '/>';
+      svg += '<text x="' + (W-4) + '" y="' + (ry+3).toFixed(1) + '" text-anchor="end" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + rv + '</text>';
+    }
+
+    var prsi = miniSvgPath(rsi13, xFor, yRsi);
+    if (prsi) svg += '<path d="' + prsi + '" fill="none" stroke="#455a70" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    var latestRsi = meta && meta.indicatorLatest ? meta.indicatorLatest.rsi13 : null;
+    if (latestRsi != null && isFinite(Number(latestRsi))) {
+      var latestRsiY = yRsi(latestRsi);
+      svg += '<circle cx="' + xFor(count-1).toFixed(2) + '" cy="' + latestRsiY.toFixed(1) + '" r="2.2" fill="#455a70"/>';
+      svg += '<text x="' + (W-right) + '" y="' + Math.max(rsiTop+8, latestRsiY-4).toFixed(1) + '" text-anchor="end" fill="#455a70" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">' + Number(latestRsi).toFixed(1) + '</text>';
+    }
+
+    // Bottom time labels.
+    var first = bars[0].datetime || "";
+    var last = bars[bars.length-1].datetime || "";
+    svg += '<text x="' + left + '" y="332" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(first) + '</text>';
+    svg += '<text x="' + (W-right+4) + '" y="332" text-anchor="end" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(last) + '</text>';
 
     svg += '</svg>';
     return svg;
@@ -3538,7 +4584,25 @@ textarea.journalNotes{
     var footerText = "OHLC " + bars.length + "本";
     if (meta.barTime) footerText += " / latest " + meta.barTime;
     if (meta.fetchedAt) footerText += " / fetched " + formatLocalStamp(meta.fetchedAt);
-    footer.innerHTML = esc(footerText);
+
+    var latest = meta.indicatorLatest || {};
+    var indicatorHtml = "";
+
+    if (latest.ema20 != null && latest.ema50 != null &&
+        latest.ema200 != null && latest.rsi13 != null) {
+      indicatorHtml =
+        '<div class="miniIndicatorLegend">' +
+        '<span><i class="miniIndicatorKey ema20"></i>EMA20 ' + esc(R.fmt(latest.ema20)) + '</span>' +
+        '<span><i class="miniIndicatorKey ema50"></i>EMA50 ' + esc(R.fmt(latest.ema50)) + '</span>' +
+        '<span><i class="miniIndicatorKey ema200"></i>EMA200 ' + esc(R.fmt(latest.ema200)) + '</span>' +
+        '<span><i class="miniIndicatorKey rsi13"></i>RSI13 ' + esc(Number(latest.rsi13).toFixed(1)) + '</span>' +
+        '</div>';
+    } else {
+      indicatorHtml =
+        '<div class="miniIndicatorLegend"><span>EMA / RSIはMarket Data再取得後に表示</span></div>';
+    }
+
+    footer.innerHTML = esc(footerText) + indicatorHtml;
   }
 
 
@@ -3998,6 +5062,8 @@ textarea.journalNotes{
         symbol:symbol,
         label:S.label,
         timeframe:value("tf"),
+        d1bias:value("d1bias"),
+        depth:value("depth"),
         mode:"GRID",
         direction:R.dir > 0 ? "BUY" : "SELL",
         stateAtSave:R.state,
@@ -4019,12 +5085,16 @@ textarea.journalNotes{
     if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
 
     return {
+      edgeFactors: R.edge ? R.edge.firedIds.slice(0) : [],
+      edgeScore: R.edge ? R.edge.score : null,
       id:makeJournalId(),
       createdAt:new Date().getTime(),
       updatedAt:new Date().getTime(),
       symbol:symbol,
       label:S.label,
       timeframe:value("tf"),
+      d1bias:value("d1bias"),
+      depth:value("depth"),
       mode:R.mode,
       direction:R.dir > 0 ? "BUY" : "SELL",
       stateAtSave:R.state,
@@ -4323,6 +5393,8 @@ textarea.journalNotes{
     if (selectedJournalId && !getJournalItem(selectedJournalId)) {
       openJournalEditor(null);
     }
+
+    if (el("analyticsSummary")) renderAnalytics();
   }
 
   function hookPhase4Controls() {
@@ -4744,6 +5816,7 @@ textarea.journalNotes{
 
   var WORKSPACE_IDS = [
     "symbol", "tf", "d1bias", "entryType", "depth",
+    "counterDir", "gridDir", "slFloorAtr", "counterSlAtr",
     "acctCcy", "balance", "riskPct", "leverage",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
@@ -5115,7 +6188,9 @@ textarea.journalNotes{
       "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
       "customPip", "customContract", "customDigits",
       "price", "atr", "swingHigh", "swingLow", "slAnchor", "d1bias",
-      "entryType", "depth", "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+      "entryType", "depth", "counterDir", "gridDir", "slFloorAtr", "counterSlAtr",
+      "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult",
+      "stressSpreadMult", "stressExtraSlip", "stressGapAtr"
     ];
 
     var i, node;
@@ -5143,12 +6218,19 @@ textarea.journalNotes{
     hookPhase5Controls();
     hookPhase7Controls();
     hookPhase8Controls();
+    hookV3Controls();
+    hookEdgeControls();
     refreshPresetSelect();
     render();
     renderPortfolio();
     renderJournal();
     renderMarketDataStatus();
     renderWatchPanel();
+    renderDataQuality();
+    renderTradeLifecycle();
+    renderAnalytics();
+    renderMtfDashboard();
+    renderStressTest();
     restartMarketAutoRefresh();
 
     if (hasMarketDataKey()) {
@@ -5185,7 +6267,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v2.10-P8.3</li>
+    <li class="group">ENTRY CONSOLE v3.1</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -5196,15 +6278,23 @@ textarea.journalNotes{
     <li><a href="#marketdata">Market Data <span id="navData" class="navValue">MANUAL</span></a></li>
     <li><a href="#watch">WATCH / Alerts <span id="navWatch" class="navValue">OFF</span></a></li>
     <li><a href="#gates">ゲート判定 <span id="navGates" class="navValue">G-01</span></a></li>
+    <li><a href="#edge">Edge Score <span id="navEdge" class="navValue">—</span></a></li>
     <li><a href="#riskengine">Risk Engine <span id="navRisk" class="navValue">—</span></a></li>
     <li><a href="#positionmap">Position Map <span id="navChart" class="navValue">—</span></a></li>
     <li><a href="#portfolio">Portfolio Risk <span id="navPortfolio" class="navValue">0.0%</span></a></li>
     <li><a href="#journal">Trade Journal <span id="navJournal" class="navValue">0</span></a></li>
+    <li class="group">RISK OPS v3</li>
+    <li><a href="#dataquality">Data Quality <span id="navQuality" class="navValue">—</span></a></li>
+    <li><a href="#trades">Trade Lifecycle <span id="navTrades" class="navValue">0</span></a></li>
+    <li><a href="#analytics">Journal Analytics <span id="navAnalytics" class="navValue">—</span></a></li>
+    <li><a href="#mtf">Multi-Timeframe <span id="navMtf" class="navValue">—</span></a></li>
+    <li><a href="#stress">Stress Test <span id="navStress" class="navValue">—</span></a></li>
     <li id="navPositionRow"><a href="#position">建玉設計 <span id="navPosition" class="navValue">—</span></a></li>
     <li id="navManagementRow"><a href="#management">建玉後の管理 <span class="navValue">—</span></a></li>
     <li id="navGridRow" style="display:none"><a href="#grid">グリッド構成 <span id="navGrid" class="navValue">—</span></a></li>
     <li class="group">SYSTEM</li>
     <li><a href="#storage">保存 / Broker Preset <span id="navSave" class="navValue">LOCAL</span></a></li>
+    <li><a href="#backup">Backup / Restore <span id="navBackup" class="navValue">JSON</span></a></li>
     <li><a href="#pwa">App / Offline <span id="navPwa" class="navValue">WEB</span></a></li>
     <li><a href="#about">仕様 / 注意事項</a></li>
   </ul>
@@ -5297,6 +6387,28 @@ textarea.journalNotes{
           <option value="GRID">グリッド</option>
         </select>
       </div>
+      <div class="row" id="counterDirRow" style="display:none">
+        <label for="counterDir">逆張り方向</label>
+        <select id="counterDir">
+          <option value="SELL">売り（直近高値を叩く）</option>
+          <option value="BUY">買い（直近安値を拾う）</option>
+        </select>
+      </div>
+      <div class="row" id="gridDirRow" style="display:none">
+        <label for="gridDir">グリッド方向</label>
+        <select id="gridDir">
+          <option value="BUY">買い下がり</option>
+          <option value="SELL">売り上がり</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="slFloorAtr">SL幅下限 ATR倍 (G-07)</label>
+        <input id="slFloorAtr" type="number" min="0" step="0.1" value="1">
+      </div>
+      <div class="row" id="counterSlRow" style="display:none">
+        <label for="counterSlAtr">逆張りSLバッファ ATR倍</label>
+        <input id="counterSlAtr" type="number" min="0" step="0.1" value="1">
+      </div>
       <div class="row" id="depthRow">
         <label for="depth">押し目・戻り深度</label>
         <select id="depth">
@@ -5318,7 +6430,7 @@ textarea.journalNotes{
         <div class="miniChartPlaceholder">Market Data取得後、選択中の銘柄・時間足の直近100本を表示します。</div>
       </div>
       <div id="strategyMiniChartFooter" class="miniChartFooter">
-        実OHLCのみ表示。データ未取得時はチャートを生成しません。
+        実OHLCのみ表示。EMA20/50/200とRSI13は同一時間足データからローカル計算します。
       </div>
     </div>
   </div>
@@ -5476,9 +6588,9 @@ textarea.journalNotes{
 
     <div class="panelNote">
       ATRはWilder方式でローカル計算し、初期値はATR14です。Swing High/Low 100は、取得した同一時間足の直近100 OHLCバーについて
-      <strong>最高High / 最低Low</strong> を計算します。M3はProviderの1分足を3本ずつ集約、M30はProviderの30分足を直接使用します。
-      APIの直接対応は M1/M5/M15/M30/H1/H4/D1、M3だけローカル集約です。
-      APIデータのリアルタイム性・遅延・利用可能銘柄はProvider契約と市場に依存するため、「LIVE」とは表示しません。
+      <strong>最高High / 最低Low</strong> を計算します。EMA20 / EMA50 / EMA200 と RSI13 も同一時間足の終値から端末側で計算します。
+      指標計算用に約350本を取得し、ミニチャートには直近100本だけ表示します。M3はProviderの1分足を3本ずつ集約してから指標計算し、
+      M30はProviderの30分足を直接使用します。APIデータのリアルタイム性・遅延・利用可能銘柄はProvider契約と市場に依存するため、「LIVE」とは表示しません。
     </div>
   </div>
 
@@ -5559,6 +6671,30 @@ textarea.journalNotes{
   </div>
 
 
+
+  <!-- EDGE SCORE -->
+  <div id="edge" title="Edge Score">
+    <div id="edgeStatus" class="opsStatus"><strong>OBSERVE</strong><br>閾値0の間、Edge Scoreは判定を一切動かしません。発火の記録だけを行います。</div>
+    <fieldset>
+      <div class="row">
+        <label for="edgeThreshold">ENTRY必要スコア（0=無効）</label>
+        <input id="edgeThreshold" type="number" min="0" step="1" value="0">
+      </div>
+    </fieldset>
+    <div class="opsTableWrap">
+      <table id="edgeTable" class="opsTable">
+        <thead><tr><th>ID</th><th>ファクター</th><th>発火</th><th>重み</th><th>ステータス</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <ul id="edgeSummary" class="resultList"></ul>
+    <div class="actionPanel"><button id="edgeSave" class="actionButton primary" type="button">Edge設定を保存</button></div>
+    <div class="panelNote">
+      ステータスが「採用」のファクターだけがスコアに加算されます。「未検証」「検証中」は発火の記録のみで、判定には影響しません。
+      Journal Analyticsのファクター別実現Rが十分なNに達するまで、採用に変更しないでください。
+      Edge Scoreは条件の充足度であって、勝率でも確率でもありません。
+    </div>
+  </div>
 
   <!-- TRADE JOURNAL -->
   <div id="journal" title="Trade Journal">
@@ -5712,6 +6848,7 @@ textarea.journalNotes{
     <div class="actionPanel">
       <button id="addToPortfolio" class="actionButton primary" type="button">Risk予約としてPortfolioへ追加</button>
       <button id="saveToJournal" class="actionButton" type="button">現在の建玉設計をJournalへ保存</button>
+      <button id="createTradeFromPosition" class="actionButton" type="button">Trade Lifecycleに登録</button>
       <button id="armWatchFromPosition" class="actionButton" type="button">このセットアップをWATCH</button>
     </div>
     <div class="panelNote">
@@ -5745,6 +6882,7 @@ textarea.journalNotes{
     </div>
     <div class="actionPanel">
       <button id="saveGridToJournal" class="actionButton" type="button">GRID設計をJournalへ保存</button>
+      <button id="createTradeFromGrid" class="actionButton" type="button">GRIDをTrade Lifecycleに登録</button>
       <button id="armWatchFromGrid" class="actionButton" type="button">このGRIDをWATCH</button>
     </div>
   </div>
@@ -5816,11 +6954,93 @@ textarea.journalNotes{
     </div>
   </div>
 
+
+  <!-- DATA QUALITY -->
+  <div id="dataquality" title="Data Quality">
+    <div id="dqStatus" class="opsStatus"><strong>CHECK</strong><br>市場データ品質を評価します。</div>
+    <ul id="dqSummary" class="resultList"><li><span>状態</span><strong>—</strong></li></ul>
+    <fieldset>
+      <div class="row"><label for="dqStaleBars">STALE判定 bars</label><input id="dqStaleBars" type="number" min="1" max="20" step="1" value="3"></div>
+      <div class="row"><label for="dqConversionMaxMin">換算レート許容分</label><input id="dqConversionMaxMin" type="number" min="1" max="1440" step="1" value="60"></div>
+    </fieldset>
+    <div class="panelNote">初期値3 bars / 60分はDEPAの暫定デフォルトで、普遍的な安全基準ではありません。必要に応じて変更してください。API基準値を手修正した場合はERRORではなくADJUSTEDとして分離表示します。</div>
+  </div>
+
+  <!-- TRADE LIFECYCLE -->
+  <div id="trades" title="Trade Lifecycle">
+    <div id="tradeStatusBox" class="opsStatus"><strong>TRADE ID</strong><br>PLANからCLOSEDまで一つのIDで管理します。</div>
+    <ul id="tradeSummary" class="resultList"><li><span>Active</span><strong>0</strong></li></ul>
+    <div class="actionPanel"><button id="createTradePlan" class="actionButton primary" type="button">現在セットアップからTrade作成</button></div>
+    <div class="opsTableWrap"><table id="tradeTable" class="opsTable"><thead><tr><th>Trade</th><th>銘柄</th><th>TF</th><th>方向</th><th>Status</th><th>Risk</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div id="tradeEditorEmpty" class="statusBox">「編集」を押すと状態遷移と実約定を記録できます。</div>
+    <div id="tradeEditor" style="display:none">
+      <fieldset>
+        <div class="row"><label for="tradeEditStatus">Status</label><select id="tradeEditStatus"><option>PLANNED</option><option>WATCH</option><option>ENTRY</option><option>OPEN</option><option>MANAGE</option><option>CLOSED</option><option>CANCEL</option></select></div>
+        <div class="row"><label for="tradeActualEntry">実Entry</label><input id="tradeActualEntry" type="number" step="any"></div>
+        <div class="row"><label for="tradeActualExit">実Exit</label><input id="tradeActualExit" type="number" step="any"></div>
+        <div class="row"><label for="tradeRealizedR">実現R</label><input id="tradeRealizedR" type="number" step="any"></div>
+        <div class="row" style="min-height:90px"><label for="tradeNotes">メモ</label><textarea id="tradeNotes" class="journalNotes" maxlength="800"></textarea></div>
+      </fieldset>
+      <div class="actionPanel"><button id="updateTrade" class="actionButton primary" type="button">Trade更新</button></div>
+    </div>
+    <div class="panelNote">Trade作成時にJournal PLANNEDとPortfolio Risk予約を同じTrade IDで作成します。CLOSED/CANCEL時はPortfolio予約を外し、Journal状態を同期します。LifecycleのWATCH状態は記録上の状態で、Phase 8の単一WATCHを自動ARMしません。</div>
+  </div>
+
+  <!-- JOURNAL ANALYTICS -->
+  <div id="analytics" title="Journal Analytics">
+    <fieldset>
+      <div class="row"><label for="analyticsSymbol">銘柄</label><select id="analyticsSymbol"><option value="ALL">ALL</option></select></div>
+      <div class="row"><label for="analyticsTf">時間足</label><select id="analyticsTf"><option value="ALL">ALL</option></select></div>
+      <div class="row"><label for="analyticsMode">Mode</label><select id="analyticsMode"><option value="ALL">ALL</option></select></div>
+      <div class="row"><label for="analyticsGroupBy">Breakdown</label><select id="analyticsGroupBy"><option value="symbol">銘柄</option><option value="timeframe">時間足</option><option value="mode">Mode</option><option value="direction">方向</option></select></div>
+    </fieldset>
+    <ul id="analyticsSummary" class="resultList"><li><span>実現R件数</span><strong>0</strong></li></ul>
+    <div class="opsTableWrap"><table id="analyticsTable" class="opsTable"><thead><tr><th>Group</th><th>N</th><th>Total R</th><th>Avg R</th><th>Win %</th></tr></thead><tbody></tbody></table></div>
+    <div class="opsTableWrap"><table id="edgeFactorTable" class="opsTable"><thead><tr><th>Factor</th><th>N</th><th>Avg R</th><th>Win %</th><th>vs Base</th></tr></thead><tbody></tbody></table></div>
+    <div class="panelNote">実現Rが入力された記録だけの記述統計です。サンプル数Nを必ず併記し、過去成績を将来勝率の保証として扱いません。</div>
+    <div class="panelNote">ファクター別は「そのファクターが発火した記録だけ」を抜き出した層別集計です。vs Baseは全体平均Rとの差であり、因果ではありません。Nが小さいうちの差は雑音です。</div>
+  </div>
+
+  <!-- MULTI TIMEFRAME -->
+  <div id="mtf" title="Multi-Timeframe">
+    <div id="mtfStatus" class="opsStatus"><strong>READY</strong><br>比較したい時間足を選び、手動取得してください。</div>
+    <div class="mtfChecks">
+      <label><input id="mtfM1" type="checkbox"> M1</label><label><input id="mtfM3" type="checkbox"> M3</label><label><input id="mtfM5" type="checkbox" checked> M5</label><label><input id="mtfM15" type="checkbox" checked> M15</label><label><input id="mtfM30" type="checkbox"> M30</label><label><input id="mtfH1" type="checkbox" checked> H1</label><label><input id="mtfH4" type="checkbox" checked> H4</label><label><input id="mtfD1" type="checkbox" checked> D1</label>
+    </div>
+    <div class="actionPanel"><button id="fetchMtf" class="actionButton primary" type="button">選択時間足を取得</button></div>
+    <div class="opsTableWrap"><table id="mtfTable" class="opsTable"><thead><tr><th>TF</th><th>Close</th><th>P/E20</th><th>P/E50</th><th>P/E200</th><th>E20/E50</th><th>E50/E200</th><th>RSI13</th><th>ATR14</th><th>Range%</th></tr></thead><tbody></tbody></table></div>
+    <div class="panelNote">Confluence表示は観測値の比較です。複数時間足の一致を売買Edgeや勝率へ自動変換しません。取得はAPIクレジット消費を避けるため手動です。</div>
+  </div>
+
+  <!-- STRESS TEST -->
+  <div id="stress" title="Scenario Stress Test">
+    <fieldset>
+      <div class="row"><label for="stressSpreadMult">Spread倍率</label><input id="stressSpreadMult" type="number" min="1" step="0.1" value="2"></div>
+      <div class="row"><label for="stressExtraSlip">追加Slippage pips</label><input id="stressExtraSlip" type="number" min="0" step="any" value="0"></div>
+      <div class="row"><label for="stressGapAtr">Gap ATR</label><input id="stressGapAtr" type="number" min="0" step="0.1" value="0.5"></div>
+    </fieldset>
+    <ul id="stressSummary" class="resultList"><li><span>状態</span><strong>入力待ち</strong></li></ul>
+    <div class="panelNote">これはWhat-if試算です。Spread倍率やGap ATRはユーザー定義の仮定であり、将来損失の上限ではありません。ギャップ・約定拒否・流動性低下で実損失が上回る可能性があります。</div>
+  </div>
+
+  <!-- BACKUP / RESTORE -->
+  <div id="backup" title="Backup / Restore">
+    <div id="backupStatus" class="opsStatus"><strong>JSON BACKUP</strong><br>DEPA FXの端末内データを保存・復元できます。</div>
+    <fieldset>
+      <div class="row watchCheckRow"><label for="backupIncludeApiKey">API Keyを含める</label><input id="backupIncludeApiKey" type="checkbox"></div>
+      <div class="row watchCheckRow"><label for="backupReplaceExisting">復元時に既存DEPAデータ置換</label><input id="backupReplaceExisting" type="checkbox"></div>
+    </fieldset>
+    <div class="actionPanel"><button id="exportBackup" class="actionButton primary" type="button">Backup JSONを書き出す</button></div>
+    <fieldset><div class="row" style="min-height:60px"><label for="backupFile">Import JSON</label><input id="backupFile" class="backupFile" type="file" accept="application/json,.json"></div></fieldset>
+    <div class="actionPanel"><button id="applyBackup" class="actionButton" type="button">読込済みBackupを復元</button></div>
+    <div class="panelNote">API Keyは初期状態ではBackupに含めません。ImportはDEPA FX専用キーだけを受け付けます。復元後はページを再読込します。</div>
+  </div>
+
   <!-- ABOUT -->
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v2.10-P8.3 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v3.1 — 建玉設計コンソール。</p>
       <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
       <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
       <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>
@@ -5831,6 +7051,8 @@ textarea.journalNotes{
       <p>v2.8-P8.1ではM30を追加し、銘柄/時間足変更時にAPI Key設定済みなら現在値・ATR14・直近100本の最高High/最低Lowを自動取得します。取得値は基準値として既存入力欄へ入り、その後ブローカー値へ手修正できます。</p>
       <p>v2.9-P8.2では、銘柄のQuote通貨と口座通貨から必要な換算FXレートを自動判定し、USDJPY/EURUSD/GBPUSD/AUDUSD/NZDUSD/USDCAD/USDCHFのうち必要なものだけ取得します。API取得後の換算値は手修正でき、BROKER ADJUSTEDとして保持します。</p>
       <p>v2.10-P8.3では、銘柄と戦術画面の下部に選択中の銘柄・時間足の直近100本OHLCを使ったミニローソク足チャートを追加しています。現在値、Swing High 100、Swing Low 100も同じ価格軸に表示します。</p>
+      <p>v2.11-P8.4では、ミニチャートへEMA20 / EMA50 / EMA200を重ね、下段へWilder方式のRSI13を追加しています。約350本を指標計算に使用し、チャート表示は直近100本に限定します。M3は1分足を3分足へ集約後に指標を計算します。</p>
+      <p>v3.0ではData Quality Guard、Trade Lifecycle、Journal Analytics、Multi-Timeframe Dashboard、Scenario Stress Test、Backup/Restoreを追加しています。Data Qualityの初期STALE閾値は暫定値であり、ユーザー変更可能です。Stress TestはWhat-if仮定で損失上限を保証しません。</p>
       <p>これはシグナル発生器ではありません。入力された相場・口座・ブローカー条件から、ゲート判定、建玉サイズ、管理価格を計算します。Risk Engine v2では、SL・Spread・Commission・Slippageを合算した実リスクからLotを決定します。</p>
       <p>この配布物は、2007〜2009年頃の classic iUI のHTML構造・画面遷移・Settings風UIを再現するための、オフライン動作用互換レイヤーを同梱しています。元のiUIライブラリ本体は同梱していません。</p>
       <p class="muted">実運用前に、使用ブローカーの契約サイズ、tick/pip、証拠金計算、手数料、最小ロット、ロット刻み、ストップ制約を確認してください。特に指数・原油・暗号資産はブローカー間差が大きいため、銘柄仕様の確認を必須としています。</p>

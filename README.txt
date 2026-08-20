@@ -1,4 +1,4 @@
-DEPA FX v2.10-P8.3 (Mini Candlestick + Auto FX Conversion + Market Data + WATCH)
+DEPA FX v3.0 (Risk Ops Suite)
 
 Upload these files to the repository root:
 - index.html
@@ -78,3 +78,53 @@ v2.10-P8.3:
 - Shows current price, Swing High 100 and Swing Low 100 on the same axis.
 - Automatically switches with symbol/timeframe selection.
 - If OHLC is unavailable, shows a data-waiting placeholder instead of a fake chart.
+
+v2.11-P8.4:
+- Strategy mini chart now overlays EMA20, EMA50 and EMA200.
+- RSI13 is rendered in a separate lower panel with 70 / 50 / 30 reference levels.
+- EMA uses SMA seed then standard exponential smoothing alpha=2/(period+1).
+- RSI13 uses Wilder average gain/loss smoothing.
+- Fetch target increased to 350 effective bars so EMA200 has warm-up history.
+- M3 fetches 1050 one-minute bars, aggregates to 3-minute OHLC, then computes EMA/RSI.
+- Only the latest 100 candles and indicator values are rendered.
+- Latest EMA20/50/200 and RSI13 values are shown in the chart footer.
+
+
+v3.0 Risk Ops Suite:
+- Data Quality Guard: API context, source bar count, EMA/RSI/ATR readiness, fetch/bar age, required FX conversion freshness, manual-adjustment state.
+- User-adjustable provisional stale thresholds: timeframe bars and conversion-rate minutes.
+- Trade Lifecycle: PLANNED -> WATCH -> ENTRY -> OPEN -> MANAGE -> CLOSED, plus CANCEL; linked Trade ID across Journal and Portfolio.
+- Trade creation is blocked when Data Quality is ERROR/STALE or Portfolio gates would be exceeded.
+- WATCH arm is also blocked on Data Quality ERROR/STALE.
+- Journal Analytics: realized-R N, total/average R, avg win/loss R, win %, profit factor, max drawdown R, win/loss streaks, filters and grouped breakdown.
+- Multi-Timeframe Dashboard: manual fetch of selected timeframes; close vs EMA20/50/200, EMA relationships, RSI13, ATR14 and 100-bar range position. No automatic buy/sell score.
+- Scenario Stress Test: user-defined spread multiplier, extra slippage and gap ATR; compares stressed loss with risk allowance and portfolio nominal stop risk.
+- Backup/Restore: JSON export/import for depaFX.* localStorage. API key excluded by default; optional inclusion.
+- Existing Phase 1-8 features remain in place.
+
+v3.1 Bug Fix + Edge Score:
+[BUG FIX 1] Counter-trend direction is now an explicit selector (counterDir).
+  Previously dir was derived from d1bias while G-02 required RANGE, which made
+  SELL counter-trend entries structurally impossible. Both directions now work.
+[BUG FIX 1b] Counter-trend SL buffer is now configurable (counterSlAtr, default 1.0 ATR)
+  and G-07's floor is configurable (slFloorAtr, default 1.0 ATR).
+  Previously the counter SL buffer was hardcoded at 0.5 ATR while G-07 demanded
+  1.0 ATR, so counter-trend always failed G-07.
+[BUG FIX 2] Changing symbol or timeframe now clears price / atr / swingHigh /
+  swingLow / slAnchor. Data Quality also reports STALE when API metadata exists
+  for a different context. Previously stale prices from the previous symbol
+  survived the switch, DQ reported PARTIAL, and trade creation was not blocked.
+[BUG FIX 3] Grid direction is now an explicit selector (gridDir) and is reported
+  as gate GR-4. Previously d1bias=RANGE silently became a buy grid.
+
+Edge Score layer:
+- Eight mechanical factors E-01..E-08 evaluated on every calculation.
+- Each factor has an editable weight and a status of 未検証 / 検証中 / 採用.
+- Only 採用 factors contribute to the score. Threshold defaults to 0, so the
+  layer changes nothing until the user deliberately activates it.
+- Gate E-00 enforces the threshold when active.
+- Fired factor IDs are stored on each Journal entry (edgeFactors).
+- Journal Analytics adds a per-factor stratified table: N, Avg R, Win %, and the
+  difference from the overall baseline. Rows with N<20 are marked.
+- Edge Score is a condition-satisfaction count. It is not a probability and not
+  a win rate.
