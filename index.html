@@ -728,6 +728,35 @@ textarea.journalNotes{
 .mtfArrowUp{color:#18733a;font-weight:bold}.mtfArrowDown{color:#a32f28;font-weight:bold}.mtfArrowFlat{color:#7a848e;font-weight:bold}
 .backupFile{width:100%;box-sizing:border-box;padding:8px;background:#fff;border:1px solid #aaa;border-radius:6px;}
 
+
+/* ================= v3.2 EDGE DISCOVERY / PLAYBOOK ================= */
+.discoveryHero{
+  margin:12px 9px;
+  padding:11px 12px;
+  border:1px solid #9aa4ad;
+  border-radius:10px;
+  background:#f7f8f9;
+  color:#52606c;
+  font-size:12px;
+  line-height:1.55;
+}
+.playbookText{
+  margin:12px 9px;
+  padding:12px 13px;
+  border:1px solid #9ca5ad;
+  border-radius:10px;
+  background:#fff;
+  color:#3f4b56;
+  font-size:12px;
+  line-height:1.7;
+}
+.playbookText p{margin:0 0 9px;}
+.playbookText p:last-child{margin-bottom:0;}
+.methodCompareTable td:nth-child(2),
+.methodCompareTable td:nth-child(3){text-align:left;white-space:normal;min-width:150px;}
+.methodCompareTable td:nth-child(1){font-weight:bold;}
+.discoverySmall{font-size:10px;color:#78838d;}
+
 </style>
 
   <script>
@@ -861,7 +890,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v3.1
+   DEPA FX SYSTEM — ENTRY CONSOLE v3.2
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -1618,7 +1647,23 @@ textarea.journalNotes{
   function edgeMtfFrame(tf) {
     var c = getMtfCache();
     if (!c || c.symbol !== value("symbol") || !c.frames) return null;
-    return c.frames[tf] || null;
+
+    var f = c.frames[tf] || null;
+    if (!f) return null;
+
+    var minutes = tfMinutes(tf);
+    var dqs = getDqSettings();
+    var limit = minutes == null ? null : minutes * Number(dqs.staleBars);
+    var fetchAge = ageMinutes(c.fetchedAt);
+    var barMs = providerUtcMs(f.barTime);
+    var barAge = barMs == null ? null : ageMinutes(barMs);
+
+    // Edge evidence must have known freshness. Missing timestamps or stale MTF
+    // data become Unknown (null) rather than silently contributing YES/NO.
+    if (limit == null || fetchAge == null || barAge == null) return null;
+    if (fetchAge > limit || barAge > limit) return null;
+
+    return f;
   }
 
   function edgeEmaAligned(f, dir) {
@@ -1678,10 +1723,23 @@ textarea.journalNotes{
 
     var active = cfg.threshold > 0 && adopted > 0;
     return {
-      rows:rows, score:score, maxScore:maxScore, threshold:cfg.threshold,
+      rows:rows, states:fired,
+      score:score, maxScore:maxScore, threshold:cfg.threshold,
       active:active, adopted:adopted, firedIds:firedIds,
       ok: !active || score >= cfg.threshold
     };
+  }
+
+  function edgeStateSnapshot(E) {
+    if (!E || !E.states) return null;
+
+    var out = {}, i, id, v;
+    for (i = 0; i < EDGE_SPECS.length; i++) {
+      id = EDGE_SPECS[i].id;
+      v = Object.prototype.hasOwnProperty.call(E.states, id) ? E.states[id] : null;
+      out[id] = v === true ? true : (v === false ? false : null);
+    }
+    return out;
   }
 
   function renderEdge(R) {
@@ -2114,21 +2172,27 @@ textarea.journalNotes{
       if (n("swingLow") == null || n("swingLow") <= 0) currentMissing.push("Swing Low");
     }
 
+    var contextMismatch = !!(meta && meta.localSymbol && !same);
     var stale = false;
     if (same && staleLimit != null) {
       if (fetchAge != null && fetchAge > staleLimit) stale = true;
       if (barAge != null && barAge > staleLimit) stale = true;
     }
     if (convStale.length) stale = true;
-    if (meta && meta.localSymbol && !same) stale = true;
+    if (contextMismatch) stale = true;
 
     var adjusted = marketDataMode === "ADJUSTED" || convAdjusted.length > 0;
     var partial = !same || !barsOk || !indicatorsOk || convUnknown.length > 0;
     var error = currentMissing.length > 0 || convMissing.length > 0 || marketDataMode === "ERROR";
-    var status = error ? "ERROR" : stale ? "STALE" : partial ? "PARTIAL" : adjusted ? "ADJUSTED" : "OK";
+
+    // A known API context belonging to another symbol/timeframe is classified as STALE
+    // rather than letting cleared inputs mask the upstream context mismatch as ERROR.
+    var status = contextMismatch ? "STALE" :
+      (error ? "ERROR" : stale ? "STALE" : partial ? "PARTIAL" : adjusted ? "ADJUSTED" : "OK");
 
     return {
-      status:status, same:same, barsOk:barsOk, indicatorsOk:indicatorsOk,
+      status:status, same:same, contextMismatch:contextMismatch,
+      barsOk:barsOk, indicatorsOk:indicatorsOk,
       sourceBars:sourceBars, fetchAge:fetchAge, barAge:barAge, staleLimit:staleLimit,
       requiredConversions:required, convMissing:convMissing, convUnknown:convUnknown,
       convStale:convStale, convAdjusted:convAdjusted, currentMissing:currentMissing,
@@ -2161,7 +2225,9 @@ textarea.journalNotes{
 
     var html = "";
     html += resultRow("Overall", q.status);
-    html += resultRow("Market Context", q.same ? "MATCH" : "NO API META", q.same ? "go" : "");
+    html += resultRow("Market Context",
+      q.same ? "MATCH" : (q.contextMismatch ? "MISMATCH / STALE" : "NO API META"),
+      q.same ? "go" : (q.contextMismatch ? "stop" : ""));
     html += resultRow("Indicator Source Bars", String(q.sourceBars) + " / need >=300", q.barsOk ? "go" : "stop");
     html += resultRow("EMA/RSI/ATR", q.indicatorsOk ? "READY" : "PARTIAL", q.indicatorsOk ? "go" : "stop");
     html += resultRow("Price Fetch Age", dqAgeText(q.fetchAge));
@@ -2175,6 +2241,177 @@ textarea.journalNotes{
     el("dqSummary").innerHTML = html;
     if (nav) nav.innerHTML = q.status;
   }
+
+
+  /* ---------- REALIZED PERFORMANCE HELPERS v3.1.2 ---------- */
+
+  function pad2Perf(x) {
+    x = parseInt(x, 10) || 0;
+    return x < 10 ? "0" + x : String(x);
+  }
+
+  function localDateTimeInputValue(ms) {
+    if (ms == null || !isFinite(Number(ms))) return "";
+    var d = new Date(Number(ms));
+    return d.getFullYear() + "-" + pad2Perf(d.getMonth() + 1) + "-" + pad2Perf(d.getDate()) +
+      "T" + pad2Perf(d.getHours()) + ":" + pad2Perf(d.getMinutes());
+  }
+
+  function parseLocalDateTimeInput(text) {
+    if (!text) return null;
+    var m = String(text).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!m) return null;
+    var d = new Date(
+      parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10),
+      parseInt(m[4],10), parseInt(m[5],10), 0, 0
+    );
+    var ms = d.getTime();
+    return isFinite(ms) ? ms : null;
+  }
+
+  function sameLocalCalendarDay(ms, nowMs) {
+    if (ms == null || !isFinite(Number(ms))) return false;
+    var a = new Date(Number(ms));
+    var b = new Date(nowMs == null ? new Date().getTime() : Number(nowMs));
+    return a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+  }
+
+  function journalPipSize(item) {
+    if (!item) return null;
+    if (item.pipSize != null && isFinite(Number(item.pipSize)) && Number(item.pipSize) > 0) {
+      return Number(item.pipSize);
+    }
+
+    var s = SYMBOLS[item.symbol];
+    if (s && !s.customSpec && s.pip != null && isFinite(Number(s.pip)) && Number(s.pip) > 0) {
+      return Number(s.pip);
+    }
+
+    return null;
+  }
+
+  function journalRealizedPips(item) {
+    if (!item) return null;
+    var entry = Number(item.actualEntry);
+    var exit = Number(item.actualExit);
+    var pip = journalPipSize(item);
+
+    if (!isFinite(entry) || !isFinite(exit) || !isFinite(pip) || pip <= 0) return null;
+
+    if (item.direction === "BUY") return (exit - entry) / pip;
+    if (item.direction === "SELL") return (entry - exit) / pip;
+    return null;
+  }
+
+  function journalRealizedAmountInfo(item) {
+    if (!item) return null;
+
+    if (item.actualAmount != null && isFinite(Number(item.actualAmount))) {
+      return {
+        value:Number(item.actualAmount),
+        ccy:item.acctCcy || "",
+        source:"ACTUAL"
+      };
+    }
+
+    if (item.realizedR != null && isFinite(Number(item.realizedR)) &&
+        item.risk != null && isFinite(Number(item.risk))) {
+      return {
+        value:Number(item.realizedR) * Number(item.risk),
+        ccy:item.acctCcy || "",
+        source:"RISK_DERIVED"
+      };
+    }
+
+    return null;
+  }
+
+  function closedOutcomeItem(item) {
+    return !!item && (item.status === "WIN" || item.status === "LOSS" || item.status === "BE");
+  }
+
+  function directionWinLossStats(items, direction) {
+    var wins = 0, losses = 0, i, x;
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      if (x.direction !== direction) continue;
+      if (x.status === "WIN") wins++;
+      else if (x.status === "LOSS") losses++;
+    }
+
+    var n = wins + losses;
+    return {
+      wins:wins,
+      losses:losses,
+      n:n,
+      winRate:n ? wins / n * 100 : null,
+      lossRate:n ? losses / n * 100 : null
+    };
+  }
+
+  function performanceAggregate(items) {
+    var out = {
+      pips:0, pipsN:0,
+      amounts:{}, amountN:0, actualAmountN:0, derivedAmountN:0,
+      closedN:0
+    };
+    var i, x, p, a, ccy;
+
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      if (!closedOutcomeItem(x)) continue;
+      out.closedN++;
+
+      p = journalRealizedPips(x);
+      if (p != null && isFinite(Number(p))) {
+        out.pips += Number(p);
+        out.pipsN++;
+      }
+
+      a = journalRealizedAmountInfo(x);
+      if (a && isFinite(Number(a.value))) {
+        ccy = a.ccy || "CCY?";
+        if (!Object.prototype.hasOwnProperty.call(out.amounts, ccy)) out.amounts[ccy] = 0;
+        out.amounts[ccy] += Number(a.value);
+        out.amountN++;
+        if (a.source === "ACTUAL") out.actualAmountN++;
+        else out.derivedAmountN++;
+      }
+    }
+
+    return out;
+  }
+
+  function performanceMoneyNumber(v, ccy) {
+    if (v == null || !isFinite(Number(v))) return "—";
+    var digits = ccy === "JPY" ? 0 : 2;
+    var s = Number(v).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+  }
+
+  function performanceAmountText(amounts) {
+    var keys = [], k, parts = [];
+    for (k in amounts) {
+      if (Object.prototype.hasOwnProperty.call(amounts, k)) keys.push(k);
+    }
+    keys.sort();
+
+    for (var i = 0; i < keys.length; i++) {
+      k = keys[i];
+      parts.push(performanceMoneyNumber(amounts[k], k) + " " + k);
+    }
+    return parts.length ? parts.join(" / ") : "—";
+  }
+
+  function performancePipsText(v, nCount) {
+    if (!nCount) return "—";
+    return (v >= 0 ? "+" : "") + Number(v).toFixed(1) + " pips";
+  }
+
 
   /* ---------- TRADE LIFECYCLE ---------- */
 
@@ -2231,7 +2468,10 @@ textarea.journalNotes{
       plannedEntry:pSnap.entry, plannedSl:pSnap.sl, plannedTp1:pSnap.tp1, plannedTp2:pSnap.tp2,
       plannedLot:pSnap.lot, plannedRisk:pSnap.risk, plannedMargin:pSnap.margin,
       d1bias:value("d1bias"), depth:value("depth"),
-      status:"PLANNED", actualEntry:null, actualExit:null, realizedR:null, notes:"",
+      status:"PLANNED",
+      actualEntry:null, actualEntryAt:null,
+      actualExit:null, actualExitAt:null,
+      actualAmount:null, realizedR:null, notes:"",
       journalId:jSnap.id, portfolioId:pSnap.id
     };
 
@@ -2291,7 +2531,10 @@ textarea.journalNotes{
         if (trade.notes) j.notes = trade.notes;
         j.updatedAt = new Date().getTime();
         j.actualEntry = trade.actualEntry;
+        j.actualEntryAt = trade.actualEntryAt;
         j.actualExit = trade.actualExit;
+        j.actualExitAt = trade.actualExitAt;
+        j.actualAmount = trade.actualAmount;
         break;
       }
     }
@@ -2312,7 +2555,10 @@ textarea.journalNotes{
     selectedTradeId=id;
     el("tradeEditStatus").value=t.status;
     el("tradeActualEntry").value=t.actualEntry==null?"":String(t.actualEntry);
+    el("tradeActualEntryAt").value=localDateTimeInputValue(t.actualEntryAt);
     el("tradeActualExit").value=t.actualExit==null?"":String(t.actualExit);
+    el("tradeActualExitAt").value=localDateTimeInputValue(t.actualExitAt);
+    el("tradeActualAmount").value=t.actualAmount==null?"":String(t.actualAmount);
     el("tradeRealizedR").value=t.realizedR==null?"":String(t.realizedR);
     el("tradeNotes").value=t.notes||"";
     el("tradeEditorEmpty").style.display="none"; el("tradeEditor").style.display="block";
@@ -2320,30 +2566,100 @@ textarea.journalNotes{
 
   function updateSelectedTrade() {
     if (!selectedTradeId) return;
-    var d=getTrades(), i, t=null;
-    for(i=0;i<d.items.length;i++) if(d.items[i].id===selectedTradeId){t=d.items[i];break;}
-    if(!t) return;
-    var nextStatus=value("tradeEditStatus");
-    if(!tradeTransitionAllowed(t.status,nextStatus)) {
-      el("tradeStatusBox").className="opsStatus error";
-      el("tradeStatusBox").innerHTML="<strong>INVALID TRANSITION</strong><br>"+esc(t.status+" → "+nextStatus+" は許可していません。");
+
+    var d = getTrades(), i, t = null;
+    for (i = 0; i < d.items.length; i++) {
+      if (d.items[i].id === selectedTradeId) {
+        t = d.items[i];
+        break;
+      }
+    }
+    if (!t) return;
+
+    var previousStatus = t.status;
+    var nextStatus = value("tradeEditStatus");
+
+    if (!tradeTransitionAllowed(previousStatus, nextStatus)) {
+      el("tradeStatusBox").className = "opsStatus error";
+      el("tradeStatusBox").innerHTML =
+        "<strong>INVALID TRANSITION</strong><br>" +
+        esc(previousStatus + " → " + nextStatus + " は許可していません。");
       return;
     }
-    var ae=el("tradeActualEntry").value===""?null:parseFloat(el("tradeActualEntry").value);
-    var ax=el("tradeActualExit").value===""?null:parseFloat(el("tradeActualExit").value);
-    var rr=el("tradeRealizedR").value===""?null:parseFloat(el("tradeRealizedR").value);
-    if ((nextStatus==="OPEN"||nextStatus==="MANAGE"||nextStatus==="CLOSED") && (!isFinite(ae)||ae<=0)) {
-      el("tradeStatusBox").className="opsStatus error"; el("tradeStatusBox").innerHTML="<strong>INPUT</strong><br>OPEN以降は実Entryが必要です。"; return;
+
+    var aeText = el("tradeActualEntry").value;
+    var axText = el("tradeActualExit").value;
+    var amtText = el("tradeActualAmount").value;
+    var rrText = el("tradeRealizedR").value;
+
+    var ae = aeText === "" ? null : parseFloat(aeText);
+    var ax = axText === "" ? null : parseFloat(axText);
+    var amount = amtText === "" ? null : parseFloat(amtText);
+    var rr = rrText === "" ? null : parseFloat(rrText);
+
+    var entryAt = parseLocalDateTimeInput(el("tradeActualEntryAt").value);
+    var exitAt = parseLocalDateTimeInput(el("tradeActualExitAt").value);
+
+    if ((nextStatus === "OPEN" || nextStatus === "MANAGE" || nextStatus === "CLOSED") &&
+        (!isFinite(ae) || ae <= 0)) {
+      el("tradeStatusBox").className = "opsStatus error";
+      el("tradeStatusBox").innerHTML =
+        "<strong>INPUT</strong><br>OPEN以降は実Entryが必要です。";
+      return;
     }
-    if (nextStatus==="CLOSED" && (!isFinite(ax)||ax<=0 || !isFinite(rr))) {
-      el("tradeStatusBox").className="opsStatus error"; el("tradeStatusBox").innerHTML="<strong>INPUT</strong><br>CLOSEDには実Exitと実現Rが必要です。"; return;
+
+    if (amtText !== "" && !isFinite(amount)) {
+      el("tradeStatusBox").className = "opsStatus error";
+      el("tradeStatusBox").innerHTML =
+        "<strong>INPUT</strong><br>実現金額は数値で入力してください。";
+      return;
     }
-    t.status=nextStatus; t.actualEntry=ae; t.actualExit=ax; t.realizedR=rr;
-    t.notes=String(el("tradeNotes").value||"").substring(0,800); t.updatedAt=new Date().getTime();
-    if(!saveTrades(d) || !syncLinkedJournalAndPortfolio(t)) {
-      el("tradeStatusBox").className="opsStatus error"; el("tradeStatusBox").innerHTML="<strong>SAVE ERROR</strong><br>Trade同期に失敗しました。"; return;
+
+    if (nextStatus === "CLOSED" &&
+        (!isFinite(ax) || ax <= 0 || !isFinite(rr))) {
+      el("tradeStatusBox").className = "opsStatus error";
+      el("tradeStatusBox").innerHTML =
+        "<strong>INPUT</strong><br>CLOSEDには実Exitと実現Rが必要です。";
+      return;
     }
-    renderTradeLifecycle(); renderJournal(); renderPortfolio(); renderAnalytics(); openTradeEditor(t.id);
+
+    var now = new Date().getTime();
+
+    // OPENへ初めて進む時は、未入力なら現在時刻をEntry時刻として記録。
+    if ((nextStatus === "OPEN" || nextStatus === "MANAGE" || nextStatus === "CLOSED") &&
+        entryAt == null && previousStatus !== "OPEN" && previousStatus !== "MANAGE") {
+      entryAt = now;
+    } else if (entryAt == null && t.actualEntryAt != null) {
+      entryAt = t.actualEntryAt;
+    }
+
+    // CLOSEDへ進む時は、未入力なら更新時点をExit時刻として記録。
+    if (nextStatus === "CLOSED" && exitAt == null) {
+      exitAt = t.actualExitAt != null ? t.actualExitAt : now;
+    }
+
+    t.status = nextStatus;
+    t.actualEntry = ae;
+    t.actualEntryAt = entryAt;
+    t.actualExit = ax;
+    t.actualExitAt = exitAt;
+    t.actualAmount = amount;
+    t.realizedR = rr;
+    t.notes = String(el("tradeNotes").value || "").substring(0, 800);
+    t.updatedAt = now;
+
+    if (!saveTrades(d) || !syncLinkedJournalAndPortfolio(t)) {
+      el("tradeStatusBox").className = "opsStatus error";
+      el("tradeStatusBox").innerHTML =
+        "<strong>SAVE ERROR</strong><br>Trade同期に失敗しました。";
+      return;
+    }
+
+    renderTradeLifecycle();
+    renderJournal();
+    renderPortfolio();
+    renderAnalytics();
+    openTradeEditor(t.id);
   }
 
   function renderTradeLifecycle() {
@@ -2366,41 +2682,63 @@ textarea.journalNotes{
 
   function renderEdgeFactorAnalytics(items) {
     if (!el("edgeFactorTable")) return;
+
     var tbody = el("edgeFactorTable").getElementsByTagName("tbody")[0];
     var real = realizedJournal(items);
-    var base = analyticsStats(real);
-    var html = "", i, j, spec, sub, st, diff;
+    var html = "", i, j, spec, item, state;
+    var DISPLAY_MIN_N = 20; // Provisional presentation threshold only.
 
     if (!real.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#77818c">実現R記録なし</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#77818c">実現R記録なし</td></tr>';
       return;
     }
 
-    html += '<tr><td style="text-align:left">BASELINE 全体</td><td>' + base.n + '</td><td>' +
-      (base.avg == null ? "—" : base.avg.toFixed(2)) + '</td><td>' +
-      (base.winRate == null ? "—" : base.winRate.toFixed(0) + "%") + '</td><td>—</td></tr>';
-
     for (i = 0; i < EDGE_SPECS.length; i++) {
       spec = EDGE_SPECS[i];
-      sub = [];
+
+      var on = [];
+      var off = [];
+      var unknown = 0;
+
       for (j = 0; j < real.length; j++) {
-        if (real[j].edgeFactors && real[j].edgeFactors.indexOf) {
-          if (real[j].edgeFactors.indexOf(spec.id) >= 0) sub.push(real[j]);
+        item = real[j];
+
+        // Only full-state Evidence can define ON and OFF in the same eligible population.
+        // Legacy edgeFactors can prove a historical fire, but cannot prove OFF when absent,
+        // so legacy records are intentionally kept out of both comparison groups.
+        if (!item.edgeStates ||
+            !Object.prototype.hasOwnProperty.call(item.edgeStates, spec.id)) {
+          unknown++;
+          continue;
         }
+
+        state = item.edgeStates[spec.id];
+        if (state === true) on.push(item);
+        else if (state === false) off.push(item);
+        else unknown++;
       }
-      if (!sub.length) {
-        html += '<tr><td style="text-align:left">' + esc(spec.id) + '</td><td>0</td><td>—</td><td>—</td><td>—</td></tr>';
-        continue;
-      }
-      st = analyticsStats(sub);
-      diff = (st.avg == null || base.avg == null) ? null : (st.avg - base.avg);
-      html += '<tr><td style="text-align:left">' + esc(spec.id) + '</td><td>' + st.n + '</td><td>' +
-        (st.avg == null ? "—" : st.avg.toFixed(2)) + '</td><td>' +
-        (st.winRate == null ? "—" : st.winRate.toFixed(0) + "%") + '</td><td class="' +
-        (st.n >= 20 && diff != null ? (diff > 0 ? "go" : "stop") : "") + '">' +
-        (diff == null ? "—" : ((diff >= 0 ? "+" : "") + diff.toFixed(2))) +
-        (st.n < 20 ? " (N<20)" : "") + '</td></tr>';
+
+      var onSt = analyticsStats(on);
+      var offSt = analyticsStats(off);
+      var diff = (onSt.avg == null || offSt.avg == null) ? null : (onSt.avg - offSt.avg);
+      var enough = onSt.n >= DISPLAY_MIN_N && offSt.n >= DISPLAY_MIN_N;
+      var diffText = diff == null ? "—" : ((diff >= 0 ? "+" : "") + diff.toFixed(2));
+      if (!enough && diff != null) diffText += " (暫定N<20)";
+
+      html += '<tr>' +
+        '<td style="text-align:left">' + esc(spec.id) + '</td>' +
+        '<td>' + onSt.n + '</td>' +
+        '<td>' + (onSt.avg == null ? "—" : onSt.avg.toFixed(2)) + '</td>' +
+        '<td>' + (onSt.winRate == null ? "—" : onSt.winRate.toFixed(0) + "%") + '</td>' +
+        '<td>' + offSt.n + '</td>' +
+        '<td>' + (offSt.avg == null ? "—" : offSt.avg.toFixed(2)) + '</td>' +
+        '<td>' + (offSt.winRate == null ? "—" : offSt.winRate.toFixed(0) + "%") + '</td>' +
+        '<td class="' + (enough && diff != null ? (diff > 0 ? "go" : (diff < 0 ? "stop" : "")) : "") + '">' +
+          diffText + '</td>' +
+        '<td>' + unknown + '</td>' +
+        '</tr>';
     }
+
     tbody.innerHTML = html;
   }
 
@@ -2462,10 +2800,139 @@ textarea.journalNotes{
       pf:neg>0?pos/neg:(pos>0?Infinity:null),maxDD:maxDD,maxWinRun:maxWinRun,maxLossRun:maxLossRun};
   }
 
+
+  function renderDirectionPerformance(items) {
+    if (!el("directionPerformanceTable")) return;
+
+    var directions = [
+      { key:"BUY", label:"LONG" },
+      { key:"SELL", label:"SHORT" }
+    ];
+
+    var html = "", i, d, s;
+    for (i = 0; i < directions.length; i++) {
+      d = directions[i];
+      s = directionWinLossStats(items, d.key);
+
+      html += '<tr>' +
+        '<td style="text-align:left">' + d.label + '</td>' +
+        '<td>' + s.n + '</td>' +
+        '<td>' + s.wins + '</td>' +
+        '<td>' + s.losses + '</td>' +
+        '<td>' + (s.winRate == null ? "—" : s.winRate.toFixed(1) + "%") + '</td>' +
+        '<td>' + (s.lossRate == null ? "—" : s.lossRate.toFixed(1) + "%") + '</td>' +
+        '</tr>';
+    }
+
+    el("directionPerformanceTable").getElementsByTagName("tbody")[0].innerHTML = html;
+  }
+
+  function renderPnlPerformance(items) {
+    if (!el("pnlPerformanceSummary")) return;
+
+    var now = new Date().getTime();
+    var todayItems = [];
+    var i, x;
+
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      if (!closedOutcomeItem(x)) continue;
+      if (sameLocalCalendarDay(x.actualExitAt, now)) todayItems.push(x);
+    }
+
+    var today = performanceAggregate(todayItems);
+    var total = performanceAggregate(items);
+
+    var missingPips = total.closedN - total.pipsN;
+    var missingAmount = total.closedN - total.amountN;
+
+    var html = "";
+    html += resultRow("本日の獲得pips", performancePipsText(today.pips, today.pipsN));
+    html += resultRow("本日の獲得金額", performanceAmountText(today.amounts));
+    html += resultRow("トータル獲得pips", performancePipsText(total.pips, total.pipsN),
+      total.pipsN ? (total.pips >= 0 ? "go" : "stop") : "");
+    html += resultRow("トータル獲得金額", performanceAmountText(total.amounts));
+    html += resultRow("pips集計可能", total.pipsN + " / " + total.closedN + " closed");
+    html += resultRow("金額集計可能", total.amountN + " / " + total.closedN + " closed");
+    html += resultRow("金額内訳",
+      "実額 " + total.actualAmountN + " / R×Risk " + total.derivedAmountN);
+    html += resultRow("不足データ",
+      "pips " + missingPips + " / 金額 " + missingAmount);
+
+    el("pnlPerformanceSummary").innerHTML = html;
+  }
+
+  function renderHourlyPerformance(items) {
+    if (!el("hourlyPerformanceTable")) return;
+
+    var groups = {};
+    var unknownTime = 0;
+    var i, x, d, h, key;
+
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      if (!closedOutcomeItem(x)) continue;
+
+      if (x.actualEntryAt == null || !isFinite(Number(x.actualEntryAt))) {
+        unknownTime++;
+        continue;
+      }
+
+      d = new Date(Number(x.actualEntryAt));
+      h = d.getHours();
+      key = pad2Perf(h);
+
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(x);
+    }
+
+    var keys = [], k, html = "";
+    for (k in groups) {
+      if (Object.prototype.hasOwnProperty.call(groups, k)) keys.push(k);
+    }
+    keys.sort();
+
+    for (i = 0; i < keys.length; i++) {
+      key = keys[i];
+      var arr = groups[key];
+      var wlWins = 0, wlLosses = 0, j;
+      for (j = 0; j < arr.length; j++) {
+        if (arr[j].status === "WIN") wlWins++;
+        else if (arr[j].status === "LOSS") wlLosses++;
+      }
+      var wlN = wlWins + wlLosses;
+      var agg = performanceAggregate(arr);
+
+      html += '<tr>' +
+        '<td style="text-align:left">' + key + ':00–' + key + ':59</td>' +
+        '<td>' + arr.length + '</td>' +
+        '<td>' + (wlN ? (wlWins / wlN * 100).toFixed(1) + "%" : "—") + '</td>' +
+        '<td>' + (wlN ? (wlLosses / wlN * 100).toFixed(1) + "%" : "—") + '</td>' +
+        '<td>' + performancePipsText(agg.pips, agg.pipsN) + '</td>' +
+        '<td>' + performanceAmountText(agg.amounts) + '</td>' +
+        '</tr>';
+    }
+
+    if (!html) {
+      html = '<tr><td colspan="6" style="text-align:center;color:#77818c">Entry時刻付きの決済履歴なし</td></tr>';
+    }
+
+    if (unknownTime > 0) {
+      html += '<tr><td style="text-align:left">時刻不明</td><td>' + unknownTime +
+        '</td><td>—</td><td>—</td><td>—</td><td>集計外</td></tr>';
+    }
+
+    el("hourlyPerformanceTable").getElementsByTagName("tbody")[0].innerHTML = html;
+  }
+
+
   function renderAnalytics() {
     if(!el("analyticsSummary"))return;
     populateAnalyticsFilters();
     var items=analyticsFilteredItems(), s=analyticsStats(items), html="";
+    renderDirectionPerformance(items);
+    renderPnlPerformance(items);
+    renderHourlyPerformance(items);
     renderEdgeFactorAnalytics(items);
     html+=resultRow("対象Journal",String(items.length));
     html+=resultRow("実現R件数 N",String(s.n));
@@ -2487,6 +2954,881 @@ textarea.journalNotes{
     for(i=0;i<keys.length;i++){var gs=analyticsStats(groups[keys[i]]);html+='<tr><td>'+esc(keys[i])+'</td><td>'+gs.n+'</td><td>'+(gs.n?gs.total.toFixed(2):'—')+'</td><td>'+(gs.avg==null?'—':gs.avg.toFixed(3))+'</td><td>'+(gs.winRate==null?'—':gs.winRate.toFixed(1)+'%')+'</td></tr>';}
     el("analyticsTable").getElementsByTagName("tbody")[0].innerHTML=html||'<tr><td colspan="5" style="text-align:center;color:#77818c">データなし</td></tr>';
   }
+
+
+  /* ---------- v3.2 EDGE DISCOVERY / PLAYBOOK ---------- */
+
+  var DECLARED_METHOD_KEY = "depaFX.declaredMethod.v32";
+
+  function finiteOrNull(v) {
+    return v != null && isFinite(Number(v)) ? Number(v) : null;
+  }
+
+  function copyMtfEvidenceFrame(frame) {
+    if (!frame) return null;
+    return {
+      close:finiteOrNull(frame.close),
+      ema20:finiteOrNull(frame.ema20),
+      ema50:finiteOrNull(frame.ema50),
+      ema200:finiteOrNull(frame.ema200),
+      rsi13:finiteOrNull(frame.rsi13),
+      atr14:finiteOrNull(frame.atr14),
+      rangePos:finiteOrNull(frame.rangePos),
+      barTime:frame.barTime || null
+    };
+  }
+
+  function edgeNumericSnapshot(R) {
+    if (!R || R.state === "INVALID") return null;
+
+    var ind = edgeCurrentIndicators();
+    var atr = n("atr");
+    var price = n("price");
+    var swingHigh = n("swingHigh");
+    var swingLow = n("swingLow");
+    var leg = (swingHigh != null && swingLow != null) ? (swingHigh - swingLow) : null;
+    var entry = R.mode === "GRID" ? R.avg : R.entry;
+    var sl = R.mode === "GRID" ? R.finalSL : R.sl;
+
+    var rangePos = null;
+    if (leg != null && isFinite(leg) && leg > 0 && price != null && isFinite(price)) {
+      rangePos = ((price - swingLow) / leg) * 100;
+    }
+
+    function atrDistance(v) {
+      if (v == null || !isFinite(Number(v)) || atr == null || !isFinite(Number(atr)) || Number(atr) <= 0) return null;
+      return Number(v) / Number(atr);
+    }
+
+    var slDist = null;
+    if (entry != null && sl != null && isFinite(Number(entry)) && isFinite(Number(sl))) {
+      slDist = Math.abs(Number(entry) - Number(sl));
+    }
+
+    var distEntry = null;
+    if (price != null && entry != null && isFinite(Number(price)) && isFinite(Number(entry))) {
+      distEntry = Math.abs(Number(price) - Number(entry));
+    }
+
+    var e20 = ind ? finiteOrNull(ind.ema20) : null;
+    var e50 = ind ? finiteOrNull(ind.ema50) : null;
+    var e200 = ind ? finiteOrNull(ind.ema200) : null;
+    var rsi13 = ind ? finiteOrNull(ind.rsi13) : null;
+
+    return {
+      schema:1,
+      capturedAt:new Date().getTime(),
+      price:finiteOrNull(price),
+      atr:finiteOrNull(atr),
+      ema20:e20,
+      ema50:e50,
+      ema200:e200,
+      rsi13:rsi13,
+      priceEma20Atr:(price != null && e20 != null) ? atrDistance(Number(price) - e20) : null,
+      priceEma50Atr:(price != null && e50 != null) ? atrDistance(Number(price) - e50) : null,
+      priceEma200Atr:(price != null && e200 != null) ? atrDistance(Number(price) - e200) : null,
+      swingHigh:finiteOrNull(swingHigh),
+      swingLow:finiteOrNull(swingLow),
+      swingRangePosPct:finiteOrNull(rangePos),
+      leg:finiteOrNull(leg),
+      legAtr:(leg != null) ? atrDistance(leg) : null,
+      depthPct:R.mode === "TREND" && n("depth") != null ? Number(n("depth")) * 100 : null,
+      plannedRR:R.mode === "GRID" ? null : finiteOrNull(R.netRR),
+      riskPct:finiteOrNull(n("riskPct")),
+      slAtr:atrDistance(slDist),
+      distanceToEntryAtr:atrDistance(distEntry),
+      spreadPips:finiteOrNull(n("spreadPips")),
+      slippagePips:finiteOrNull(n("slippagePips")),
+      mtfD1:copyMtfEvidenceFrame(edgeMtfFrame("D1")),
+      mtfH4:copyMtfEvidenceFrame(edgeMtfFrame("H4"))
+    };
+  }
+
+  function discoveryPopulateFilters() {
+    if (!el("discoverySymbol")) return;
+    var items = getJournal().items;
+    setAnalyticsOptions("discoverySymbol", uniqueJournalValues(items, "symbol"));
+    setAnalyticsOptions("discoveryTf", uniqueJournalValues(items, "timeframe"));
+    setAnalyticsOptions("discoveryMode", uniqueJournalValues(items, "mode"));
+  }
+
+  function discoveryFilteredItems() {
+    var items = getJournal().items, out = [], i, x;
+    var symbol = value("discoverySymbol");
+    var tf = value("discoveryTf");
+    var mode = value("discoveryMode");
+
+    for (i = 0; i < items.length; i++) {
+      x = items[i];
+      if (symbol !== "ALL" && x.symbol !== symbol) continue;
+      if (tf !== "ALL" && x.timeframe !== tf) continue;
+      if (mode !== "ALL" && x.mode !== mode) continue;
+      out.push(x);
+    }
+    return out;
+  }
+
+  function edgeKnownForIds(item, ids) {
+    if (!item || !item.edgeStates) return false;
+    var i, id, v;
+    for (i = 0; i < ids.length; i++) {
+      id = ids[i];
+      if (!Object.prototype.hasOwnProperty.call(item.edgeStates, id)) return false;
+      v = item.edgeStates[id];
+      if (v !== true && v !== false) return false;
+    }
+    return true;
+  }
+
+  function factorComparison(items, ids) {
+    var real = realizedJournal(items);
+    var on = [], off = [], unknown = 0;
+    var eligible = [], i, j, item, allTrue;
+
+    for (i = 0; i < real.length; i++) {
+      item = real[i];
+
+      if (!edgeKnownForIds(item, ids)) {
+        unknown++;
+        continue;
+      }
+
+      eligible.push(item);
+      allTrue = true;
+      for (j = 0; j < ids.length; j++) {
+        if (item.edgeStates[ids[j]] !== true) {
+          allTrue = false;
+          break;
+        }
+      }
+
+      if (allTrue) on.push(item);
+      else off.push(item);
+    }
+
+    var onSt = analyticsStats(on);
+    var offSt = analyticsStats(off);
+    var delta = (onSt.avg == null || offSt.avg == null) ? null : onSt.avg - offSt.avg;
+
+    return {
+      on:on,
+      off:off,
+      eligible:eligible,
+      unknown:unknown,
+      onStats:onSt,
+      offStats:offSt,
+      delta:delta
+    };
+  }
+
+  function evidenceTime(item) {
+    if (item && item.actualEntryAt != null && isFinite(Number(item.actualEntryAt))) return Number(item.actualEntryAt);
+    if (item && item.createdAt != null && isFinite(Number(item.createdAt))) return Number(item.createdAt);
+    return 0;
+  }
+
+  function splitFactorComparison(items, ids) {
+    var real = realizedJournal(items);
+    var known = [], i;
+
+    for (i = 0; i < real.length; i++) {
+      if (edgeKnownForIds(real[i], ids)) known.push(real[i]);
+    }
+
+    known.sort(function(a,b){ return evidenceTime(a) - evidenceTime(b); });
+
+    if (known.length < 2) {
+      return { first:null, recent:null, direction:"—" };
+    }
+
+    var cut = Math.floor(known.length / 2);
+    if (cut < 1) cut = 1;
+    var firstItems = known.slice(0, cut);
+    var recentItems = known.slice(cut);
+
+    var a = factorComparison(firstItems, ids);
+    var b = factorComparison(recentItems, ids);
+    var da = a.delta;
+    var db = b.delta;
+    var direction = "—";
+
+    if (da != null && db != null) {
+      if ((da > 0 && db > 0) || (da < 0 && db < 0)) direction = "同方向";
+      else if ((da > 0 && db < 0) || (da < 0 && db > 0)) direction = "反転";
+      else direction = "境界";
+    }
+
+    return { first:da, recent:db, direction:direction };
+  }
+
+  function deltaText(v) {
+    return v == null ? "—" : ((v >= 0 ? "+" : "") + Number(v).toFixed(2));
+  }
+
+  function combinationsOf(ids, size) {
+    var out = [];
+    function rec(start, current) {
+      if (current.length === size) {
+        out.push(current.slice(0));
+        return;
+      }
+      for (var i = start; i < ids.length; i++) {
+        current.push(ids[i]);
+        rec(i + 1, current);
+        current.pop();
+      }
+    }
+    rec(0, []);
+    return out;
+  }
+
+  function discoveryMinN() {
+    var v = parseInt(value("discoveryMinN"), 10);
+    return isFinite(v) && v > 0 ? v : 20;
+  }
+
+  function renderDiscoverySingle(items) {
+    var tbody = el("discoverySingleTable").getElementsByTagName("tbody")[0];
+    var html = "", i, spec, cmp, split, enough, cls;
+
+    for (i = 0; i < EDGE_SPECS.length; i++) {
+      spec = EDGE_SPECS[i];
+      cmp = factorComparison(items, [spec.id]);
+      split = splitFactorComparison(items, [spec.id]);
+      enough = cmp.onStats.n >= discoveryMinN() && cmp.offStats.n >= discoveryMinN();
+      cls = enough && cmp.delta != null ? (cmp.delta > 0 ? "go" : (cmp.delta < 0 ? "stop" : "")) : "";
+
+      html += '<tr>' +
+        '<td style="text-align:left">' + esc(spec.id) + '</td>' +
+        '<td>' + cmp.onStats.n + '</td>' +
+        '<td>' + cmp.offStats.n + '</td>' +
+        '<td>' + (cmp.onStats.avg == null ? "—" : cmp.onStats.avg.toFixed(2)) + '</td>' +
+        '<td>' + (cmp.offStats.avg == null ? "—" : cmp.offStats.avg.toFixed(2)) + '</td>' +
+        '<td class="' + cls + '">' + deltaText(cmp.delta) + '</td>' +
+        '<td>' + deltaText(split.first) + '</td>' +
+        '<td>' + deltaText(split.recent) + '</td>' +
+        '<td>' + esc(split.direction) + '</td>' +
+        '<td>' + cmp.unknown + '</td>' +
+        '</tr>';
+    }
+
+    tbody.innerHTML = html;
+  }
+
+  function renderDiscoveryCombos(items) {
+    var tbody = el("discoveryComboTable").getElementsByTagName("tbody")[0];
+    var size = parseInt(value("discoveryComboSize"),10) === 3 ? 3 : 2;
+    var ids = [], i, combos, rows = [];
+
+    for (i = 0; i < EDGE_SPECS.length; i++) ids.push(EDGE_SPECS[i].id);
+    combos = combinationsOf(ids, size);
+
+    for (i = 0; i < combos.length; i++) {
+      var cmp = factorComparison(items, combos[i]);
+      var split = splitFactorComparison(items, combos[i]);
+      rows.push({
+        ids:combos[i],
+        cmp:cmp,
+        split:split
+      });
+    }
+
+    // Exploratory ranking only: largest absolute observed delta first.
+    rows.sort(function(a,b){
+      var aa = a.cmp.delta == null ? -1 : Math.abs(a.cmp.delta);
+      var bb = b.cmp.delta == null ? -1 : Math.abs(b.cmp.delta);
+      if (aa !== bb) return bb - aa;
+      return a.ids.join("+") < b.ids.join("+") ? -1 : 1;
+    });
+
+    var html = "", r, enough, cls;
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      enough = r.cmp.onStats.n >= discoveryMinN() && r.cmp.offStats.n >= discoveryMinN();
+      cls = enough && r.cmp.delta != null ? (r.cmp.delta > 0 ? "go" : (r.cmp.delta < 0 ? "stop" : "")) : "";
+
+      html += '<tr>' +
+        '<td style="text-align:left">' + esc(r.ids.join(" + ")) + '</td>' +
+        '<td>' + r.cmp.onStats.n + '</td>' +
+        '<td>' + r.cmp.offStats.n + '</td>' +
+        '<td>' + (r.cmp.onStats.winRate == null ? "—" : r.cmp.onStats.winRate.toFixed(1) + "%") + '</td>' +
+        '<td>' + (r.cmp.offStats.winRate == null ? "—" : r.cmp.offStats.winRate.toFixed(1) + "%") + '</td>' +
+        '<td class="' + cls + '">' + deltaText(r.cmp.delta) + '</td>' +
+        '<td>' + deltaText(r.split.first) + '</td>' +
+        '<td>' + deltaText(r.split.recent) + '</td>' +
+        '<td>' + esc(r.split.direction) + '</td>' +
+        '<td>' + r.cmp.unknown + '</td>' +
+        '</tr>';
+    }
+
+    tbody.innerHTML = html || '<tr><td colspan="10" style="text-align:center;color:#77818c">比較可能なEvidenceなし</td></tr>';
+
+    var meta = el("comboDiscoveryMeta");
+    if (meta) {
+      meta.innerHTML =
+        "<strong>" + combos.length + " combinations tested</strong><br>" +
+        "表示順は |Δ AvgR| の大きい順。これは探索上の順位であり、Edge採用順位ではありません。";
+    }
+
+    if (el("navDiscovery")) el("navDiscovery").innerHTML = combos.length + " TESTS";
+  }
+
+  function quantileSorted(values, q) {
+    if (!values || !values.length) return null;
+    var pos = (values.length - 1) * q;
+    var base = Math.floor(pos);
+    var rest = pos - base;
+    if (values[base + 1] !== undefined) {
+      return values[base] + rest * (values[base + 1] - values[base]);
+    }
+    return values[base];
+  }
+
+  function metricValues(items, key) {
+    var out = [], i, snap, v;
+    for (i = 0; i < items.length; i++) {
+      if (!closedOutcomeItem(items[i])) continue;
+      snap = items[i].numericSnapshot;
+      if (!snap) continue;
+      v = snap[key];
+      if (v != null && isFinite(Number(v))) out.push(Number(v));
+    }
+    out.sort(function(a,b){return a-b;});
+    return out;
+  }
+
+  function renderNumericSnapshots(items) {
+    if (!el("numericSnapshotTable")) return;
+
+    var defs = [
+      ["riskPct","Risk %"],
+      ["depthPct","Depth %"],
+      ["plannedRR","Planned RR"],
+      ["legAtr","Leg / ATR"],
+      ["slAtr","SL / ATR"],
+      ["rsi13","RSI13"],
+      ["swingRangePosPct","Swing Range %"],
+      ["priceEma20Atr","Price-EMA20 / ATR"],
+      ["priceEma50Atr","Price-EMA50 / ATR"],
+      ["priceEma200Atr","Price-EMA200 / ATR"],
+      ["spreadPips","Spread pips"]
+    ];
+
+    var html = "", i, vals, med, q1, q3;
+    for (i = 0; i < defs.length; i++) {
+      vals = metricValues(items, defs[i][0]);
+      med = quantileSorted(vals, .5);
+      q1 = quantileSorted(vals, .25);
+      q3 = quantileSorted(vals, .75);
+
+      html += '<tr>' +
+        '<td style="text-align:left">' + esc(defs[i][1]) + '</td>' +
+        '<td>' + vals.length + '</td>' +
+        '<td>' + (med == null ? "—" : med.toFixed(2)) + '</td>' +
+        '<td>' + (q1 == null ? "—" : q1.toFixed(2)) + '</td>' +
+        '<td>' + (q3 == null ? "—" : q3.toFixed(2)) + '</td>' +
+        '</tr>';
+    }
+
+    el("numericSnapshotTable").getElementsByTagName("tbody")[0].innerHTML = html;
+  }
+
+  function renderEdgeDiscovery() {
+    if (!el("discoverySingleTable")) return;
+
+    discoveryPopulateFilters();
+    var items = discoveryFilteredItems();
+    var realized = realizedJournal(items);
+    var fullEvidence = 0, numericN = 0, i;
+
+    for (i = 0; i < realized.length; i++) {
+      if (realized[i].edgeStates) fullEvidence++;
+      if (realized[i].numericSnapshot) numericN++;
+    }
+
+    renderDiscoverySingle(items);
+    renderDiscoveryCombos(items);
+    renderNumericSnapshots(items);
+
+    var status = el("discoveryStatus");
+    if (status) {
+      status.innerHTML =
+        "<strong>EXPLORATORY ONLY</strong><br>" +
+        "対象Journal " + items.length +
+        " / 実現R " + realized.length +
+        " / Full Edge Evidence " + fullEvidence +
+        " / Numeric Snapshot " + numericN +
+        "。組み合わせ探索は自動採用しません。";
+    }
+  }
+
+  function defaultDeclaredMethod() {
+    return {
+      schema:1,
+      savedAt:null,
+      summary:"",
+      symbols:"",
+      mode:"ANY",
+      direction:"ANY",
+      timeframe:"ANY",
+      d1Align:"ANY",
+      h4Align:"ANY",
+      rsiPullback:"ANY",
+      minDepth:null,
+      minRR:null,
+      minLegAtr:null,
+      maxRiskPct:null,
+      hourStart:null,
+      hourEnd:null
+    };
+  }
+
+  function getDeclaredMethod() {
+    var base = defaultDeclaredMethod();
+    var d = storageRead(DECLARED_METHOD_KEY, null);
+    if (!d || typeof d !== "object") return base;
+
+    var k;
+    for (k in base) {
+      if (Object.prototype.hasOwnProperty.call(base,k) &&
+          Object.prototype.hasOwnProperty.call(d,k)) {
+        base[k] = d[k];
+      }
+    }
+    return base;
+  }
+
+  function optionalNumberFromField(id) {
+    var node = el(id);
+    if (!node || String(node.value).replace(/^\s+|\s+$/g,"") === "") return null;
+    var v = parseFloat(node.value);
+    return isFinite(v) ? v : null;
+  }
+
+  function saveDeclaredMethodFromUi() {
+    var d = {
+      schema:1,
+      savedAt:new Date().getTime(),
+      summary:String(value("declaredSummary") || "").substring(0,1200),
+      symbols:String(value("declaredSymbols") || "").substring(0,300),
+      mode:value("declaredMode"),
+      direction:value("declaredDirection"),
+      timeframe:value("declaredTf"),
+      d1Align:value("declaredD1Align"),
+      h4Align:value("declaredH4Align"),
+      rsiPullback:value("declaredRsiPullback"),
+      minDepth:optionalNumberFromField("declaredMinDepth"),
+      minRR:optionalNumberFromField("declaredMinRR"),
+      minLegAtr:optionalNumberFromField("declaredMinLegAtr"),
+      maxRiskPct:optionalNumberFromField("declaredMaxRiskPct"),
+      hourStart:optionalNumberFromField("declaredHourStart"),
+      hourEnd:optionalNumberFromField("declaredHourEnd")
+    };
+
+    if (d.hourStart != null) d.hourStart = Math.max(0, Math.min(23, Math.floor(d.hourStart)));
+    if (d.hourEnd != null) d.hourEnd = Math.max(0, Math.min(23, Math.floor(d.hourEnd)));
+
+    storageWrite(DECLARED_METHOD_KEY, d);
+    restoreDeclaredMethodUi();
+    renderPlaybook();
+
+    if (el("playbookStatus")) {
+      el("playbookStatus").className = "discoveryHero";
+      el("playbookStatus").innerHTML =
+        "<strong>DECLARED METHOD SAVED</strong><br>" +
+        "保存: " + formatLocalStamp(d.savedAt) +
+        "。比較は構造化ルールだけを対象にします。";
+    }
+  }
+
+  function restoreDeclaredMethodUi() {
+    if (!el("declaredSummary")) return;
+    var d = getDeclaredMethod();
+
+    el("declaredSummary").value = d.summary || "";
+    el("declaredSymbols").value = d.symbols || "";
+    el("declaredMode").value = d.mode || "ANY";
+    el("declaredDirection").value = d.direction || "ANY";
+    el("declaredTf").value = d.timeframe || "ANY";
+    el("declaredD1Align").value = d.d1Align || "ANY";
+    el("declaredH4Align").value = d.h4Align || "ANY";
+    el("declaredRsiPullback").value = d.rsiPullback || "ANY";
+    el("declaredMinDepth").value = d.minDepth == null ? "" : String(d.minDepth);
+    el("declaredMinRR").value = d.minRR == null ? "" : String(d.minRR);
+    el("declaredMinLegAtr").value = d.minLegAtr == null ? "" : String(d.minLegAtr);
+    el("declaredMaxRiskPct").value = d.maxRiskPct == null ? "" : String(d.maxRiskPct);
+    el("declaredHourStart").value = d.hourStart == null ? "" : String(d.hourStart);
+    el("declaredHourEnd").value = d.hourEnd == null ? "" : String(d.hourEnd);
+  }
+
+  function closedPlaybookItems() {
+    var items = getJournal().items, out = [], i;
+    for (i = 0; i < items.length; i++) {
+      if (closedOutcomeItem(items[i])) out.push(items[i]);
+    }
+    return out;
+  }
+
+  function topCategory(items, key) {
+    var counts = {}, total = 0, i, v, best = null, bestN = 0;
+    for (i = 0; i < items.length; i++) {
+      v = items[i][key];
+      if (v == null || String(v) === "") continue;
+      v = String(v);
+      counts[v] = (counts[v] || 0) + 1;
+      total++;
+      if (counts[v] > bestN) {
+        best = v;
+        bestN = counts[v];
+      }
+    }
+    return {
+      value:best,
+      n:bestN,
+      total:total,
+      pct:total ? bestN / total * 100 : null
+    };
+  }
+
+  function medianSnapshot(items, key) {
+    var vals = metricValues(items, key);
+    return {
+      n:vals.length,
+      median:quantileSorted(vals,.5)
+    };
+  }
+
+  function knownFactorRate(items, id) {
+    var yes = 0, no = 0, i, s;
+    for (i = 0; i < items.length; i++) {
+      if (!items[i].edgeStates ||
+          !Object.prototype.hasOwnProperty.call(items[i].edgeStates,id)) continue;
+      s = items[i].edgeStates[id];
+      if (s === true) yes++;
+      else if (s === false) no++;
+    }
+    var n = yes + no;
+    return { yes:yes, no:no, n:n, pct:n ? yes/n*100 : null };
+  }
+
+  function topEntryHours(items, limit) {
+    var counts = {}, i, h, d, keys = [];
+    for (i = 0; i < items.length; i++) {
+      if (items[i].actualEntryAt == null || !isFinite(Number(items[i].actualEntryAt))) continue;
+      d = new Date(Number(items[i].actualEntryAt));
+      h = d.getHours();
+      counts[h] = (counts[h] || 0) + 1;
+    }
+
+    for (h in counts) {
+      if (Object.prototype.hasOwnProperty.call(counts,h)) {
+        keys.push({hour:Number(h), n:counts[h]});
+      }
+    }
+
+    keys.sort(function(a,b){
+      if (a.n !== b.n) return b.n - a.n;
+      return a.hour - b.hour;
+    });
+
+    return keys.slice(0,limit || 3);
+  }
+
+  function pctText(v) {
+    return v == null ? "—" : Number(v).toFixed(1) + "%";
+  }
+
+  function observedPlaybookHtml(items) {
+    if (!items.length) {
+      return "<p>決済済みのWIN / LOSS / BE履歴がありません。実績が蓄積されると観測された手法を表示します。</p>";
+    }
+
+    var mode = topCategory(items,"mode");
+    var direction = topCategory(items,"direction");
+    var tf = topCategory(items,"timeframe");
+    var symbol = topCategory(items,"symbol");
+    var bias = topCategory(items,"d1bias");
+
+    var depth = medianSnapshot(items,"depthPct");
+    var rr = medianSnapshot(items,"plannedRR");
+    var leg = medianSnapshot(items,"legAtr");
+    var rsi = medianSnapshot(items,"rsi13");
+    var risk = medianSnapshot(items,"riskPct");
+    var slAtr = medianSnapshot(items,"slAtr");
+
+    var d1 = knownFactorRate(items,"E-01");
+    var h4 = knownFactorRate(items,"E-02");
+    var rsiRule = knownFactorRate(items,"E-04");
+    var hours = topEntryHours(items,3);
+
+    var html = "";
+    html += "<p><strong>観測対象:</strong> 決済済み " + items.length + "件。</p>";
+
+    if (mode.value) {
+      html += "<p><strong>戦術:</strong> 最多Modeは " + esc(mode.value) +
+        "（" + pctText(mode.pct) + ", N=" + mode.n + "/" + mode.total + "）。";
+      if (direction.value) {
+        html += " 最多方向は " + esc(direction.value === "BUY" ? "LONG" : "SHORT") +
+          "（" + pctText(direction.pct) + "）。";
+      }
+      html += "</p>";
+    }
+
+    if (symbol.value || tf.value) {
+      html += "<p><strong>市場選択:</strong> ";
+      if (symbol.value) html += "最多銘柄 " + esc(symbol.value) + "（" + pctText(symbol.pct) + "）";
+      if (symbol.value && tf.value) html += " / ";
+      if (tf.value) html += "最多時間足 " + esc(tf.value) + "（" + pctText(tf.pct) + "）";
+      html += "。</p>";
+    }
+
+    if (bias.value) {
+      html += "<p><strong>環境認識:</strong> 最多D1 Biasは " + esc(bias.value) +
+        "（" + pctText(bias.pct) + "）。";
+      if (d1.n) html += " D1 EMA整合は既知N=" + d1.n + "のうち " + pctText(d1.pct) + "。";
+      if (h4.n) html += " H4 EMA整合は既知N=" + h4.n + "のうち " + pctText(h4.pct) + "。";
+      html += "</p>";
+    }
+
+    var nums = [];
+    if (depth.median != null) nums.push("Depth中央値 " + depth.median.toFixed(1) + "% (N=" + depth.n + ")");
+    if (leg.median != null) nums.push("Leg中央値 " + leg.median.toFixed(2) + " ATR (N=" + leg.n + ")");
+    if (rr.median != null) nums.push("Planned RR中央値 " + rr.median.toFixed(2) + " (N=" + rr.n + ")");
+    if (rsi.median != null) nums.push("RSI13中央値 " + rsi.median.toFixed(1) + " (N=" + rsi.n + ")");
+    if (slAtr.median != null) nums.push("SL中央値 " + slAtr.median.toFixed(2) + " ATR (N=" + slAtr.n + ")");
+    if (risk.median != null) nums.push("Risk中央値 " + risk.median.toFixed(2) + "% (N=" + risk.n + ")");
+    if (nums.length) html += "<p><strong>エントリー/リスク特性:</strong> " + esc(nums.join(" / ")) + "。</p>";
+
+    if (rsiRule.n) {
+      html += "<p><strong>RSI挙動:</strong> E-04（RSI13が押し目/戻り側）は既知N=" +
+        rsiRule.n + "のうち " + pctText(rsiRule.pct) + "で成立。</p>";
+    }
+
+    if (hours.length) {
+      var parts = [];
+      for (var i = 0; i < hours.length; i++) {
+        parts.push(pad2Perf(hours[i].hour) + ":00台 N=" + hours[i].n);
+      }
+      html += "<p><strong>Entry時間:</strong> 件数上位は " + esc(parts.join(" / ")) + "。</p>";
+    }
+
+    html += "<p class=\"discoverySmall\">これは履歴に最も多く観測された行動の記述であり、推奨ルールや因果的Edgeではありません。</p>";
+    return html;
+  }
+
+  function parseDeclaredSymbols(text) {
+    var parts = String(text || "").toUpperCase().split(/[\s,、;]+/);
+    var out = [], map = {}, i, x;
+    for (i = 0; i < parts.length; i++) {
+      x = parts[i].replace(/[^A-Z0-9]/g,"");
+      if (!x || map[x]) continue;
+      map[x] = 1;
+      out.push(x);
+    }
+    return out;
+  }
+
+  function compareRule(label, declaredText, items, eligibleFn, matchFn) {
+    var eligible = 0, match = 0, i;
+    for (i = 0; i < items.length; i++) {
+      if (!eligibleFn(items[i])) continue;
+      eligible++;
+      if (matchFn(items[i])) match++;
+    }
+
+    return {
+      label:label,
+      declared:declaredText,
+      observed:eligible ? (match + " / " + eligible + " records satisfy") : "比較可能データなし",
+      rate:eligible ? match / eligible * 100 : null,
+      n:eligible
+    };
+  }
+
+  function hourMatchesWindow(hour,start,end) {
+    if (start == null || end == null) return false;
+    if (start <= end) return hour >= start && hour <= end;
+    return hour >= start || hour <= end;
+  }
+
+  function renderMethodCompare(items, declared) {
+    var tbody = el("methodCompareTable").getElementsByTagName("tbody")[0];
+    var rows = [], symbols;
+
+    if (String(declared.symbols || "").replace(/\s+/g,"") !== "") {
+      symbols = parseDeclaredSymbols(declared.symbols);
+      rows.push(compareRule(
+        "対象銘柄", symbols.join(", "),
+        items,
+        function(){return true;},
+        function(x){return symbols.indexOf(String(x.symbol || "").toUpperCase()) >= 0;}
+      ));
+    }
+
+    if (declared.mode && declared.mode !== "ANY") {
+      rows.push(compareRule("Mode", declared.mode, items,
+        function(){return true;},
+        function(x){return x.mode === declared.mode;}
+      ));
+    }
+
+    if (declared.direction && declared.direction !== "ANY") {
+      rows.push(compareRule("方向", declared.direction === "BUY" ? "LONG" : "SHORT", items,
+        function(){return true;},
+        function(x){return x.direction === declared.direction;}
+      ));
+    }
+
+    if (declared.timeframe && declared.timeframe !== "ANY") {
+      rows.push(compareRule("時間足", declared.timeframe, items,
+        function(){return true;},
+        function(x){return x.timeframe === declared.timeframe;}
+      ));
+    }
+
+    if (declared.d1Align === "REQUIRED") {
+      rows.push(compareRule("D1 EMA整合", "必須", items,
+        function(x){return x.edgeStates && (x.edgeStates["E-01"] === true || x.edgeStates["E-01"] === false);},
+        function(x){return x.edgeStates["E-01"] === true;}
+      ));
+    }
+
+    if (declared.h4Align === "REQUIRED") {
+      rows.push(compareRule("H4 EMA整合", "必須", items,
+        function(x){return x.edgeStates && (x.edgeStates["E-02"] === true || x.edgeStates["E-02"] === false);},
+        function(x){return x.edgeStates["E-02"] === true;}
+      ));
+    }
+
+    if (declared.rsiPullback === "REQUIRED") {
+      rows.push(compareRule("RSI押し/戻り", "必須", items,
+        function(x){return x.edgeStates && (x.edgeStates["E-04"] === true || x.edgeStates["E-04"] === false);},
+        function(x){return x.edgeStates["E-04"] === true;}
+      ));
+    }
+
+    if (declared.minDepth != null && isFinite(Number(declared.minDepth))) {
+      rows.push(compareRule("最小Depth", "≥ " + Number(declared.minDepth).toFixed(1) + "%", items,
+        function(x){return x.numericSnapshot && x.numericSnapshot.depthPct != null && isFinite(Number(x.numericSnapshot.depthPct));},
+        function(x){return Number(x.numericSnapshot.depthPct) >= Number(declared.minDepth);}
+      ));
+    }
+
+    if (declared.minRR != null && isFinite(Number(declared.minRR))) {
+      rows.push(compareRule("最低Planned RR", "≥ " + Number(declared.minRR).toFixed(2), items,
+        function(x){return x.numericSnapshot && x.numericSnapshot.plannedRR != null && isFinite(Number(x.numericSnapshot.plannedRR));},
+        function(x){return Number(x.numericSnapshot.plannedRR) >= Number(declared.minRR);}
+      ));
+    }
+
+    if (declared.minLegAtr != null && isFinite(Number(declared.minLegAtr))) {
+      rows.push(compareRule("最低Leg ATR", "≥ " + Number(declared.minLegAtr).toFixed(2), items,
+        function(x){return x.numericSnapshot && x.numericSnapshot.legAtr != null && isFinite(Number(x.numericSnapshot.legAtr));},
+        function(x){return Number(x.numericSnapshot.legAtr) >= Number(declared.minLegAtr);}
+      ));
+    }
+
+    if (declared.maxRiskPct != null && isFinite(Number(declared.maxRiskPct))) {
+      rows.push(compareRule("最大Risk", "≤ " + Number(declared.maxRiskPct).toFixed(2) + "%", items,
+        function(x){return x.numericSnapshot && x.numericSnapshot.riskPct != null && isFinite(Number(x.numericSnapshot.riskPct));},
+        function(x){return Number(x.numericSnapshot.riskPct) <= Number(declared.maxRiskPct);}
+      ));
+    }
+
+    if (declared.hourStart != null && declared.hourEnd != null &&
+        isFinite(Number(declared.hourStart)) && isFinite(Number(declared.hourEnd))) {
+      rows.push(compareRule(
+        "Entry時間",
+        pad2Perf(declared.hourStart) + ":00–" + pad2Perf(declared.hourEnd) + ":59",
+        items,
+        function(x){return x.actualEntryAt != null && isFinite(Number(x.actualEntryAt));},
+        function(x){
+          var h = new Date(Number(x.actualEntryAt)).getHours();
+          return hourMatchesWindow(h, Number(declared.hourStart), Number(declared.hourEnd));
+        }
+      ));
+    }
+
+    var html = "", i, r;
+    if (!rows.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="5" style="text-align:center;color:#77818c">構造化したDeclared Ruleがまだありません。</td></tr>';
+      return;
+    }
+
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      html += '<tr>' +
+        '<td>' + esc(r.label) + '</td>' +
+        '<td>' + esc(r.declared) + '</td>' +
+        '<td>' + esc(r.observed) + '</td>' +
+        '<td>' + (r.rate == null ? "—" : r.rate.toFixed(1) + "%") + '</td>' +
+        '<td>' + r.n + '</td>' +
+        '</tr>';
+    }
+    tbody.innerHTML = html;
+  }
+
+  function renderObservedPlaybookStats(items) {
+    if (!el("observedPlaybookStats")) return;
+
+    var numeric = 0, edgeFull = 0, timed = 0, i;
+    for (i = 0; i < items.length; i++) {
+      if (items[i].numericSnapshot) numeric++;
+      if (items[i].edgeStates) edgeFull++;
+      if (items[i].actualEntryAt != null && isFinite(Number(items[i].actualEntryAt))) timed++;
+    }
+
+    var stats = analyticsStats(items);
+    var html = "";
+    html += resultRow("決済履歴", String(items.length));
+    html += resultRow("Numeric Snapshot", numeric + " / " + items.length);
+    html += resultRow("Full Edge Evidence", edgeFull + " / " + items.length);
+    html += resultRow("Entry時刻あり", timed + " / " + items.length);
+    html += resultRow("観測Avg R", stats.avg == null ? "—" : stats.avg.toFixed(3) + "R");
+    html += resultRow("観測Win %", stats.winRate == null ? "—" : stats.winRate.toFixed(1) + "%");
+    el("observedPlaybookStats").innerHTML = html;
+  }
+
+  function renderPlaybook() {
+    if (!el("observedPlaybook")) return;
+
+    var items = closedPlaybookItems();
+    var d = getDeclaredMethod();
+
+    el("observedPlaybook").innerHTML = observedPlaybookHtml(items);
+    renderObservedPlaybookStats(items);
+    renderMethodCompare(items, d);
+
+    var status = el("playbookStatus");
+    if (status) {
+      var summary = d.summary ? esc(d.summary) : "本人の自由記述は未入力";
+      status.innerHTML =
+        "<strong>OBSERVED vs DECLARED</strong><br>" +
+        "決済履歴 N=" + items.length +
+        " / " + summary;
+    }
+
+    if (el("navPlaybook")) el("navPlaybook").innerHTML = items.length + " TRADES";
+  }
+
+  function hookV32Controls() {
+    var ids = [
+      "discoverySymbol","discoveryTf","discoveryMode",
+      "discoveryComboSize","discoveryMinN"
+    ];
+    var i, node;
+
+    for (i = 0; i < ids.length; i++) {
+      node = el(ids[i]);
+      if (!node) continue;
+      node.onchange = renderEdgeDiscovery;
+      if (ids[i] === "discoveryMinN") node.oninput = renderEdgeDiscovery;
+    }
+
+    if (el("saveDeclaredMethod")) el("saveDeclaredMethod").onclick = saveDeclaredMethodFromUi;
+  }
+
 
   /* ---------- MULTI-TIMEFRAME DASHBOARD ---------- */
 
@@ -2527,7 +3869,7 @@ textarea.journalNotes{
 
   function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
 
-  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.1",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.2",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
 
   function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
 
@@ -2569,8 +3911,7 @@ textarea.journalNotes{
     "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
     "customPip", "customContract", "customDigits",
     "swingHigh", "swingLow", "slAnchor",
-    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult",
-    "stressSpreadMult", "stressExtraSlip", "stressGapAtr"
+    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
   ];
 
   function defaultWatchSettings() {
@@ -4224,11 +5565,19 @@ textarea.journalNotes{
   function marketContextChanged() {
     clearMarketInputs();
     marketDataMode = "MANUAL";
+
+    // Recalculate immediately after clearing. This prevents the previous symbol/timeframe
+    // result from remaining visible until another input event or API response occurs.
+    render();
+
     syncProviderSymbolField();
     renderMarketDataStatus();
     renderStrategyMiniChart();
+    renderDataQuality();
+    renderMtfDashboard();
     restartMarketAutoRefresh();
     renderWatchPanel();
+    scheduleWorkspaceSave();
     scheduleMarketContextAutoFetch();
   }
 
@@ -5076,6 +6425,16 @@ textarea.journalNotes{
         risk:R.worstLoss,
         acctCcy:R.acctCcy,
         digits:digits,
+        pipSize:R.S && R.S.pip != null ? R.S.pip : null,
+        actualEntry:null, actualEntryAt:null,
+        actualExit:null, actualExitAt:null,
+        actualAmount:null,
+        numericEvidenceVersion:1,
+        numericSnapshot:edgeNumericSnapshot(R),
+        edgeEvidenceVersion:2,
+        edgeStates:null,
+        edgeFactors:[],
+        edgeScore:null,
         status:"PLANNED",
         realizedR:null,
         notes:""
@@ -5085,6 +6444,13 @@ textarea.journalNotes{
     if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
 
     return {
+      numericEvidenceVersion:1,
+      numericSnapshot:edgeNumericSnapshot(R),
+      edgeEvidenceVersion:2,
+      edgeStates:edgeStateSnapshot(R.edge),
+      edgeEvaluatedAt:new Date().getTime(),
+      // Retained for backward compatibility / quick display only.
+      // Analytics v3.1.1 uses edgeStates, not absence from edgeFactors, to define OFF.
       edgeFactors: R.edge ? R.edge.firedIds.slice(0) : [],
       edgeScore: R.edge ? R.edge.score : null,
       id:makeJournalId(),
@@ -5107,6 +6473,10 @@ textarea.journalNotes{
       risk:R.riskReal,
       acctCcy:R.acctCcy,
       digits:digits,
+      pipSize:R.S && R.S.pip != null ? R.S.pip : null,
+      actualEntry:null, actualEntryAt:null,
+      actualExit:null, actualExitAt:null,
+      actualAmount:null,
       status:"PLANNED",
       realizedR:null,
       notes:""
@@ -5165,6 +6535,11 @@ textarea.journalNotes{
 
     selectedJournalId = id;
     el("journalEditStatus").value = item.status || "PLANNED";
+    el("journalEditActualEntry").value = item.actualEntry == null ? "" : String(item.actualEntry);
+    el("journalEditEntryAt").value = localDateTimeInputValue(item.actualEntryAt);
+    el("journalEditActualExit").value = item.actualExit == null ? "" : String(item.actualExit);
+    el("journalEditExitAt").value = localDateTimeInputValue(item.actualExitAt);
+    el("journalEditAmount").value = item.actualAmount == null ? "" : String(item.actualAmount);
     el("journalEditR").value = item.realizedR == null ? "" : String(item.realizedR);
     el("journalEditNotes").value = item.notes || "";
     el("journalEditorEmpty").style.display = "none";
@@ -5192,10 +6567,34 @@ textarea.journalNotes{
       return;
     }
 
+    var previousStatus = item.status || "PLANNED";
     var status = value("journalEditStatus");
+
+    var aeText = el("journalEditActualEntry").value;
+    var axText = el("journalEditActualExit").value;
+    var amountText = el("journalEditAmount").value;
     var realizedText = el("journalEditR").value;
+
+    var ae = aeText === "" ? null : parseFloat(aeText);
+    var ax = axText === "" ? null : parseFloat(axText);
+    var actualAmount = amountText === "" ? null : parseFloat(amountText);
     var realized = realizedText === "" ? null : parseFloat(realizedText);
 
+    var entryAt = parseLocalDateTimeInput(el("journalEditEntryAt").value);
+    var exitAt = parseLocalDateTimeInput(el("journalEditExitAt").value);
+
+    if (aeText !== "" && (!isFinite(ae) || ae <= 0)) {
+      setStorageStatus("実Entryは0より大きい数値にしてください。", false);
+      return;
+    }
+    if (axText !== "" && (!isFinite(ax) || ax <= 0)) {
+      setStorageStatus("実Exitは0より大きい数値にしてください。", false);
+      return;
+    }
+    if (amountText !== "" && !isFinite(actualAmount)) {
+      setStorageStatus("実現金額は数値で入力してください。", false);
+      return;
+    }
     if (realizedText !== "" && !isFinite(realized)) {
       setStorageStatus("実現Rは数値で入力してください。", false);
       return;
@@ -5210,26 +6609,44 @@ textarea.journalNotes{
       setStorageStatus("WINの実現Rは0より大きい値にしてください。", false);
       return;
     }
-
     if (status === "LOSS" && realizedText !== "" && realized >= 0) {
       setStorageStatus("LOSSの実現Rは0より小さい値にしてください。", false);
       return;
     }
-
     if (status === "BE" && realizedText !== "" && Math.abs(realized) > 1e-12) {
       setStorageStatus("BEの実現Rは0Rにしてください。", false);
       return;
     }
-
     if (status === "CANCEL" && realizedText !== "" && Math.abs(realized) > 1e-12) {
       setStorageStatus("CANCELは実現Rを空欄または0Rにしてください。", false);
       return;
     }
 
+    var now = new Date().getTime();
+
+    // OPENへ更新した時だけ、Entry価格があり時刻未入力なら現在時刻を記録。
+    if (status === "OPEN" && previousStatus !== "OPEN" &&
+        ae != null && entryAt == null) {
+      entryAt = now;
+    } else if (entryAt == null && item.actualEntryAt != null) {
+      entryAt = item.actualEntryAt;
+    }
+
+    // 決済Statusへ更新した時は、Exit時刻未入力なら更新時刻を記録。
+    if ((status === "WIN" || status === "LOSS" || status === "BE") &&
+        exitAt == null) {
+      exitAt = item.actualExitAt != null ? item.actualExitAt : now;
+    }
+
     item.status = status;
+    item.actualEntry = ae;
+    item.actualEntryAt = entryAt;
+    item.actualExit = ax;
+    item.actualExitAt = exitAt;
+    item.actualAmount = actualAmount;
     item.realizedR = realized;
     item.notes = String(el("journalEditNotes").value || "").substring(0, 800);
-    item.updatedAt = new Date().getTime();
+    item.updatedAt = now;
 
     if (!saveJournal(data)) {
       setStorageStatus("Journal更新に失敗しました。", false);
@@ -5395,6 +6812,8 @@ textarea.journalNotes{
     }
 
     if (el("analyticsSummary")) renderAnalytics();
+    if (el("discoverySingleTable")) renderEdgeDiscovery();
+    if (el("observedPlaybook")) renderPlaybook();
   }
 
   function hookPhase4Controls() {
@@ -6219,7 +7638,9 @@ textarea.journalNotes{
     hookPhase7Controls();
     hookPhase8Controls();
     hookV3Controls();
+    hookV32Controls();
     hookEdgeControls();
+    restoreDeclaredMethodUi();
     refreshPresetSelect();
     render();
     renderPortfolio();
@@ -6229,6 +7650,8 @@ textarea.journalNotes{
     renderDataQuality();
     renderTradeLifecycle();
     renderAnalytics();
+    renderEdgeDiscovery();
+    renderPlaybook();
     renderMtfDashboard();
     renderStressTest();
     restartMarketAutoRefresh();
@@ -6267,7 +7690,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v3.1</li>
+    <li class="group">ENTRY CONSOLE v3.2</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -6287,6 +7710,8 @@ textarea.journalNotes{
     <li><a href="#dataquality">Data Quality <span id="navQuality" class="navValue">—</span></a></li>
     <li><a href="#trades">Trade Lifecycle <span id="navTrades" class="navValue">0</span></a></li>
     <li><a href="#analytics">Journal Analytics <span id="navAnalytics" class="navValue">—</span></a></li>
+    <li><a href="#discovery">Edge Discovery <span id="navDiscovery" class="navValue">—</span></a></li>
+    <li><a href="#playbook">My Playbook <span id="navPlaybook" class="navValue">—</span></a></li>
     <li><a href="#mtf">Multi-Timeframe <span id="navMtf" class="navValue">—</span></a></li>
     <li><a href="#stress">Stress Test <span id="navStress" class="navValue">—</span></a></li>
     <li id="navPositionRow"><a href="#position">建玉設計 <span id="navPosition" class="navValue">—</span></a></li>
@@ -6716,7 +8141,7 @@ textarea.journalNotes{
 
     <div class="journalEditorTitle">選択レコード編集</div>
     <div id="journalEditorEmpty" class="statusBox">
-      Journalの「編集」を押すと、Status・実現R・メモを更新できます。
+      Journalの「編集」を押すと、Status・実Entry/Exit・時刻・実現金額・実現R・メモを更新できます。
     </div>
 
     <div id="journalEditor" style="display:none">
@@ -6731,6 +8156,26 @@ textarea.journalNotes{
             <option value="BE">BE</option>
             <option value="CANCEL">CANCEL</option>
           </select>
+        </div>
+        <div class="row">
+          <label for="journalEditActualEntry">実Entry</label>
+          <input id="journalEditActualEntry" type="number" step="any" placeholder="約定価格">
+        </div>
+        <div class="row">
+          <label for="journalEditEntryAt">Entry日時</label>
+          <input id="journalEditEntryAt" type="datetime-local">
+        </div>
+        <div class="row">
+          <label for="journalEditActualExit">実Exit</label>
+          <input id="journalEditActualExit" type="number" step="any" placeholder="約定価格">
+        </div>
+        <div class="row">
+          <label for="journalEditExitAt">Exit日時</label>
+          <input id="journalEditExitAt" type="datetime-local">
+        </div>
+        <div class="row">
+          <label for="journalEditAmount">実現金額（任意）</label>
+          <input id="journalEditAmount" type="number" step="any" placeholder="未入力なら実現R×保存Risk">
         </div>
         <div class="row">
           <label for="journalEditR">実現R</label>
@@ -6977,7 +8422,10 @@ textarea.journalNotes{
       <fieldset>
         <div class="row"><label for="tradeEditStatus">Status</label><select id="tradeEditStatus"><option>PLANNED</option><option>WATCH</option><option>ENTRY</option><option>OPEN</option><option>MANAGE</option><option>CLOSED</option><option>CANCEL</option></select></div>
         <div class="row"><label for="tradeActualEntry">実Entry</label><input id="tradeActualEntry" type="number" step="any"></div>
+        <div class="row"><label for="tradeActualEntryAt">Entry日時</label><input id="tradeActualEntryAt" type="datetime-local"></div>
         <div class="row"><label for="tradeActualExit">実Exit</label><input id="tradeActualExit" type="number" step="any"></div>
+        <div class="row"><label for="tradeActualExitAt">Exit日時</label><input id="tradeActualExitAt" type="datetime-local"></div>
+        <div class="row"><label for="tradeActualAmount">実現金額（任意）</label><input id="tradeActualAmount" type="number" step="any" placeholder="ブローカー実績があれば入力"></div>
         <div class="row"><label for="tradeRealizedR">実現R</label><input id="tradeRealizedR" type="number" step="any"></div>
         <div class="row" style="min-height:90px"><label for="tradeNotes">メモ</label><textarea id="tradeNotes" class="journalNotes" maxlength="800"></textarea></div>
       </fieldset>
@@ -6995,10 +8443,118 @@ textarea.journalNotes{
       <div class="row"><label for="analyticsGroupBy">Breakdown</label><select id="analyticsGroupBy"><option value="symbol">銘柄</option><option value="timeframe">時間足</option><option value="mode">Mode</option><option value="direction">方向</option></select></div>
     </fieldset>
     <ul id="analyticsSummary" class="resultList"><li><span>実現R件数</span><strong>0</strong></li></ul>
+
+    <div class="sech">方向別 勝率 / 負率</div>
+    <div class="opsTableWrap"><table id="directionPerformanceTable" class="opsTable">
+      <thead><tr><th>方向</th><th>W/L N</th><th>勝</th><th>負</th><th>勝率</th><th>負率</th></tr></thead><tbody></tbody>
+    </table></div>
+
+    <div class="sech">獲得実績</div>
+    <ul id="pnlPerformanceSummary" class="resultList"><li><span>本日</span><strong>—</strong></li></ul>
+
+    <div class="sech">トータル 時間別実績（Entry時間）</div>
+    <div class="opsTableWrap"><table id="hourlyPerformanceTable" class="opsTable">
+      <thead><tr><th>Entry時間</th><th>N</th><th>勝率</th><th>負率</th><th>獲得pips</th><th>獲得金額</th></tr></thead><tbody></tbody>
+    </table></div>
+
     <div class="opsTableWrap"><table id="analyticsTable" class="opsTable"><thead><tr><th>Group</th><th>N</th><th>Total R</th><th>Avg R</th><th>Win %</th></tr></thead><tbody></tbody></table></div>
-    <div class="opsTableWrap"><table id="edgeFactorTable" class="opsTable"><thead><tr><th>Factor</th><th>N</th><th>Avg R</th><th>Win %</th><th>vs Base</th></tr></thead><tbody></tbody></table></div>
-    <div class="panelNote">実現Rが入力された記録だけの記述統計です。サンプル数Nを必ず併記し、過去成績を将来勝率の保証として扱いません。</div>
-    <div class="panelNote">ファクター別は「そのファクターが発火した記録だけ」を抜き出した層別集計です。vs Baseは全体平均Rとの差であり、因果ではありません。Nが小さいうちの差は雑音です。</div>
+    <div class="opsTableWrap"><table id="edgeFactorTable" class="opsTable"><thead><tr><th>Factor</th><th>ON N</th><th>ON AvgR</th><th>ON Win%</th><th>OFF N</th><th>OFF AvgR</th><th>OFF Win%</th><th>Δ ON-OFF</th><th>Unknown</th></tr></thead><tbody></tbody></table></div>
+    <div class="panelNote">方向別の勝率/負率は WIN / (WIN+LOSS)、LOSS / (WIN+LOSS) で、BE/CANCELは分母から除外します。pipsは実Entryと実Exitの約定価格差から方向付きで計算し、pipサイズが確定できる記録だけを集計します。</div>
+    <div class="panelNote">本日の獲得実績は端末ローカル日付のExit日時で判定します。時間別実績はEntry時刻の時間帯で集計し、時刻不明の旧履歴は推定しません。獲得金額は明示入力した実現金額を優先し、未入力時だけ「実現R × 保存Risk」を派生値として使用します。異なる口座通貨は合算せず通貨別に表示します。</div>
+    <div class="panelNote">実現Rが入力された記録だけのR統計です。サンプル数Nを必ず併記し、過去成績を将来勝率の保証として扱いません。</div>
+    <div class="panelNote">ファクター別は、同じv3.1.1 Edge Evidenceを持つ実現R記録の中で ON と OFF を比較します。null・評価不能・旧v3.1の fired ID のみの記録は Unknown としてOFFへ推定しません。Δ ON-OFFは関連の記述統計であり、因果や将来Edgeの証明ではありません。</div>
+    <div class="panelNote">色付けは両群N≥20のときだけ行いますが、20は暫定の表示基準であり、採用・統計的有意性・安全性の境界ではありません。期間やcase mixを変えて差が残るかも確認してください。</div>
+  </div>
+
+
+  <!-- EDGE DISCOVERY -->
+  <div id="discovery" title="Edge Discovery">
+    <div id="discoveryStatus" class="discoveryHero">
+      <strong>EXPLORATORY ONLY</strong><br>
+      Journalの実績からFactor単独・組み合わせのON/OFF差を探索します。ランキングは仮説生成用で、自動採用しません。
+    </div>
+
+    <fieldset>
+      <div class="row"><label for="discoverySymbol">銘柄</label><select id="discoverySymbol"><option value="ALL">ALL</option></select></div>
+      <div class="row"><label for="discoveryTf">時間足</label><select id="discoveryTf"><option value="ALL">ALL</option></select></div>
+      <div class="row"><label for="discoveryMode">Mode</label><select id="discoveryMode"><option value="ALL">ALL</option></select></div>
+      <div class="row"><label for="discoveryComboSize">組合せサイズ</label>
+        <select id="discoveryComboSize"><option value="2">2 Factors</option><option value="3">3 Factors</option></select>
+      </div>
+      <div class="row"><label for="discoveryMinN">色付け最小N/群</label><input id="discoveryMinN" type="number" min="1" step="1" value="20"></div>
+    </fieldset>
+
+    <div class="sech">Single Factor Discovery</div>
+    <div class="opsTableWrap"><table id="discoverySingleTable" class="opsTable">
+      <thead><tr><th>Factor</th><th>ON N</th><th>OFF N</th><th>ON AvgR</th><th>OFF AvgR</th><th>Δ</th><th>前半Δ</th><th>後半Δ</th><th>方向</th><th>Unknown</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <div class="sech">Combination Discovery</div>
+    <div id="comboDiscoveryMeta" class="statusBox">組み合わせを計算します。</div>
+    <div class="opsTableWrap"><table id="discoveryComboTable" class="opsTable">
+      <thead><tr><th>Combination</th><th>ON N</th><th>OFF N</th><th>ON Win%</th><th>OFF Win%</th><th>Δ AvgR</th><th>前半Δ</th><th>後半Δ</th><th>方向</th><th>Unknown</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <div class="sech">数値スナップショット</div>
+    <div class="opsTableWrap"><table id="numericSnapshotTable" class="opsTable">
+      <thead><tr><th>Metric</th><th>N</th><th>Median</th><th>Q1</th><th>Q3</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <div class="panelNote">
+      Combination ONは、組み合わせ内の全Factorがtrueの記録です。OFFは全Factorが既知で少なくとも1つfalseの記録です。null/旧履歴はUnknownとして除外します。
+      全組み合わせを探索するため、多重比較で偶然の大差が出ます。Δが大きいこと自体をEdgeの証明としません。
+    </div>
+    <div class="panelNote">
+      前半Δ/後半Δは時間順に対象履歴を2分割した探索用の再現性チェックです。「同方向」は符号が一致しただけで、統計的有意性や将来再現性を意味しません。
+      色付け最小Nは表示補助のユーザー定義値です。
+    </div>
+  </div>
+
+  <!-- MY PLAYBOOK -->
+  <div id="playbook" title="My Playbook">
+    <div id="playbookStatus" class="discoveryHero">
+      <strong>OBSERVED vs DECLARED</strong><br>
+      実際の決済履歴から観測された手法を言語化し、本人が構造化入力したルールとの一致率を比較します。
+    </div>
+
+    <div class="sech">Observed Playbook — 履歴から見える実際の手法</div>
+    <div id="observedPlaybook" class="playbookText">
+      決済履歴が蓄積されると、ここに観測された行動パターンを表示します。
+    </div>
+    <ul id="observedPlaybookStats" class="resultList"></ul>
+
+    <div class="sech">Declared Method — 本人が言っている手法</div>
+    <fieldset>
+      <div class="row" style="min-height:96px"><label for="declaredSummary">本人の説明</label><textarea id="declaredSummary" class="journalNotes" maxlength="1200" placeholder="例: D1/H4の方向に沿い、H1で61.8%付近まで押した時だけ狙う"></textarea></div>
+      <div class="row"><label for="declaredSymbols">対象銘柄</label><input id="declaredSymbols" type="text" placeholder="例 XAUUSD,USDJPY / 空欄=指定なし"></div>
+      <div class="row"><label for="declaredMode">主Mode</label><select id="declaredMode"><option value="ANY">指定なし</option><option value="TREND">TREND</option><option value="COUNTER">COUNTER</option><option value="GRID">GRID</option></select></div>
+      <div class="row"><label for="declaredDirection">方向</label><select id="declaredDirection"><option value="ANY">指定なし</option><option value="BUY">LONG</option><option value="SELL">SHORT</option></select></div>
+      <div class="row"><label for="declaredTf">主時間足</label><select id="declaredTf"><option value="ANY">指定なし</option><option>M1</option><option>M3</option><option>M5</option><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></div>
+      <div class="row"><label for="declaredD1Align">D1 EMA整合</label><select id="declaredD1Align"><option value="ANY">指定なし</option><option value="REQUIRED">必須</option></select></div>
+      <div class="row"><label for="declaredH4Align">H4 EMA整合</label><select id="declaredH4Align"><option value="ANY">指定なし</option><option value="REQUIRED">必須</option></select></div>
+      <div class="row"><label for="declaredRsiPullback">RSI押し/戻り</label><select id="declaredRsiPullback"><option value="ANY">指定なし</option><option value="REQUIRED">必須</option></select></div>
+      <div class="row"><label for="declaredMinDepth">最小Depth %</label><input id="declaredMinDepth" type="number" min="0" max="100" step="0.1" placeholder="例 61.8"></div>
+      <div class="row"><label for="declaredMinRR">最低Planned RR</label><input id="declaredMinRR" type="number" min="0" step="0.1" placeholder="例 2.0"></div>
+      <div class="row"><label for="declaredMinLegAtr">最低Leg ATR</label><input id="declaredMinLegAtr" type="number" min="0" step="0.1" placeholder="例 3.0"></div>
+      <div class="row"><label for="declaredMaxRiskPct">最大Risk %</label><input id="declaredMaxRiskPct" type="number" min="0" step="0.1" placeholder="例 1.0"></div>
+      <div class="row"><label for="declaredHourStart">Entry開始時</label><input id="declaredHourStart" type="number" min="0" max="23" step="1" placeholder="例 8"></div>
+      <div class="row"><label for="declaredHourEnd">Entry終了時</label><input id="declaredHourEnd" type="number" min="0" max="23" step="1" placeholder="例 17"></div>
+    </fieldset>
+    <div class="actionPanel"><button id="saveDeclaredMethod" class="actionButton primary" type="button">Declared Methodを保存</button></div>
+
+    <div class="sech">Declared vs Observed</div>
+    <div class="opsTableWrap"><table id="methodCompareTable" class="opsTable methodCompareTable">
+      <thead><tr><th>ルール</th><th>本人申告</th><th>履歴で観測</th><th>一致率</th><th>N</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <div class="panelNote">
+      自由記述の「本人の説明」は保存・表示しますが、文章自体を勝手に意味解析しません。比較は上の構造化ルールだけを対象にします。
+      一致率は「本人申告が正しい/優れている」ことを意味せず、実際の履歴がその申告ルールをどの程度満たしたかを示します。
+    </div>
   </div>
 
   <!-- MULTI TIMEFRAME -->
@@ -7040,7 +8596,10 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v3.1 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v3.2 — 建玉設計コンソール。</p>
+      <p>v3.1.1では、銘柄/時間足変更直後の再計算、Edge Factorのtrue/false/null全状態保存、同一Evidence母集団でのON/OFF比較、MTF Edgeの鮮度確認、Stress仮定のWATCH Signature除外を追加しています。旧v3.1 Journalの発火ID欠落はOFFへ推定せずUnknownとして扱います。</p>
+      <p>v3.1.2では、LONG/SHORT別の勝率・負率、本日/トータルの獲得pips・獲得金額、Entry時間帯別の獲得pips・金額をJournal Analyticsへ追加しています。pipsは実約定価格差、金額は実現金額入力を優先し未入力時のみ実現R×保存Riskを使用します。本日はExit日時、時間別はEntry日時で判定します。</p>
+      <p>v3.2では、Edge Discoveryとして単独Factorと2/3 Factor組み合わせのON/OFF比較・前半/後半Δ、Journal保存時の数値スナップショット、Observed Playbookの自動言語化、Declared Methodの構造化保存、Declared vs Observed一致率を追加しています。組み合わせランキングは探索用で、自動Edge採用や因果推論は行いません。</p>
       <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
       <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
       <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>

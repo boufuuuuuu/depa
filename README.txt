@@ -1,4 +1,4 @@
-DEPA FX v3.0 (Risk Ops Suite)
+DEPA FX v3.2 (Edge Discovery + Playbook)
 
 Upload these files to the repository root:
 - index.html
@@ -128,3 +128,39 @@ Edge Score layer:
   difference from the overall baseline. Rows with N<20 are marked.
 - Edge Score is a condition-satisfaction count. It is not a probability and not
   a win rate.
+
+v3.1.1:
+- Symbol/timeframe context change now clears market inputs and immediately recalculates/renders the UI.
+- Known API metadata from another symbol/timeframe is classified as Data Quality STALE/MISMATCH during the transition.
+- Journal normal-trade snapshots now store all Edge factor states as true / false / null (edgeEvidenceVersion=2).
+- GRID explicitly stores no Edge factor evaluation.
+- Factor Analytics compares ON vs OFF only inside records with full-state Edge Evidence.
+- Legacy v3.1 fired-ID-only records and null evaluations remain Unknown; absence is never inferred as OFF.
+- Factor table shows ON/OFF N, AvgR, Win%, delta ON-OFF, and Unknown.
+- Both groups N>=20 is only a provisional color-display threshold, not an adoption/significance rule.
+- E-01/E-02 D1/H4 MTF evidence is ignored (Unknown) if fetch time or latest bar time is missing/stale under the user-configured Data Quality staleBars setting.
+- Stress Test assumptions are removed from WATCH setup signature.
+
+v3.1.2:
+- LONG and SHORT win/loss rates in Journal Analytics. BE/CANCEL excluded from W/L denominator.
+- Realized pips calculated from actual entry/exit execution price and stored pip size. Legacy standard FX/metals can use stable symbol pip; broker-dependent custom instruments require a stored pipSize.
+- Optional explicit actual P/L amount added to Trade Lifecycle and Journal editor.
+- Amount analytics prefer explicit actualAmount; otherwise use realizedR * saved risk as a derived amount.
+- Today's realized performance uses the device-local calendar date of actualExitAt.
+- Total hourly performance groups closed records by device-local actualEntryAt hour.
+- Legacy histories with unknown entry/exit time are not guessed; they appear as unknown / are excluded from the relevant time bucket.
+- Different account currencies are displayed separately and never summed together.
+
+v3.2:
+- Adds Edge Discovery page with single-factor and 2-factor / 3-factor combination comparisons.
+- Combination ON = all component factor states are true.
+- Combination OFF = all component states are known and at least one is false.
+- Null/missing/legacy unknown factor states are excluded from ON/OFF and counted as Unknown.
+- Displays ON/OFF N, win rates, delta AvgR, chronological first-half delta, recent-half delta and sign-direction consistency.
+- Combination table is exploratory and sorted by absolute observed delta only for scanning. It never auto-adopts an Edge.
+- Stores a numeric setup snapshot in new Journal records: ATR, EMA20/50/200, RSI13, EMA distance in ATR, swing range position, leg/ATR, depth, planned RR, risk %, SL/ATR, distance-to-entry/ATR, spread/slippage and fresh D1/H4 MTF frames where available.
+- Adds Observed Playbook: deterministic Japanese prose describing the most frequently observed mode/direction/symbol/timeframe/D1 bias, median numeric setup traits, EMA-alignment rates, RSI behavior and common entry hours.
+- Adds Declared Method structured inputs and free-text description.
+- Adds Declared vs Observed comparison as per-rule historical match rate and eligible N.
+- Free-text Declared Method is stored/displayed but is not silently NLP-parsed; only structured declared rules are compared.
+- Existing v3.1.1 full Edge Evidence remains usable for factor/combination discovery. Numeric snapshot metrics begin accumulating with v3.2 records.
