@@ -765,6 +765,9 @@ textarea.journalNotes{
   border-radius:16px;
   margin:12px 9px;
   padding:12px;
+  box-sizing:border-box;
+  max-width:calc(100% - 18px);
+  overflow:hidden;
 }
 .plCardTitle{
   display:flex;align-items:center;justify-content:space-between;
@@ -804,17 +807,52 @@ textarea.journalNotes{
   display:inline-block;min-width:34px;text-align:center;padding:6px 8px;border:1px solid #ccd3da;
   border-radius:10px;background:#f7f8f9;color:#56616c;font-weight:bold;
 }
-.calTable{width:100%;border-collapse:collapse;table-layout:fixed;}
+.calTable{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  border-collapse:collapse;
+  table-layout:fixed;
+  box-sizing:border-box;
+}
+.calTable th,
+.calTable td{
+  width:14.285714% !important;
+  min-width:0 !important;
+  max-width:14.285714% !important;
+  box-sizing:border-box;
+  white-space:normal !important;
+  overflow:hidden;
+  text-align:center;
+}
 .calTable th{
-  text-align:center;font-size:11px;color:#8a949d;padding:6px 0;border:none;background:none;
+  font-size:11px;color:#8a949d;padding:6px 1px;border:none;background:none;
 }
 .calTable td{
-  border:1px solid #e6eaee;height:74px;vertical-align:top;padding:4px;background:#fff;
+  border:1px solid #e6eaee;
+  height:64px;
+  vertical-align:top;
+  padding:4px 2px;
+  background:#fff;
 }
 .calTable td.empty{background:#fafafa;}
 .calTable td.today{background:#f5f1ea;}
-.calDayNum{font-size:11px;color:#78828c;margin-bottom:4px;}
-.calAmt{font-size:12px;font-weight:bold;line-height:1.25;word-break:break-word;}
+.calDayNum{
+  font-size:11px;color:#78828c;margin-bottom:4px;
+  text-align:right;
+}
+.calAmt{
+  display:block;
+  width:100%;
+  overflow:hidden;
+  white-space:normal !important;
+  word-break:break-all;
+  overflow-wrap:anywhere;
+  font-size:10px;
+  font-weight:bold;
+  line-height:1.2;
+  text-align:center;
+}
 .calAmt.go{color:#2f74e0;}
 .calAmt.stop{color:#ca6767;}
 .calFooter{
@@ -842,6 +880,18 @@ textarea.journalNotes{
 .excursionMetric .v.mfe{color:#26714c;}
 .excursionMeta{margin-top:8px;font-size:10px;color:#7a858f;}
 .excursionAction{margin:8px 9px 12px;}
+
+
+@media (max-width: 430px) {
+  .plCard{margin:10px 7px;padding:10px;max-width:calc(100% - 14px);}
+  .calTable td{height:58px;padding:3px 1px;}
+  .calTable th{font-size:10px;padding:5px 0;}
+  .calDayNum{font-size:10px;margin-bottom:3px;}
+  .calAmt{font-size:9px;line-height:1.15;}
+  .calFooter{font-size:12px;gap:6px;}
+  .calNavBtn{min-width:32px;padding:5px 7px;}
+  .calMonth{font-size:15px;}
+}
 
 </style>
 
@@ -976,7 +1026,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v3.4
+   DEPA FX SYSTEM — ENTRY CONSOLE v3.4.1
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -4915,7 +4965,7 @@ textarea.journalNotes{
 
   function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
 
-  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.4",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.4.1",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
 
   function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
 
@@ -8797,7 +8847,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v3.4</li>
+    <li class="group">ENTRY CONSOLE v3.4.1</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -9744,12 +9794,13 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v3.4 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v3.4.1 — 建玉設計コンソール。</p>
       <p>v3.1.1では、銘柄/時間足変更直後の再計算、Edge Factorのtrue/false/null全状態保存、同一Evidence母集団でのON/OFF比較、MTF Edgeの鮮度確認、Stress仮定のWATCH Signature除外を追加しています。旧v3.1 Journalの発火ID欠落はOFFへ推定せずUnknownとして扱います。</p>
       <p>v3.1.2では、LONG/SHORT別の勝率・負率、本日/トータルの獲得pips・獲得金額、Entry時間帯別の獲得pips・金額をJournal Analyticsへ追加しています。pipsは実約定価格差、金額は実現金額入力を優先し未入力時のみ実現R×保存Riskを使用します。本日はExit日時、時間別はEntry日時で判定します。</p>
       <p>v3.2では、Edge Discoveryとして単独Factorと2/3 Factor組み合わせのON/OFF比較・前半/後半Δ、Journal保存時の数値スナップショット、Observed Playbookの自動言語化、Declared Methodの構造化保存、Declared vs Observed一致率を追加しています。組み合わせランキングは探索用で、自動Edge採用や因果推論は行いません。</p>
       <p>v3.3では、損益ボードを追加し、実現金額ベースの累積損益グラフ（棒=日次損益 / 線=累積損益）と月次損益カレンダーを表示します。金額は実現金額入力を優先し、未入力時のみ実現R×保存Riskを使用します。異なる口座通貨は合算せず、JPY/USDなど1通貨ずつ切り替えて表示します。</p>
       <p>v3.4では、OPEN中の現在価格更新からMAE/MFE（最大逆行/最大順行）を記録し、CLOSED後にTwelve Dataの1分足OHLCをEntry〜Exit区間へ取得して再構築できます。境界1分足はEntry前/Exit後の値動きを混ぜないため完全に保有していた1分足だけを採用し、Entry/Exit実約定価格を端点として使います。再構築値とLIVE観測値はより極端な方を保持します。</p>
+      <p>v3.4.1では、iPhone Safariで損益カレンダーに全体tableの最小幅が継承されて横にはみ出す表示不具合を修正しました。カレンダーだけmin-widthを解除し、7列をカード幅へ固定しています。</p>
       <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
       <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
       <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>

@@ -1,4 +1,4 @@
-DEPA FX v3.4 (MAE/MFE Live + 1m Reconstruction)
+DEPA FX v3.4.1 (iPhone Calendar Layout Fix)
 
 Upload these files to the repository root:
 - index.html
@@ -189,3 +189,9 @@ v3.4:
 - Boundary partial-minute bars are intentionally excluded to avoid mixing pre-entry or post-exit extremes.
 - LIVE and RECONSTRUCTED observations are kept separately; final MAE/MFE uses the more extreme available observation.
 - Older Journal records can reconstruct pips when pip size is known, but amount/R may remain unavailable if no saved pipValuePerLot exists.
+v3.4.1:
+- Fixes iPhone Safari P/L calendar horizontal overflow.
+- Overrides the global table min-width only for the calendar.
+- Forces seven equal-width columns inside the P/L card.
+- Overrides global nowrap for calendar cells and allows compact amount wrapping.
+- Adds narrow-screen sizing for <=430px viewports.
