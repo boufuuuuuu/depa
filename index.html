@@ -757,6 +757,92 @@ textarea.journalNotes{
 .methodCompareTable td:nth-child(1){font-weight:bold;}
 .discoverySmall{font-size:10px;color:#78838d;}
 
+
+/* ================= v3.3 P/L BOARD ================= */
+.plCard{
+  background:#fff;
+  border:1px solid #c4ccd3;
+  border-radius:16px;
+  margin:12px 9px;
+  padding:12px;
+}
+.plCardTitle{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:15px;font-weight:bold;color:#44515d;margin-bottom:8px;
+}
+.plBadge{
+  display:inline-block;padding:2px 9px;border:1px solid #c8c0b5;border-radius:8px;
+  font-size:11px;color:#9a7d49;background:#faf8f3;
+}
+.plSummary{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px;
+}
+.plMetric{
+  border:1px solid #d9dfe4;border-radius:12px;background:#fafbfc;padding:10px 12px;
+}
+.plMetric .k{font-size:11px;color:#7d8791;margin-bottom:4px;}
+.plMetric .v{font-size:22px;font-weight:bold;color:#45525f;}
+.plMetric .v.go{color:#2f74e0;}
+.plMetric .v.stop{color:#ca6767;}
+.plChartWrap{margin-top:8px;}
+.plSvg{
+  width:100%;height:auto;display:block;border-radius:12px;background:#fcfcfd;border:1px solid #e0e5ea;
+}
+.plLegend{
+  margin-top:8px;font-size:11px;color:#74808a;line-height:1.6;
+}
+.plFilterNote{
+  font-size:11px;color:#7c8690;margin:8px 9px 2px;line-height:1.6;
+}
+.calHead{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;
+}
+.calMonth{
+  font-size:16px;font-weight:bold;color:#46525d;
+}
+.calNavBtn{
+  display:inline-block;min-width:34px;text-align:center;padding:6px 8px;border:1px solid #ccd3da;
+  border-radius:10px;background:#f7f8f9;color:#56616c;font-weight:bold;
+}
+.calTable{width:100%;border-collapse:collapse;table-layout:fixed;}
+.calTable th{
+  text-align:center;font-size:11px;color:#8a949d;padding:6px 0;border:none;background:none;
+}
+.calTable td{
+  border:1px solid #e6eaee;height:74px;vertical-align:top;padding:4px;background:#fff;
+}
+.calTable td.empty{background:#fafafa;}
+.calTable td.today{background:#f5f1ea;}
+.calDayNum{font-size:11px;color:#78828c;margin-bottom:4px;}
+.calAmt{font-size:12px;font-weight:bold;line-height:1.25;word-break:break-word;}
+.calAmt.go{color:#2f74e0;}
+.calAmt.stop{color:#ca6767;}
+.calFooter{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;
+  font-size:13px;font-weight:bold;color:#59646f;
+}
+.calFooter .go{color:#2f74e0;}
+.calFooter .stop{color:#ca6767;}
+
+
+/* ================= v3.4 MAE / MFE ================= */
+.excursionBox{
+  margin:10px 9px;padding:10px 12px;border:1px solid #a8b0b7;border-radius:10px;
+  background:#f8f9fa;color:#4f5c67;font-size:12px;line-height:1.55;
+}
+.excursionGrid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;
+}
+.excursionMetric{
+  background:#fff;border:1px solid #d6dce1;border-radius:9px;padding:8px 9px;
+}
+.excursionMetric .k{font-size:10px;color:#808a94;margin-bottom:3px;}
+.excursionMetric .v{font-size:16px;font-weight:bold;}
+.excursionMetric .v.mae{color:#b64b45;}
+.excursionMetric .v.mfe{color:#26714c;}
+.excursionMeta{margin-top:8px;font-size:10px;color:#7a858f;}
+.excursionAction{margin:8px 9px 12px;}
+
 </style>
 
   <script>
@@ -890,7 +976,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v3.2
+   DEPA FX SYSTEM — ENTRY CONSOLE v3.4
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -2413,6 +2499,554 @@ textarea.journalNotes{
   }
 
 
+
+  /* ---------- v3.4 MAE / MFE ENGINE ---------- */
+
+  function excursionReset(item) {
+    if (!item) return;
+    item.excursionVersion = 1;
+    item.maePips = null;
+    item.mfePips = null;
+    item.maeAmount = null;
+    item.mfeAmount = null;
+    item.maeR = null;
+    item.mfeR = null;
+    item.maePrice = null;
+    item.mfePrice = null;
+    item.maeAt = null;
+    item.mfeAt = null;
+    item.maeSource = null;
+    item.mfeSource = null;
+    item.excursionSource = null;
+    item.excursionUpdatedAt = null;
+    item.liveMaePips = null;
+    item.liveMfePips = null;
+    item.liveMaePrice = null;
+    item.liveMfePrice = null;
+    item.liveMaeAt = null;
+    item.liveMfeAt = null;
+    item.reconMaePips = null;
+    item.reconMfePips = null;
+    item.reconMaePrice = null;
+    item.reconMfePrice = null;
+    item.reconMaeAt = null;
+    item.reconMfeAt = null;
+    item.reconstructionStatus = null;
+    item.reconstructionFetchedBars = 0;
+    item.reconstructionFullBars = 0;
+    item.reconstructionAt = null;
+    item.reconstructionProviderSymbol = null;
+    item.reconstructionBoundaryPolicy = null;
+  }
+
+  function excursionSameValue(a,b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    return Number(a) === Number(b);
+  }
+
+  function excursionEntryInputsChanged(oldEntry, oldEntryAt, item) {
+    return !excursionSameValue(oldEntry, item.actualEntry) ||
+      !excursionSameValue(oldEntryAt, item.actualEntryAt);
+  }
+
+  function excursionExitInputsChanged(oldExit, oldExitAt, item) {
+    return !excursionSameValue(oldExit, item.actualExit) ||
+      !excursionSameValue(oldExitAt, item.actualExitAt);
+  }
+
+  function excursionClearReconstruction(item) {
+    if (!item) return;
+    item.reconMaePips = null;
+    item.reconMfePips = null;
+    item.reconMaePrice = null;
+    item.reconMfePrice = null;
+    item.reconMaeAt = null;
+    item.reconMfeAt = null;
+    item.reconstructionStatus = null;
+    item.reconstructionFetchedBars = 0;
+    item.reconstructionFullBars = 0;
+    item.reconstructionAt = null;
+    item.reconstructionProviderSymbol = null;
+    item.reconstructionBoundaryPolicy = null;
+    excursionRecomputeCanonical(item);
+  }
+
+  function excursionEnsureBaseline(item) {
+    if (!item || item.actualEntry == null || !isFinite(Number(item.actualEntry))) return false;
+    if (item.excursionVersion !== 1) item.excursionVersion = 1;
+
+    if (item.maePips == null || !isFinite(Number(item.maePips))) item.maePips = 0;
+    if (item.mfePips == null || !isFinite(Number(item.mfePips))) item.mfePips = 0;
+    if (item.maePrice == null || !isFinite(Number(item.maePrice))) item.maePrice = Number(item.actualEntry);
+    if (item.mfePrice == null || !isFinite(Number(item.mfePrice))) item.mfePrice = Number(item.actualEntry);
+    if (item.maeAt == null) item.maeAt = item.actualEntryAt || null;
+    if (item.mfeAt == null) item.mfeAt = item.actualEntryAt || null;
+    return true;
+  }
+
+  function excursionSignedPips(item, price) {
+    if (!item || price == null || !isFinite(Number(price))) return null;
+    if (item.actualEntry == null || !isFinite(Number(item.actualEntry))) return null;
+    var pip = journalPipSize(item);
+    if (pip == null || !isFinite(Number(pip)) || Number(pip) <= 0) return null;
+
+    var entry = Number(item.actualEntry);
+    price = Number(price);
+    if (item.direction === "BUY") return (price - entry) / Number(pip);
+    if (item.direction === "SELL") return (entry - price) / Number(pip);
+    return null;
+  }
+
+  function excursionAmountFromPips(item, pips) {
+    if (!item || pips == null || !isFinite(Number(pips))) return null;
+    if (item.pipValuePerLot == null || !isFinite(Number(item.pipValuePerLot))) return null;
+    if (item.lot == null || !isFinite(Number(item.lot)) || Number(item.lot) <= 0) return null;
+    return Number(pips) * Number(item.pipValuePerLot) * Number(item.lot);
+  }
+
+  function excursionRFromAmount(item, amount) {
+    if (!item || amount == null || !isFinite(Number(amount))) return null;
+    if (item.risk == null || !isFinite(Number(item.risk)) || Number(item.risk) <= 0) return null;
+    return Number(amount) / Number(item.risk);
+  }
+
+  function excursionRefreshDerived(item) {
+    item.maeAmount = excursionAmountFromPips(item, item.maePips);
+    item.mfeAmount = excursionAmountFromPips(item, item.mfePips);
+    item.maeR = excursionRFromAmount(item, item.maeAmount);
+    item.mfeR = excursionRFromAmount(item, item.mfeAmount);
+
+    if (item.maeSource && item.mfeSource) {
+      item.excursionSource = item.maeSource === item.mfeSource
+        ? item.maeSource
+        : "HYBRID";
+    } else {
+      item.excursionSource = item.maeSource || item.mfeSource || null;
+    }
+    item.excursionUpdatedAt = new Date().getTime();
+  }
+
+  function excursionRecomputeCanonical(item) {
+    if (!excursionEnsureBaseline(item)) return;
+
+    var maePips = 0, mfePips = 0;
+    var maePrice = Number(item.actualEntry), mfePrice = Number(item.actualEntry);
+    var maeAt = item.actualEntryAt || null, mfeAt = item.actualEntryAt || null;
+    var maeSource = null, mfeSource = null;
+
+    if (item.liveMaePips != null && isFinite(Number(item.liveMaePips)) &&
+        Number(item.liveMaePips) < maePips) {
+      maePips = Number(item.liveMaePips);
+      maePrice = Number(item.liveMaePrice);
+      maeAt = item.liveMaeAt || null;
+      maeSource = "LIVE";
+    }
+    if (item.reconMaePips != null && isFinite(Number(item.reconMaePips)) &&
+        Number(item.reconMaePips) < maePips) {
+      maePips = Number(item.reconMaePips);
+      maePrice = Number(item.reconMaePrice);
+      maeAt = item.reconMaeAt || null;
+      maeSource = "RECONSTRUCTED_1M";
+    }
+
+    if (item.liveMfePips != null && isFinite(Number(item.liveMfePips)) &&
+        Number(item.liveMfePips) > mfePips) {
+      mfePips = Number(item.liveMfePips);
+      mfePrice = Number(item.liveMfePrice);
+      mfeAt = item.liveMfeAt || null;
+      mfeSource = "LIVE";
+    }
+    if (item.reconMfePips != null && isFinite(Number(item.reconMfePips)) &&
+        Number(item.reconMfePips) > mfePips) {
+      mfePips = Number(item.reconMfePips);
+      mfePrice = Number(item.reconMfePrice);
+      mfeAt = item.reconMfeAt || null;
+      mfeSource = "RECONSTRUCTED_1M";
+    }
+
+    item.maePips = maePips;
+    item.mfePips = mfePips;
+    item.maePrice = maePrice;
+    item.mfePrice = mfePrice;
+    item.maeAt = maeAt;
+    item.mfeAt = mfeAt;
+    item.maeSource = maeSource;
+    item.mfeSource = mfeSource;
+    excursionRefreshDerived(item);
+  }
+
+  function excursionApplyPoint(item, price, at, source) {
+    if (!excursionEnsureBaseline(item)) return false;
+    var pips = excursionSignedPips(item, price);
+    if (pips == null || !isFinite(Number(pips))) return false;
+
+    if (item.liveMaePips == null || !isFinite(Number(item.liveMaePips))) item.liveMaePips = 0;
+    if (item.liveMfePips == null || !isFinite(Number(item.liveMfePips))) item.liveMfePips = 0;
+
+    var changed = false;
+    if (Number(pips) < Number(item.liveMaePips)) {
+      item.liveMaePips = Number(pips);
+      item.liveMaePrice = Number(price);
+      item.liveMaeAt = at || new Date().getTime();
+      changed = true;
+    }
+    if (Number(pips) > Number(item.liveMfePips)) {
+      item.liveMfePips = Number(pips);
+      item.liveMfePrice = Number(price);
+      item.liveMfeAt = at || new Date().getTime();
+      changed = true;
+    }
+
+    if (changed) {
+      item.liveLastSource = source || "LIVE";
+      excursionRecomputeCanonical(item);
+    }
+    return changed;
+  }
+
+  function excursionProviderSymbolForItem(item) {
+    if (item && item.providerSymbolAtSave) return String(item.providerSymbolAtSave);
+    var localSymbol = item ? item.symbol : "";
+    var settings = getMarketDataSettings();
+    if (settings && settings.symbolOverrides && settings.symbolOverrides[localSymbol]) {
+      return String(settings.symbolOverrides[localSymbol]);
+    }
+    return providerDefaultSymbol(localSymbol).symbol;
+  }
+
+  function excursionFormatUtc(ms) {
+    var d = new Date(Number(ms));
+    return d.getUTCFullYear() + "-" +
+      pad2Perf(d.getUTCMonth() + 1) + "-" +
+      pad2Perf(d.getUTCDate()) + "T" +
+      pad2Perf(d.getUTCHours()) + ":" +
+      pad2Perf(d.getUTCMinutes()) + ":" +
+      pad2Perf(d.getUTCSeconds());
+  }
+
+  function excursionFloorMinute(ms) {
+    return Math.floor(Number(ms) / 60000) * 60000;
+  }
+
+  function excursionCeilMinute(ms) {
+    return Math.ceil(Number(ms) / 60000) * 60000;
+  }
+
+  function excursionFetchChunks(startMs, endMs) {
+    var out = [];
+    var cursor = excursionFloorMinute(startMs);
+    var end = excursionCeilMinute(endMs);
+    var span = 3600 * 60000; // <= 3601 one-minute timestamps per request.
+    while (cursor < end) {
+      var next = Math.min(end, cursor + span);
+      out.push({start:cursor, end:next});
+      cursor = next;
+    }
+    if (!out.length) out.push({start:excursionFloorMinute(startMs), end:excursionCeilMinute(endMs)});
+    return out;
+  }
+
+  function excursionFetchOneMinuteBars(providerSymbol, startMs, endMs, key) {
+    var chunks = excursionFetchChunks(startMs, endMs);
+    var all = [];
+    var base = "https://api.twelvedata.com";
+
+    function run(index) {
+      if (index >= chunks.length) return Promise.resolve();
+
+      var c = chunks[index];
+      var url = base + "/time_series?symbol=" + encodeURIComponent(providerSymbol) +
+        "&interval=1min" +
+        "&timezone=UTC" +
+        "&start_date=" + encodeURIComponent(excursionFormatUtc(c.start)) +
+        "&end_date=" + encodeURIComponent(excursionFormatUtc(c.end)) +
+        "&apikey=" + encodeURIComponent(key);
+
+      return fetchTwelveJson(url).then(function(res) {
+        var bars = parseTwelveBars(res.data ? res.data.values : null);
+        for (var i = 0; i < bars.length; i++) all.push(bars[i]);
+        return run(index + 1);
+      });
+    }
+
+    return run(0).then(function() {
+      var map = {}, keys = [], i, dt;
+      for (i = 0; i < all.length; i++) {
+        dt = all[i].datetime;
+        if (!Object.prototype.hasOwnProperty.call(map, dt)) keys.push(dt);
+        map[dt] = all[i];
+      }
+      keys.sort();
+      var out = [];
+      for (i = 0; i < keys.length; i++) out.push(map[keys[i]]);
+      return {bars:out, chunks:chunks.length};
+    });
+  }
+
+  function excursionReconstructFromBars(item, bars) {
+    if (!item || !bars) return null;
+    var entryAt = Number(item.actualEntryAt);
+    var exitAt = Number(item.actualExitAt);
+    if (!isFinite(entryAt) || !isFinite(exitAt) || exitAt <= entryAt) return null;
+    if (item.actualEntry == null || !isFinite(Number(item.actualEntry))) return null;
+
+    var fullStart = excursionCeilMinute(entryAt);
+    var fullEnd = excursionFloorMinute(exitAt);
+    var recon = {
+      maePips:0, mfePips:0,
+      maePrice:Number(item.actualEntry), mfePrice:Number(item.actualEntry),
+      maeAt:entryAt, mfeAt:entryAt,
+      fullBars:0
+    };
+
+    function apply(price, at) {
+      var pips = excursionSignedPips(item, price);
+      if (pips == null || !isFinite(Number(pips))) return;
+      if (pips < recon.maePips) {
+        recon.maePips = Number(pips);
+        recon.maePrice = Number(price);
+        recon.maeAt = at;
+      }
+      if (pips > recon.mfePips) {
+        recon.mfePips = Number(pips);
+        recon.mfePrice = Number(price);
+        recon.mfeAt = at;
+      }
+    }
+
+    // Exact endpoint prices are valid observations.
+    apply(Number(item.actualEntry), entryAt);
+    if (item.actualExit != null && isFinite(Number(item.actualExit))) {
+      apply(Number(item.actualExit), exitAt);
+    }
+
+    for (var i = 0; i < bars.length; i++) {
+      var openMs = providerUtcMs(bars[i].datetime);
+      if (openMs == null || !isFinite(Number(openMs))) continue;
+
+      // Only bars fully inside the holding interval are used.
+      // This avoids attributing pre-entry or post-exit extremes from boundary bars.
+      if (openMs < fullStart) continue;
+      if (openMs + 60000 > exitAt) continue;
+      if (openMs >= fullEnd && fullEnd < exitAt) continue;
+
+      recon.fullBars++;
+      if (item.direction === "BUY") {
+        apply(bars[i].low, openMs);
+        apply(bars[i].high, openMs);
+      } else if (item.direction === "SELL") {
+        apply(bars[i].high, openMs);
+        apply(bars[i].low, openMs);
+      }
+    }
+
+    return recon;
+  }
+
+  function excursionMergeReconstruction(item, recon, meta) {
+    if (!item || !recon) return;
+    excursionEnsureBaseline(item);
+
+    item.reconMaePips = recon.maePips;
+    item.reconMfePips = recon.mfePips;
+    item.reconMaePrice = recon.maePrice;
+    item.reconMfePrice = recon.mfePrice;
+    item.reconMaeAt = recon.maeAt;
+    item.reconMfeAt = recon.mfeAt;
+
+    item.reconstructionStatus = recon.fullBars > 0 ? "RECONSTRUCTED_1M" : "ENDPOINTS_ONLY";
+    item.reconstructionFetchedBars = meta.fetchedBars || 0;
+    item.reconstructionFullBars = recon.fullBars || 0;
+    item.reconstructionAt = new Date().getTime();
+    item.reconstructionProviderSymbol = meta.providerSymbol || null;
+    item.reconstructionBoundaryPolicy = "FULL_1M_ONLY";
+
+    excursionRecomputeCanonical(item);
+  }
+
+  function excursionSummaryHtml(item) {
+    if (!item) return "<strong>MAE / MFE</strong><br>記録なし。";
+    var has = item.maePips != null || item.mfePips != null;
+    if (!has) {
+      return "<strong>MAE / MFE</strong><br>OPEN後の価格更新、または決済後の1分足再構築で記録します。";
+    }
+
+    function one(kind) {
+      var isMae = kind === "mae";
+      var pips = isMae ? item.maePips : item.mfePips;
+      var amount = isMae ? item.maeAmount : item.mfeAmount;
+      var r = isMae ? item.maeR : item.mfeR;
+      var price = isMae ? item.maePrice : item.mfePrice;
+      var at = isMae ? item.maeAt : item.mfeAt;
+      var src = isMae ? item.maeSource : item.mfeSource;
+      var parts = [];
+      if (pips != null && isFinite(Number(pips))) parts.push((Number(pips) >= 0 ? "+" : "") + Number(pips).toFixed(1) + " pips");
+      if (amount != null && isFinite(Number(amount))) parts.push(plFormatAmount(amount, item.acctCcy || ""));
+      if (r != null && isFinite(Number(r))) parts.push((Number(r) >= 0 ? "+" : "") + Number(r).toFixed(2) + "R");
+      var line = parts.length ? parts.join(" / ") : "—";
+      if (price != null && isFinite(Number(price))) line += "<br><span class=\"discoverySmall\">price " + esc(String(price)) + (at ? " / " + esc(formatLocalStamp(at)) : "") + (src ? " / " + esc(src) : "") + "</span>";
+      return line;
+    }
+
+    var meta = "Source " + esc(item.excursionSource || "—") + (item.liveLastSource ? " / live " + esc(item.liveLastSource) : "");
+    if (item.reconstructionStatus) {
+      meta += " / " + esc(item.reconstructionStatus) +
+        " / fetched " + Number(item.reconstructionFetchedBars || 0) +
+        " bars / full " + Number(item.reconstructionFullBars || 0);
+    }
+
+    return '<strong>MAE / MFE</strong>' +
+      '<div class="excursionGrid">' +
+      '<div class="excursionMetric"><div class="k">MAE 最大逆行</div><div class="v mae">' + one("mae") + '</div></div>' +
+      '<div class="excursionMetric"><div class="k">MFE 最大順行</div><div class="v mfe">' + one("mfe") + '</div></div>' +
+      '</div><div class="excursionMeta">' + meta +
+      '<br>金額は保存時pip価値×lot。1分足再構築は完全保有した1分足＋実Entry/Exitのみ。</div>';
+  }
+
+  function renderJournalExcursionSummary(item) {
+    var node = el("journalExcursionSummary");
+    if (node) node.innerHTML = excursionSummaryHtml(item);
+  }
+
+  function renderTradeExcursionSummary(trade) {
+    var node = el("tradeExcursionSummary");
+    if (!node) return;
+    var item = trade && trade.journalId ? getJournalItem(trade.journalId) : null;
+    node.innerHTML = excursionSummaryHtml(item);
+  }
+
+  function updateOpenJournalExcursions(localSymbol, price, source) {
+    if (!localSymbol || price == null || !isFinite(Number(price))) return false;
+
+    var data = getJournal();
+    var changed = false, i, item, pointChanged;
+    for (i = 0; i < data.items.length; i++) {
+      item = data.items[i];
+      if (item.status !== "OPEN") continue;
+      if (item.symbol !== localSymbol) continue;
+      if (item.actualEntry == null || !isFinite(Number(item.actualEntry))) continue;
+
+      var baselineMissing =
+        item.excursionVersion !== 1 ||
+        item.maePips == null || item.mfePips == null;
+
+      excursionEnsureBaseline(item);
+      if (baselineMissing) {
+        excursionRefreshDerived(item);
+        changed = true;
+      }
+
+      pointChanged = excursionApplyPoint(
+        item,
+        Number(price),
+        new Date().getTime(),
+        source === "MANUAL" ? "LIVE_MANUAL" : "LIVE_API"
+      );
+      if (pointChanged) changed = true;
+    }
+
+    if (!changed) return false;
+    if (!saveJournal(data)) return false;
+
+    if (selectedJournalId) renderJournalExcursionSummary(getJournalItem(selectedJournalId));
+    if (selectedTradeId) renderTradeExcursionSummary(getTradeById(selectedTradeId));
+    return true;
+  }
+
+  function reconstructJournalExcursion(journalId, automatic) {
+    var data = getJournal(), item = null, index = -1, i;
+    for (i = 0; i < data.items.length; i++) {
+      if (data.items[i].id === journalId) {
+        item = data.items[i];
+        index = i;
+        break;
+      }
+    }
+
+    function fail(message) {
+      if (!automatic) setStorageStatus(message, false);
+      var node = selectedJournalId === journalId ? el("journalExcursionSummary") : null;
+      if (node) node.innerHTML = "<strong>MAE / MFE</strong><br>" + esc(message);
+      return Promise.resolve({ok:false, reason:message});
+    }
+
+    if (!item) return fail("Journal記録が見つかりません。");
+    if (!closedOutcomeItem(item)) return fail("1分足再構築はWIN / LOSS / BEの決済済み記録で実行します。");
+    if (item.actualEntry == null || !isFinite(Number(item.actualEntry))) return fail("実Entry価格が必要です。");
+    if (item.actualEntryAt == null || item.actualExitAt == null ||
+        !isFinite(Number(item.actualEntryAt)) || !isFinite(Number(item.actualExitAt)) ||
+        Number(item.actualExitAt) <= Number(item.actualEntryAt)) {
+      return fail("Entry日時とExit日時が必要です。");
+    }
+    if (navigator.onLine === false) return fail("オフラインのため1分足を取得できません。");
+
+    var key = getMarketApiKey();
+    if (!key) return fail("Twelve Data API Keyが必要です。");
+
+    var providerSymbol = excursionProviderSymbolForItem(item);
+    if (!providerSymbol) return fail("Provider Symbolを決定できません。");
+
+    if (selectedJournalId === journalId && el("journalExcursionSummary")) {
+      el("journalExcursionSummary").innerHTML =
+        "<strong>RECONSTRUCTING...</strong><br>" + esc(providerSymbol) + " / 1min";
+    }
+    if (selectedTradeId) {
+      var tr = getTradeById(selectedTradeId);
+      if (tr && tr.journalId === journalId && el("tradeExcursionSummary")) {
+        el("tradeExcursionSummary").innerHTML =
+          "<strong>RECONSTRUCTING...</strong><br>" + esc(providerSymbol) + " / 1min";
+      }
+    }
+
+    return excursionFetchOneMinuteBars(
+      providerSymbol,
+      Number(item.actualEntryAt),
+      Number(item.actualExitAt),
+      key
+    ).then(function(result) {
+      var fresh = getJournal();
+      var target = null, idx = -1, j;
+      for (j = 0; j < fresh.items.length; j++) {
+        if (fresh.items[j].id === journalId) {
+          target = fresh.items[j];
+          idx = j;
+          break;
+        }
+      }
+      if (!target) throw new Error("Journal記録が更新中に見つからなくなりました。");
+
+      var recon = excursionReconstructFromBars(target, result.bars);
+      if (!recon) throw new Error("1分足からMAE/MFEを計算できません。");
+
+      excursionMergeReconstruction(target, recon, {
+        fetchedBars:result.bars.length,
+        providerSymbol:providerSymbol
+      });
+      target.updatedAt = new Date().getTime();
+
+      if (!saveJournal(fresh)) throw new Error("再構築結果の保存に失敗しました。");
+
+      if (selectedJournalId === journalId) renderJournalExcursionSummary(target);
+      if (selectedTradeId) {
+        var t2 = getTradeById(selectedTradeId);
+        if (t2 && t2.journalId === journalId) renderTradeExcursionSummary(t2);
+      }
+      renderJournal();
+      if (!automatic) {
+        setStorageStatus(
+          "MAE/MFEを1分足で再構築しました: fetched " +
+          result.bars.length + " / full " + recon.fullBars + " bars",
+          true
+        );
+      }
+      return {ok:true, fetched:result.bars.length, full:recon.fullBars};
+    }).catch(function(err) {
+      return fail("MAE/MFE再構築失敗: " + (err && err.message ? err.message : String(err)));
+    });
+  }
+
+
   /* ---------- TRADE LIFECYCLE ---------- */
 
   function getTrades() {
@@ -2529,12 +3163,27 @@ textarea.journalNotes{
           j.status = "PLANNED"; j.realizedR = null;
         }
         if (trade.notes) j.notes = trade.notes;
+        var oldJEntry = j.actualEntry;
+        var oldJEntryAt = j.actualEntryAt;
+        var oldJExit = j.actualExit;
+        var oldJExitAt = j.actualExitAt;
+
         j.updatedAt = new Date().getTime();
         j.actualEntry = trade.actualEntry;
         j.actualEntryAt = trade.actualEntryAt;
         j.actualExit = trade.actualExit;
         j.actualExitAt = trade.actualExitAt;
         j.actualAmount = trade.actualAmount;
+
+        if (excursionEntryInputsChanged(oldJEntry, oldJEntryAt, j)) {
+          excursionReset(j);
+        } else if (excursionExitInputsChanged(oldJExit, oldJExitAt, j)) {
+          excursionClearReconstruction(j);
+        }
+        if (trade.status === "OPEN" || trade.status === "MANAGE" || trade.status === "CLOSED") {
+          excursionEnsureBaseline(j);
+          excursionRefreshDerived(j);
+        }
         break;
       }
     }
@@ -2562,6 +3211,7 @@ textarea.journalNotes{
     el("tradeRealizedR").value=t.realizedR==null?"":String(t.realizedR);
     el("tradeNotes").value=t.notes||"";
     el("tradeEditorEmpty").style.display="none"; el("tradeEditor").style.display="block";
+    renderTradeExcursionSummary(t);
   }
 
   function updateSelectedTrade() {
@@ -2660,6 +3310,10 @@ textarea.journalNotes{
     renderPortfolio();
     renderAnalytics();
     openTradeEditor(t.id);
+
+    if (nextStatus === "CLOSED" && t.journalId) {
+      reconstructJournalExcursion(t.journalId, true);
+    }
   }
 
   function renderTradeLifecycle() {
@@ -2953,6 +3607,398 @@ textarea.journalNotes{
     html="";
     for(i=0;i<keys.length;i++){var gs=analyticsStats(groups[keys[i]]);html+='<tr><td>'+esc(keys[i])+'</td><td>'+gs.n+'</td><td>'+(gs.n?gs.total.toFixed(2):'—')+'</td><td>'+(gs.avg==null?'—':gs.avg.toFixed(3))+'</td><td>'+(gs.winRate==null?'—':gs.winRate.toFixed(1)+'%')+'</td></tr>';}
     el("analyticsTable").getElementsByTagName("tbody")[0].innerHTML=html||'<tr><td colspan="5" style="text-align:center;color:#77818c">データなし</td></tr>';
+  }
+
+
+
+  /* ---------- v3.3 P/L BOARD ---------- */
+
+  function plRecordTimestamp(item) {
+    if (item && item.actualExitAt != null && isFinite(Number(item.actualExitAt))) return Number(item.actualExitAt);
+    if (item && item.actualEntryAt != null && isFinite(Number(item.actualEntryAt))) return Number(item.actualEntryAt);
+    if (item && item.createdAt != null && isFinite(Number(item.createdAt))) return Number(item.createdAt);
+    return null;
+  }
+
+  function plAllRecords() {
+    var items = getJournal().items, out = [], i, info, ts;
+    for (i = 0; i < items.length; i++) {
+      if (!closedOutcomeItem(items[i])) continue;
+      info = journalRealizedAmountInfo(items[i]);
+      ts = plRecordTimestamp(items[i]);
+      if (!info || info.value == null || !isFinite(Number(info.value))) continue;
+      if (!info.ccy) continue;
+      if (ts == null || !isFinite(Number(ts))) continue;
+      out.push({
+        id:items[i].id,
+        ts:Number(ts),
+        amount:Number(info.value),
+        ccy:String(info.ccy),
+        source:info.source || "",
+        item:items[i]
+      });
+    }
+    out.sort(function(a,b){ return a.ts - b.ts; });
+    return out;
+  }
+
+  function monthKeyFromDate(d) {
+    return d.getFullYear() + "-" + pad2Perf(d.getMonth() + 1);
+  }
+
+  function monthKeyFromTs(ts) {
+    return monthKeyFromDate(new Date(Number(ts)));
+  }
+
+  function startOfWeekMonday(ts) {
+    var d = new Date(Number(ts));
+    d.setHours(0,0,0,0);
+    var jsDay = d.getDay();
+    var diff = (jsDay + 6) % 7; // Mon=0
+    d.setDate(d.getDate() - diff);
+    return d.getTime();
+  }
+
+  function plAvailableCurrencies(records) {
+    var map = {}, out = [], i, ccy;
+    for (i = 0; i < records.length; i++) {
+      ccy = records[i].ccy;
+      if (!map[ccy]) { map[ccy] = 1; out.push(ccy); }
+    }
+    if (!out.length) {
+      var current = value("acctCcy") || "JPY";
+      out.push(current);
+    }
+    out.sort();
+    return out;
+  }
+
+  function setSelectOptionsKeepValue(id, values) {
+    var node = el(id), old = node ? node.value : "";
+    if (!node) return;
+    var html = "";
+    for (var i = 0; i < values.length; i++) {
+      html += '<option value="' + esc(values[i]) + '">' + esc(values[i]) + '</option>';
+    }
+    node.innerHTML = html;
+    if (old && values.indexOf(old) >= 0) node.value = old;
+    else if (values.length) node.value = values[0];
+  }
+
+  function latestMonthKey(records, ccy) {
+    var key = null, i;
+    for (i = records.length - 1; i >= 0; i--) {
+      if (!ccy || records[i].ccy === ccy) {
+        key = monthKeyFromTs(records[i].ts);
+        break;
+      }
+    }
+    if (!key) key = monthKeyFromDate(new Date());
+    return key;
+  }
+
+  function ensurePlBoardFilters(records) {
+    records = records || plAllRecords();
+    var currencies = plAvailableCurrencies(records);
+    setSelectOptionsKeepValue("plCurrency", currencies);
+    var ccy = value("plCurrency");
+    if (!ccy && currencies.length) {
+      ccy = currencies[0];
+      el("plCurrency").value = ccy;
+    }
+    if (el("plMonth") && !el("plMonth").value) {
+      el("plMonth").value = latestMonthKey(records, ccy);
+    }
+  }
+
+  function plRecordsForCurrency(records, ccy) {
+    var out = [], i;
+    for (i = 0; i < records.length; i++) if (records[i].ccy === ccy) out.push(records[i]);
+    return out;
+  }
+
+  function plFormatAmount(v, ccy) {
+    if (v == null || !isFinite(Number(v))) return "—";
+    var num = Number(v);
+    var sign = num > 0 ? "+" : "";
+    return sign + performanceMoneyNumber(num, ccy);
+  }
+
+  function dayKeyTs(ts) {
+    var d = new Date(Number(ts));
+    return d.getFullYear() + "-" + pad2Perf(d.getMonth() + 1) + "-" + pad2Perf(d.getDate());
+  }
+
+  function dayLabelShort(ts) {
+    var d = new Date(Number(ts));
+    return pad2Perf(d.getMonth() + 1) + "/" + pad2Perf(d.getDate());
+  }
+
+  function aggregateDailyAmounts(records) {
+    var map = {}, order = [], i, key;
+    for (i = 0; i < records.length; i++) {
+      key = dayKeyTs(records[i].ts);
+      if (!Object.prototype.hasOwnProperty.call(map, key)) {
+        map[key] = { key:key, ts:new Date(key + "T00:00:00").getTime(), amount:0, n:0 };
+        order.push(key);
+      }
+      map[key].amount += Number(records[i].amount);
+      map[key].n += 1;
+    }
+    order.sort();
+    var out = [];
+    for (i = 0; i < order.length; i++) out.push(map[order[i]]);
+    return out;
+  }
+
+  function plBoardSummaryHtml(records, ccy, monthKey) {
+    var total = 0, monthTotal = 0, i, latest = null;
+    for (i = 0; i < records.length; i++) {
+      total += Number(records[i].amount);
+      if (monthKeyFromTs(records[i].ts) === monthKey) monthTotal += Number(records[i].amount);
+      latest = records[i].ts;
+    }
+
+    var clsTotal = total > 0 ? "go" : (total < 0 ? "stop" : "");
+    var clsMonth = monthTotal > 0 ? "go" : (monthTotal < 0 ? "stop" : "");
+    var html = "";
+    html += '<div class="plMetric"><div class="k">全期間累積損益</div><div class="v ' + clsTotal + '">' + plFormatAmount(total, ccy) + '</div></div>';
+    html += '<div class="plMetric"><div class="k">' + esc(monthKey || "当月") + ' 損益</div><div class="v ' + clsMonth + '">' + plFormatAmount(monthTotal, ccy) + '</div></div>';
+    return html;
+  }
+
+  function plNiceTicks(minV, maxV, count) {
+    var out = [], i;
+    if (minV == null || maxV == null) return out;
+    if (minV === maxV) {
+      minV -= 1;
+      maxV += 1;
+    }
+    count = count || 5;
+    for (i = 0; i < count; i++) {
+      out.push(minV + (maxV - minV) * (i / (count - 1)));
+    }
+    return out;
+  }
+
+  function renderPlEquityChart(records, ccy) {
+    var svg = el("plEquitySvg");
+    if (!svg) return;
+
+    if (!records.length) {
+      svg.innerHTML = '<text x="170" y="110" text-anchor="middle" font-size="13" fill="#7a8590">損益データがありません</text>';
+      return;
+    }
+
+    var daily = aggregateDailyAmounts(records);
+    var cum = [], i, eq = 0;
+    for (i = 0; i < daily.length; i++) {
+      eq += Number(daily[i].amount);
+      cum.push({ts:daily[i].ts, eq:eq, daily:daily[i].amount});
+    }
+
+    var W = 340, H = 220, ml = 56, mr = 10, mt = 14, mb = 28;
+    var iw = W - ml - mr, ih = H - mt - mb;
+    var minY = 0, maxY = 0, maxAbsDaily = 0;
+
+    for (i = 0; i < cum.length; i++) {
+      if (cum[i].eq < minY) minY = cum[i].eq;
+      if (cum[i].eq > maxY) maxY = cum[i].eq;
+      if (cum[i].daily < minY) minY = cum[i].daily;
+      if (cum[i].daily > maxY) maxY = cum[i].daily;
+      if (Math.abs(cum[i].daily) > maxAbsDaily) maxAbsDaily = Math.abs(cum[i].daily);
+    }
+
+    if (minY > 0) minY = 0;
+    if (maxY < 0) maxY = 0;
+    if (minY === maxY) maxY = minY + 1;
+
+    function xAt(idx) {
+      if (cum.length === 1) return ml + iw / 2;
+      return ml + (iw * idx / (cum.length - 1));
+    }
+    function yAt(v) {
+      return mt + (maxY - v) * ih / (maxY - minY);
+    }
+
+    var ticks = plNiceTicks(minY, maxY, 5);
+    var parts = [];
+    parts.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="12" ry="12" fill="#fcfcfd"></rect>');
+
+    for (i = 0; i < ticks.length; i++) {
+      var ty = yAt(ticks[i]);
+      parts.push('<line x1="' + ml + '" y1="' + ty.toFixed(1) + '" x2="' + (W - mr) + '" y2="' + ty.toFixed(1) + '" stroke="#e6eaee" stroke-dasharray="2 3"></line>');
+      parts.push('<text x="' + (ml - 6) + '" y="' + (ty + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="#9099a2">' + esc(performanceMoneyNumber(Math.round(ticks[i]), ccy)) + '</text>');
+    }
+
+    var yZero = yAt(0);
+    parts.push('<line x1="' + ml + '" y1="' + yZero.toFixed(1) + '" x2="' + (W - mr) + '" y2="' + yZero.toFixed(1) + '" stroke="#d5dbe1"></line>');
+
+    var barHalf = Math.max(1.8, Math.min(5, iw / Math.max(cum.length, 40) / 2));
+    for (i = 0; i < cum.length; i++) {
+      var x = xAt(i);
+      var y = yAt(cum[i].daily);
+      var top = Math.min(yZero, y);
+      var h = Math.max(1, Math.abs(yZero - y));
+      var fill = cum[i].daily >= 0 ? "#c9ddd8" : "#ead3d3";
+      parts.push('<rect x="' + (x - barHalf).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + (barHalf * 2).toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + fill + '" rx="1"></rect>');
+    }
+
+    var areaPath = "", linePath = "";
+    for (i = 0; i < cum.length; i++) {
+      var px = xAt(i), py = yAt(cum[i].eq);
+      linePath += (i ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1) + " ";
+      if (i === 0) areaPath = "M" + px.toFixed(1) + " " + yZero.toFixed(1) + " ";
+      areaPath += "L" + px.toFixed(1) + " " + py.toFixed(1) + " ";
+      if (i === cum.length - 1) areaPath += "L" + px.toFixed(1) + " " + yZero.toFixed(1) + " Z";
+    }
+
+    parts.push('<path d="' + areaPath + '" fill="#dfe8e4"></path>');
+    parts.push('<path d="' + linePath + '" fill="none" stroke="#927549" stroke-width="2.4"></path>');
+
+    var firstX = xAt(0), firstY = yAt(cum[0].eq);
+    var lastX = xAt(cum.length - 1), lastY = yAt(cum[cum.length - 1].eq);
+    parts.push('<circle cx="' + firstX.toFixed(1) + '" cy="' + firstY.toFixed(1) + '" r="3.2" fill="#4b8b73"></circle>');
+    parts.push('<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="3.2" fill="#4b8b73"></circle>');
+
+    var labelCount = Math.min(6, cum.length);
+    for (i = 0; i < labelCount; i++) {
+      var idx = labelCount === 1 ? 0 : Math.round((cum.length - 1) * i / (labelCount - 1));
+      var lx = xAt(idx);
+      parts.push('<text x="' + lx.toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#8a949d" transform="rotate(-35 ' + lx.toFixed(1) + ' ' + (H - 8) + ')">' + esc(dayLabelShort(cum[idx].ts)) + '</text>');
+    }
+
+    svg.innerHTML = parts.join("");
+  }
+
+  function plMonthRange(monthKey) {
+    if (!monthKey || !/^\d{4}-\d{2}$/.test(monthKey)) monthKey = monthKeyFromDate(new Date());
+    var parts = monthKey.split("-");
+    var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
+    var start = new Date(y, m, 1, 0, 0, 0, 0);
+    var end = new Date(y, m + 1, 1, 0, 0, 0, 0);
+    return {start:start.getTime(), end:end.getTime(), y:y, m:m};
+  }
+
+  function formatMonthTitle(y, m) {
+    return y + "年" + (m + 1) + "月";
+  }
+
+  function monthDailyMap(records, monthKey) {
+    var range = plMonthRange(monthKey), map = {}, i, dKey;
+    for (i = 0; i < records.length; i++) {
+      if (records[i].ts < range.start || records[i].ts >= range.end) continue;
+      dKey = dayKeyTs(records[i].ts);
+      map[dKey] = (map[dKey] || 0) + Number(records[i].amount);
+    }
+    return map;
+  }
+
+  function localTodayKey() {
+    return dayKeyTs(new Date().getTime());
+  }
+
+  function renderPlCalendar(records, ccy, monthKey) {
+    var table = el("plCalendarTable");
+    if (!table) return;
+    var tbody = table.getElementsByTagName("tbody")[0];
+    var range = plMonthRange(monthKey);
+    var map = monthDailyMap(records, monthKey);
+    var first = new Date(range.y, range.m, 1);
+    var lastDay = new Date(range.y, range.m + 1, 0).getDate();
+    var mondayIndex = (first.getDay() + 6) % 7;
+    var rows = [], week = [], day = 1, cellIndex = 0, html = "", todayKey = localTodayKey();
+    var monthTotal = 0, k;
+
+    for (k in map) if (Object.prototype.hasOwnProperty.call(map, k)) monthTotal += Number(map[k]);
+
+    while (cellIndex < mondayIndex) {
+      week.push('<td class="empty"></td>');
+      cellIndex++;
+    }
+
+    while (day <= lastDay) {
+      var key = range.y + "-" + pad2Perf(range.m + 1) + "-" + pad2Perf(day);
+      var amount = Object.prototype.hasOwnProperty.call(map, key) ? Number(map[key]) : null;
+      var cls = "", amtHtml = "";
+      if (key === todayKey) cls += " today";
+      if (amount != null) {
+        cls += amount >= 0 ? " go" : " stop";
+        amtHtml = '<div class="calAmt ' + (amount >= 0 ? 'go' : 'stop') + '">' + esc(plFormatAmount(amount, ccy)) + '</div>';
+      }
+      week.push('<td class="' + cls.replace(/^\s+/,"") + '"><div class="calDayNum">' + day + '</div>' + amtHtml + '</td>');
+      day++;
+      cellIndex++;
+
+      if (cellIndex % 7 === 0) {
+        rows.push('<tr>' + week.join("") + '</tr>');
+        week = [];
+      }
+    }
+
+    if (week.length) {
+      while (week.length < 7) week.push('<td class="empty"></td>');
+      rows.push('<tr>' + week.join("") + '</tr>');
+    }
+
+    tbody.innerHTML = rows.join("");
+
+    if (el("plCalendarTitle")) el("plCalendarTitle").innerHTML = formatMonthTitle(range.y, range.m);
+    if (el("plMonthTotal")) {
+      el("plMonthTotal").className = monthTotal > 0 ? "go" : (monthTotal < 0 ? "stop" : "");
+      el("plMonthTotal").innerHTML = plFormatAmount(monthTotal, ccy);
+    }
+
+    var weekStart = startOfWeekMonday(new Date().getTime());
+    var weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000;
+    var weekTotal = 0, i;
+    for (i = 0; i < records.length; i++) {
+      if (records[i].ts >= weekStart && records[i].ts < weekEnd) weekTotal += Number(records[i].amount);
+    }
+    if (el("plWeekTotal")) {
+      el("plWeekTotal").className = weekTotal > 0 ? "go" : (weekTotal < 0 ? "stop" : "");
+      el("plWeekTotal").innerHTML = plFormatAmount(weekTotal, ccy);
+    }
+  }
+
+  function renderPlBoard() {
+    if (!el("plCurrency")) return;
+    var all = plAllRecords();
+    ensurePlBoardFilters(all);
+
+    var ccy = value("plCurrency");
+    var monthKey = value("plMonth");
+    if (!monthKey) {
+      monthKey = latestMonthKey(all, ccy);
+      if (el("plMonth")) el("plMonth").value = monthKey;
+    }
+
+    var records = plRecordsForCurrency(all, ccy);
+
+    if (el("plGraphBadge")) el("plGraphBadge").innerHTML = esc(ccy);
+    if (el("plCalendarBadge")) el("plCalendarBadge").innerHTML = esc(ccy);
+    if (el("plGraphSummary")) el("plGraphSummary").innerHTML = plBoardSummaryHtml(records, ccy, monthKey);
+
+    renderPlEquityChart(records, ccy);
+    renderPlCalendar(records, ccy, monthKey);
+
+    if (el("navPlBoard")) el("navPlBoard").innerHTML = records.length ? (ccy + " / " + records.length) : "0";
+  }
+
+  function shiftPlMonth(delta) {
+    if (!el("plMonth")) return;
+    var v = el("plMonth").value || monthKeyFromDate(new Date());
+    var parts = v.split("-");
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1 + Number(delta), 1);
+    el("plMonth").value = monthKeyFromDate(d);
+    renderPlBoard();
+  }
+
+  function hookV33Controls() {
+    if (el("plCurrency")) el("plCurrency").onchange = renderPlBoard;
+    if (el("plMonth")) el("plMonth").onchange = renderPlBoard;
+    if (el("plPrevMonth")) el("plPrevMonth").onclick = function(){ shiftPlMonth(-1); };
+    if (el("plNextMonth")) el("plNextMonth").onclick = function(){ shiftPlMonth(1); };
   }
 
 
@@ -3869,7 +4915,7 @@ textarea.journalNotes{
 
   function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
 
-  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.2",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.4",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
 
   function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
 
@@ -5493,6 +6539,7 @@ textarea.journalNotes{
       scheduleWorkspaceSave();
       renderMarketDataStatus();
       renderStrategyMiniChart();
+      updateOpenJournalExcursions(localSymbol, price, fromTimer ? "API AUTO" : "API");
       evaluateActiveWatch(fromTimer ? "API AUTO" : "API");
 
       fetchRequiredConversions({
@@ -6426,6 +7473,9 @@ textarea.journalNotes{
         acctCcy:R.acctCcy,
         digits:digits,
         pipSize:R.S && R.S.pip != null ? R.S.pip : null,
+        pipValuePerLot:R.pipVal != null ? R.pipVal : null,
+        providerSymbolAtSave:currentProviderSymbol(getMarketDataSettings()),
+        excursionVersion:1,
         actualEntry:null, actualEntryAt:null,
         actualExit:null, actualExitAt:null,
         actualAmount:null,
@@ -6474,6 +7524,9 @@ textarea.journalNotes{
       acctCcy:R.acctCcy,
       digits:digits,
       pipSize:R.S && R.S.pip != null ? R.S.pip : null,
+      pipValuePerLot:R.pipVal != null ? R.pipVal : null,
+      providerSymbolAtSave:currentProviderSymbol(getMarketDataSettings()),
+      excursionVersion:1,
       actualEntry:null, actualEntryAt:null,
       actualExit:null, actualExitAt:null,
       actualAmount:null,
@@ -6544,6 +7597,7 @@ textarea.journalNotes{
     el("journalEditNotes").value = item.notes || "";
     el("journalEditorEmpty").style.display = "none";
     el("journalEditor").style.display = "block";
+    renderJournalExcursionSummary(item);
   }
 
   function updateSelectedJournal() {
@@ -6568,6 +7622,10 @@ textarea.journalNotes{
     }
 
     var previousStatus = item.status || "PLANNED";
+    var oldActualEntry = item.actualEntry;
+    var oldActualEntryAt = item.actualEntryAt;
+    var oldActualExit = item.actualExit;
+    var oldActualExitAt = item.actualExitAt;
     var status = value("journalEditStatus");
 
     var aeText = el("journalEditActualEntry").value;
@@ -6648,6 +7706,16 @@ textarea.journalNotes{
     item.notes = String(el("journalEditNotes").value || "").substring(0, 800);
     item.updatedAt = now;
 
+    if (excursionEntryInputsChanged(oldActualEntry, oldActualEntryAt, item)) {
+      excursionReset(item);
+    } else if (excursionExitInputsChanged(oldActualExit, oldActualExitAt, item)) {
+      excursionClearReconstruction(item);
+    }
+    if (status === "OPEN" || status === "WIN" || status === "LOSS" || status === "BE") {
+      excursionEnsureBaseline(item);
+      excursionRefreshDerived(item);
+    }
+
     if (!saveJournal(data)) {
       setStorageStatus("Journal更新に失敗しました。", false);
       return;
@@ -6656,6 +7724,10 @@ textarea.journalNotes{
     renderJournal();
     openJournalEditor(selectedJournalId);
     setStorageStatus("Journalを更新しました。", true);
+
+    if (status === "WIN" || status === "LOSS" || status === "BE") {
+      reconstructJournalExcursion(selectedJournalId, true);
+    }
   }
 
   function deleteSelectedJournal() {
@@ -6812,6 +7884,7 @@ textarea.journalNotes{
     }
 
     if (el("analyticsSummary")) renderAnalytics();
+    if (el("plCurrency")) renderPlBoard();
     if (el("discoverySingleTable")) renderEdgeDiscovery();
     if (el("observedPlaybook")) renderPlaybook();
   }
@@ -7582,6 +8655,34 @@ textarea.journalNotes{
     }
   }
 
+  function hookV34Controls() {
+    if (el("journalReconstructExcursion")) {
+      el("journalReconstructExcursion").onclick = function () {
+        if (!selectedJournalId) {
+          setStorageStatus("再構築するJournal記録を選択してください。", false);
+          return;
+        }
+        reconstructJournalExcursion(selectedJournalId, false);
+      };
+    }
+
+    if (el("tradeReconstructExcursion")) {
+      el("tradeReconstructExcursion").onclick = function () {
+        if (!selectedTradeId) {
+          setStorageStatus("再構築するTradeを選択してください。", false);
+          return;
+        }
+        var t = getTradeById(selectedTradeId);
+        if (!t || !t.journalId) {
+          setStorageStatus("リンクされたJournal記録がありません。", false);
+          return;
+        }
+        reconstructJournalExcursion(t.journalId, false);
+      };
+    }
+  }
+
+
   function handleUserInput(e) {
     render();
     renderPortfolio();
@@ -7590,7 +8691,10 @@ textarea.journalNotes{
     var t = e ? (e.target || e.srcElement) : null;
     var id = t && t.id ? t.id : "";
 
-    if (id === "price" || id === "atr") {
+    if (id === "price") {
+      updateOpenJournalExcursions(value("symbol"), n("price"), "MANUAL");
+      evaluateActiveWatch("MANUAL");
+    } else if (id === "atr") {
       evaluateActiveWatch("MANUAL");
     } else {
       renderWatchPanel();
@@ -7639,6 +8743,8 @@ textarea.journalNotes{
     hookPhase8Controls();
     hookV3Controls();
     hookV32Controls();
+    hookV33Controls();
+    hookV34Controls();
     hookEdgeControls();
     restoreDeclaredMethodUi();
     refreshPresetSelect();
@@ -7650,6 +8756,7 @@ textarea.journalNotes{
     renderDataQuality();
     renderTradeLifecycle();
     renderAnalytics();
+    renderPlBoard();
     renderEdgeDiscovery();
     renderPlaybook();
     renderMtfDashboard();
@@ -7690,7 +8797,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v3.2</li>
+    <li class="group">ENTRY CONSOLE v3.4</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -7710,6 +8817,7 @@ textarea.journalNotes{
     <li><a href="#dataquality">Data Quality <span id="navQuality" class="navValue">—</span></a></li>
     <li><a href="#trades">Trade Lifecycle <span id="navTrades" class="navValue">0</span></a></li>
     <li><a href="#analytics">Journal Analytics <span id="navAnalytics" class="navValue">—</span></a></li>
+    <li><a href="#plboard">損益ボード <span id="navPlBoard" class="navValue">—</span></a></li>
     <li><a href="#discovery">Edge Discovery <span id="navDiscovery" class="navValue">—</span></a></li>
     <li><a href="#playbook">My Playbook <span id="navPlaybook" class="navValue">—</span></a></li>
     <li><a href="#mtf">Multi-Timeframe <span id="navMtf" class="navValue">—</span></a></li>
@@ -8191,12 +9299,14 @@ textarea.journalNotes{
         <button id="journalUpdate" class="actionButton primary" type="button">更新</button>
         <button id="journalDelete" class="actionButton danger" type="button">この記録を削除</button>
       </div>
+      <div id="journalExcursionSummary" class="excursionBox"><strong>MAE / MFE</strong><br>OPEN後に追跡します。</div>
+      <div class="excursionAction"><button id="journalReconstructExcursion" class="actionButton" type="button">1分足でMAE/MFE再構築</button></div>
     </div>
 
     <div class="panelNote">
       集計はJournalに実際に記録された結果だけを対象にします。WIN率* は WIN / (WIN + LOSS) の記述統計で、BE/CANCELは分母から除外します。
       これ単独をEdgeの証拠とは扱いません。平均Rは「実現R」が入力されたレコードだけで計算します。
-      Journal保存時の価格・Lot・Riskはスナップショットであり、後から自動更新しません。
+      Journal保存時の価格・Lot・Riskはスナップショットです。v3.4ではOPEN中の現在価格からMAE/MFEを追跡し、決済後は1分足OHLCから保有区間を再構築できます。
     </div>
 
     <div class="actionPanel">
@@ -8430,8 +9540,46 @@ textarea.journalNotes{
         <div class="row" style="min-height:90px"><label for="tradeNotes">メモ</label><textarea id="tradeNotes" class="journalNotes" maxlength="800"></textarea></div>
       </fieldset>
       <div class="actionPanel"><button id="updateTrade" class="actionButton primary" type="button">Trade更新</button></div>
+      <div id="tradeExcursionSummary" class="excursionBox"><strong>MAE / MFE</strong><br>OPEN後に追跡します。</div>
+      <div class="excursionAction"><button id="tradeReconstructExcursion" class="actionButton" type="button">1分足でMAE/MFE再構築</button></div>
     </div>
     <div class="panelNote">Trade作成時にJournal PLANNEDとPortfolio Risk予約を同じTrade IDで作成します。CLOSED/CANCEL時はPortfolio予約を外し、Journal状態を同期します。LifecycleのWATCH状態は記録上の状態で、Phase 8の単一WATCHを自動ARMしません。</div>
+  </div>
+
+
+  <!-- P/L BOARD -->
+  <div id="plboard" title="損益ボード">
+    <fieldset>
+      <div class="row"><label for="plCurrency">通貨</label><select id="plCurrency"><option value="JPY">JPY</option></select></div>
+      <div class="row"><label for="plMonth">カレンダー月</label><input id="plMonth" type="month"></div>
+    </fieldset>
+    <div class="plFilterNote">
+      実現金額を優先し、未入力時のみ「実現R × 保存Risk」を使用します。損益ボードは<strong>1通貨ずつ</strong>表示します。
+    </div>
+
+    <div class="plCard">
+      <div class="plCardTitle"><span>損益推移</span><span id="plGraphBadge" class="plBadge">JPY</span></div>
+      <div id="plGraphSummary" class="plSummary"></div>
+      <div class="plChartWrap"><svg id="plEquitySvg" class="plSvg" viewBox="0 0 340 220" preserveAspectRatio="none"></svg></div>
+      <div class="plLegend">棒 = 日次損益 / 線 = 累積損益。全期間を時間順に表示します。</div>
+    </div>
+
+    <div class="plCard">
+      <div class="plCardTitle"><span>損益カレンダー</span><span id="plCalendarBadge" class="plBadge">JPY</span></div>
+      <div class="calHead">
+        <button id="plPrevMonth" type="button" class="calNavBtn">◀</button>
+        <div id="plCalendarTitle" class="calMonth">—</div>
+        <button id="plNextMonth" type="button" class="calNavBtn">▶</button>
+      </div>
+      <table id="plCalendarTable" class="calTable">
+        <thead><tr><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="calFooter">
+        <span>今週合計 <strong id="plWeekTotal">—</strong></span>
+        <span>月間合計 <strong id="plMonthTotal">—</strong></span>
+      </div>
+    </div>
   </div>
 
   <!-- JOURNAL ANALYTICS -->
@@ -8596,10 +9744,12 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v3.2 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v3.4 — 建玉設計コンソール。</p>
       <p>v3.1.1では、銘柄/時間足変更直後の再計算、Edge Factorのtrue/false/null全状態保存、同一Evidence母集団でのON/OFF比較、MTF Edgeの鮮度確認、Stress仮定のWATCH Signature除外を追加しています。旧v3.1 Journalの発火ID欠落はOFFへ推定せずUnknownとして扱います。</p>
       <p>v3.1.2では、LONG/SHORT別の勝率・負率、本日/トータルの獲得pips・獲得金額、Entry時間帯別の獲得pips・金額をJournal Analyticsへ追加しています。pipsは実約定価格差、金額は実現金額入力を優先し未入力時のみ実現R×保存Riskを使用します。本日はExit日時、時間別はEntry日時で判定します。</p>
       <p>v3.2では、Edge Discoveryとして単独Factorと2/3 Factor組み合わせのON/OFF比較・前半/後半Δ、Journal保存時の数値スナップショット、Observed Playbookの自動言語化、Declared Methodの構造化保存、Declared vs Observed一致率を追加しています。組み合わせランキングは探索用で、自動Edge採用や因果推論は行いません。</p>
+      <p>v3.3では、損益ボードを追加し、実現金額ベースの累積損益グラフ（棒=日次損益 / 線=累積損益）と月次損益カレンダーを表示します。金額は実現金額入力を優先し、未入力時のみ実現R×保存Riskを使用します。異なる口座通貨は合算せず、JPY/USDなど1通貨ずつ切り替えて表示します。</p>
+      <p>v3.4では、OPEN中の現在価格更新からMAE/MFE（最大逆行/最大順行）を記録し、CLOSED後にTwelve Dataの1分足OHLCをEntry〜Exit区間へ取得して再構築できます。境界1分足はEntry前/Exit後の値動きを混ぜないため完全に保有していた1分足だけを採用し、Entry/Exit実約定価格を端点として使います。再構築値とLIVE観測値はより極端な方を保持します。</p>
       <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
       <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
       <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>

@@ -1,4 +1,4 @@
-DEPA FX v3.2 (Edge Discovery + Playbook)
+DEPA FX v3.4 (MAE/MFE Live + 1m Reconstruction)
 
 Upload these files to the repository root:
 - index.html
@@ -164,3 +164,28 @@ v3.2:
 - Adds Declared vs Observed comparison as per-rule historical match rate and eligible N.
 - Free-text Declared Method is stored/displayed but is not silently NLP-parsed; only structured declared rules are compared.
 - Existing v3.1.1 full Edge Evidence remains usable for factor/combination discovery. Numeric snapshot metrics begin accumulating with v3.2 records.
+
+
+v3.3:
+- Adds P/L Board page.
+- Adds cumulative profit/loss chart by account currency.
+- Chart uses realized amount first; when missing, it derives amount from realizedR × saved risk.
+- The chart displays daily P/L bars and an all-time cumulative equity line.
+- Adds monthly P/L calendar with Monday-first layout.
+- Adds month navigation and currency selector.
+- Adds current-week total and selected-month total.
+- Different account currencies are not merged; view one currency at a time.
+
+v3.4:
+- Tracks MAE/MFE while Journal status is OPEN whenever the selected symbol price updates.
+- Live source is recorded as LIVE_API or LIVE_MANUAL.
+- Stores signed MAE/MFE pips, amount, R, extreme price and timestamp.
+- New Journal snapshots store pipValuePerLot and providerSymbolAtSave.
+- Amount uses saved pip value per lot × saved lot; R uses amount ÷ saved planned risk.
+- On WIN/LOSS/BE or Trade Lifecycle CLOSED, attempts automatic 1-minute reconstruction when API key/network are available.
+- Manual reconstruction buttons are available from Trade Lifecycle and Trade Journal editors.
+- Historical reconstruction uses Twelve Data /time_series interval=1min with UTC start_date/end_date and sequential chunks.
+- Only one-minute bars fully contained inside the actual Entry→Exit interval are used; actual Entry/Exit prices are included as endpoints.
+- Boundary partial-minute bars are intentionally excluded to avoid mixing pre-entry or post-exit extremes.
+- LIVE and RECONSTRUCTED observations are kept separately; final MAE/MFE uses the more extreme available observation.
+- Older Journal records can reconstruct pips when pip size is known, but amount/R may remain unavailable if no saved pipValuePerLot exists.
