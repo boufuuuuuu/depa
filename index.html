@@ -893,6 +893,128 @@ textarea.journalNotes{
   .calMonth{font-size:15px;}
 }
 
+
+/* ================= v3.6 TECHNICAL / MARKET STRUCTURE LOGGING ================= */
+.miniTechControls{
+  padding:8px 10px;
+  border-bottom:1px solid #d2d7dc;
+  background:#f7f8f9;
+}
+.miniTechControlsTitle{
+  font-size:10px;
+  font-weight:bold;
+  color:#596673;
+  margin-bottom:6px;
+}
+.miniTechToggleGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+.miniTechToggle{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  padding:6px 7px;
+  border:1px solid #d0d6db;
+  border-radius:8px;
+  background:#fff;
+  color:#56616c;
+  font-size:10px;
+  line-height:1.2;
+}
+.miniTechToggle input{
+  margin:0;
+  flex:0 0 auto;
+}
+.miniTechLogNote{
+  margin-top:6px;
+  color:#74808a;
+  font-size:9px;
+  line-height:1.35;
+}
+.miniTechPanel{
+  border-top:1px solid #cfd5da;
+  background:#fff;
+}
+.miniTechPanelHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:30px;
+  padding:6px 10px;
+  box-sizing:border-box;
+  background:#f4f6f7;
+  color:#52606c;
+  font-size:10px;
+  font-weight:bold;
+}
+.miniTechPanelMeta{
+  color:#7b8690;
+  font-weight:normal;
+}
+.miniTechCanvas{
+  width:100%;
+  min-height:126px;
+  background:#fff;
+}
+.miniTechCanvas svg{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.miniAtrMetrics{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:10px;
+}
+.miniAtrMetric{
+  border:1px solid #d9dfe4;
+  border-radius:10px;
+  background:#fafbfc;
+  padding:9px 10px;
+}
+.miniAtrMetric .k{
+  color:#7d8791;
+  font-size:9px;
+  margin-bottom:3px;
+}
+.miniAtrMetric .v{
+  color:#3e4b57;
+  font-size:16px;
+  font-weight:bold;
+}
+.miniTechHidden{display:none !important;}
+.miniIndicatorKey.bb{background:#8f7d58;}
+.miniIndicatorKey.sar{
+  width:5px;height:5px;border-radius:50%;background:#9b4f2d;
+}
+.miniIndicatorKey.macd{background:#2e6da4;}
+.miniIndicatorKey.signal{background:#a27613;}
+.miniIndicatorKey.adx{background:#455a70;}
+.miniIndicatorKey.plusdi{background:#2f7b49;}
+.miniIndicatorKey.minusdi{background:#a64039;}
+@media (max-width:430px){
+  .miniChartShell{margin:12px 8px 18px;}
+  .miniTechToggleGrid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .miniTechToggle{font-size:10px;padding:7px 6px;}
+  .miniAtrMetrics{padding:8px;}
+}
+
+
+.miniIndicatorKey.donchian{background:#567d7a;}
+.miniIndicatorKey.er{background:#6a4d89;}
+.miniStructureLegend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 10px;
+  margin-top:4px;
+  font-size:9px;
+  color:#66717c;
+}
+
 </style>
 
   <script>
@@ -1026,7 +1148,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v3.4.1
+   DEPA FX SYSTEM — ENTRY CONSOLE v3.6
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -3202,6 +3324,7 @@ textarea.journalNotes{
     for (i=0;i<jData.items.length;i++) {
       if (jData.items[i].id === trade.journalId) {
         j = jData.items[i];
+        var previousJournalStatus = j.status || "PLANNED";
         if (trade.status === "CLOSED") {
           j.status = trade.realizedR > 0 ? "WIN" : (trade.realizedR < 0 ? "LOSS" : "BE");
           j.realizedR = trade.realizedR;
@@ -3233,6 +3356,9 @@ textarea.journalNotes{
         if (trade.status === "OPEN" || trade.status === "MANAGE" || trade.status === "CLOSED") {
           excursionEnsureBaseline(j);
           excursionRefreshDerived(j);
+        }
+        if (trade.status === "OPEN" && previousJournalStatus !== "OPEN") {
+          captureEntryTechnicalSnapshot(j, "TRADE_OPEN");
         }
         break;
       }
@@ -4074,10 +4200,294 @@ textarea.journalNotes{
     };
   }
 
+  function currentTechnicalSnapshot(expectedSymbol, expectedTf) {
+    var settings = getMarketDataSettings();
+    var meta = settings ? settings.lastMeta : null;
+    var symbol = expectedSymbol || value("symbol");
+    var tf = expectedTf || value("tf");
+
+    if (!meta || meta.localSymbol !== symbol || meta.timeframe !== tf || !meta.indicatorLatest) {
+      return null;
+    }
+
+    var capturedAt = new Date().getTime();
+    var ind = meta.indicatorLatest;
+    var price = n("price");
+    var atr = n("atr");
+    if (price == null || !isFinite(Number(price))) price = finiteOrNull(meta.price);
+    if (atr == null || !isFinite(Number(atr))) atr = finiteOrNull(meta.atr);
+
+    function atrDist(v) {
+      return v != null && isFinite(Number(v)) && atr != null && isFinite(Number(atr)) && Number(atr)>0
+        ? Number(v)/Number(atr) : null;
+    }
+
+    var bbUpper = finiteOrNull(ind.bbUpper);
+    var bbLower = finiteOrNull(ind.bbLower);
+    var bbMid = finiteOrNull(ind.bbMiddle);
+    var bbWidth = (bbUpper != null && bbLower != null) ? bbUpper - bbLower : null;
+    var bbPercentB = null;
+    if (price != null && bbLower != null && bbWidth != null && isFinite(bbWidth) && bbWidth > 0) {
+      bbPercentB = ((Number(price) - bbLower) / bbWidth) * 100;
+    }
+
+    var psar = finiteOrNull(ind.psar);
+    var psarDistanceAtr = null;
+    if (price != null && psar != null) psarDistanceAtr = atrDist(Number(price)-psar);
+
+    var atrPct = null;
+    if (price != null && Number(price) !== 0 && atr != null) {
+      atrPct = Number(atr) / Math.abs(Number(price)) * 100;
+    }
+
+    var donU=finiteOrNull(ind.donchianUpper20);
+    var donL=finiteOrNull(ind.donchianLower20);
+    var donM=finiteOrNull(ind.donchianMiddle20);
+    var donPrevU=finiteOrNull(ind.donchianUpperPrev20);
+    var donPrevL=finiteOrNull(ind.donchianLowerPrev20);
+    var donWidth=(donU!=null&&donL!=null)?donU-donL:null;
+    var donPos=(price!=null&&donL!=null&&donWidth!=null&&donWidth>0)
+      ? (Number(price)-donL)/donWidth*100 : null;
+
+    var bars100=meta.bars100||[];
+    var zMean=finiteOrNull(ind.zMean20);
+    var zStd=finiteOrNull(ind.zStd20);
+    var zCurrent=finiteOrNull(ind.zScore20);
+    if(price!=null && bars100.length>=20){
+      var zVals=[], zi, zv, zSum=0, zVar=0;
+      for(zi=bars100.length-20;zi<bars100.length-1;zi++){
+        if(!bars100[zi] || bars100[zi].length<5) { zVals=[]; break; }
+        zv=Number(bars100[zi][4]);
+        if(!isFinite(zv)) { zVals=[]; break; }
+        zVals.push(zv); zSum+=zv;
+      }
+      if(zVals.length===19){
+        zVals.push(Number(price)); zSum+=Number(price);
+        zMean=zSum/20;
+        for(zi=0;zi<zVals.length;zi++)zVar+=Math.pow(zVals[zi]-zMean,2);
+        zVar/=20;
+        zStd=Math.sqrt(Math.max(0,zVar));
+        zCurrent=zStd>0?(Number(price)-zMean)/zStd:0;
+      }
+    }
+
+    var liveRoc={};
+    var rp=[1,3,5,20], ri, rn, prev;
+    for(ri=0;ri<rp.length;ri++){
+      rn=rp[ri];
+      prev=(bars100.length>rn && bars100[bars100.length-1-rn] && bars100[bars100.length-1-rn].length>=5)
+        ? Number(bars100[bars100.length-1-rn][4]) : null;
+      if(price!=null&&prev!=null&&isFinite(prev)&&prev!==0){
+        liveRoc["return"+rn+"Pct"]=(Number(price)-prev)/Math.abs(prev)*100;
+        liveRoc["return"+rn+"Atr"]=atrDist(Number(price)-prev);
+      }else{
+        liveRoc["return"+rn+"Pct"]=ind.roc&&ind.roc["return"+rn+"Pct"]!=null
+          ? finiteOrNull(ind.roc["return"+rn+"Pct"]) : null;
+        liveRoc["return"+rn+"Atr"]=ind.roc&&ind.roc["return"+rn+"Atr"]!=null
+          ? finiteOrNull(ind.roc["return"+rn+"Atr"]) : null;
+      }
+    }
+
+    var candle=ind.candle||null;
+    var candleMayBeForming=null;
+    var barMs=providerUtcMs(meta.barTime);
+    var frameMin=tfMinutes(tf);
+    if(barMs!=null&&frameMin!=null){
+      candleMayBeForming = capturedAt < barMs + frameMin*60000;
+    }
+
+    var emaF=ind.emaFeature||null;
+    var daily=meta.dailyContext||null;
+    var session=sessionLabelForUtcMs(capturedAt,settings.sessionUtc);
+    var h = ind.heikin || null;
+    var params = meta.indicatorPeriods || {};
+
+    return {
+      schema:2,
+      capturedAt:capturedAt,
+      symbol:symbol,
+      timeframe:tf,
+      source:"CURRENT_MARKET_CONTEXT",
+      marketMode:marketDataMode,
+      providerSymbol:meta.providerSymbol || null,
+      marketFetchedAt:meta.fetchedAt || null,
+      marketBarTime:meta.barTime || null,
+      indicatorCalcVersion:meta.indicatorCalcVersion || null,
+      featureCalcVersion:meta.featureCalcVersion || null,
+      indicatorParams:{
+        ema20:finiteOrNull(params.ema20),
+        ema50:finiteOrNull(params.ema50),
+        ema200:finiteOrNull(params.ema200),
+        rsi13:finiteOrNull(params.rsi13),
+        atr:finiteOrNull(params.atr),
+        bbPeriod:finiteOrNull(params.bbPeriod),
+        bbSigma:finiteOrNull(params.bbSigma),
+        macdFast:finiteOrNull(params.macdFast),
+        macdSlow:finiteOrNull(params.macdSlow),
+        macdSignal:finiteOrNull(params.macdSignal),
+        psarStep:finiteOrNull(params.psarStep),
+        psarMax:finiteOrNull(params.psarMax),
+        adx:finiteOrNull(params.adx),
+        heikinAshiVersion:finiteOrNull(params.heikinAshiVersion),
+        donchian:finiteOrNull(params.donchian),
+        efficiencyRatio:finiteOrNull(params.efficiencyRatio),
+        zScore:finiteOrNull(params.zScore),
+        emaSlopeLookback:finiteOrNull(params.emaSlopeLookback),
+        returnPeriods:params.returnPeriods ? params.returnPeriods.slice(0) : [1,3,5,20]
+      },
+
+      price:finiteOrNull(price),
+      atr:finiteOrNull(atr),
+      atrPct:finiteOrNull(atrPct),
+
+      ema20:finiteOrNull(ind.ema20),
+      ema50:finiteOrNull(ind.ema50),
+      ema200:finiteOrNull(ind.ema200),
+      rsi13:finiteOrNull(ind.rsi13),
+
+      bbMiddle:bbMid,
+      bbUpper:bbUpper,
+      bbLower:bbLower,
+      bbWidthPct:finiteOrNull(ind.bbWidthPct),
+      bbWidthAtr:atrDist(bbWidth),
+      bbPercentB:finiteOrNull(bbPercentB != null ? bbPercentB : ind.bbPercentB),
+
+      macd:finiteOrNull(ind.macd),
+      macdSignal:finiteOrNull(ind.macdSignal),
+      macdDiff:finiteOrNull(ind.macdDiff),
+      macdAboveSignal:(ind.macd != null && ind.macdSignal != null)
+        ? Number(ind.macd) > Number(ind.macdSignal)
+        : null,
+      macdAboveZero:ind.macd != null ? Number(ind.macd) > 0 : null,
+
+      psar:psar,
+      psarSide:finiteOrNull(ind.psarSide),
+      psarDistanceAtr:finiteOrNull(psarDistanceAtr),
+
+      adx14:finiteOrNull(ind.adx14),
+      plusDI14:finiteOrNull(ind.plusDI14),
+      minusDI14:finiteOrNull(ind.minusDI14),
+      diSpread:(ind.plusDI14 != null && ind.minusDI14 != null)
+        ? Number(ind.plusDI14) - Number(ind.minusDI14)
+        : null,
+
+      heikinOpen:h ? finiteOrNull(h.open) : null,
+      heikinHigh:h ? finiteOrNull(h.high) : null,
+      heikinLow:h ? finiteOrNull(h.low) : null,
+      heikinClose:h ? finiteOrNull(h.close) : null,
+      heikinDirection:h ? finiteOrNull(h.direction) : null,
+      heikinStreak:h ? finiteOrNull(h.streak) : null,
+      heikinBodyAtr:h ? finiteOrNull(h.bodyAtr) : null,
+
+      donchianUpper20:donU,
+      donchianLower20:donL,
+      donchianMiddle20:donM,
+      donchianUpperPrev20:donPrevU,
+      donchianLowerPrev20:donPrevL,
+      donchianWidthAtr:atrDist(donWidth),
+      donchianPositionPct:finiteOrNull(donPos),
+      donchianBreakoutHigh:(price!=null&&donPrevU!=null)?Number(price)>donPrevU:null,
+      donchianBreakoutLow:(price!=null&&donPrevL!=null)?Number(price)<donPrevL:null,
+      distanceToDonchianUpperAtr:(price!=null&&donU!=null)?atrDist(Number(price)-donU):null,
+      distanceToDonchianLowerAtr:(price!=null&&donL!=null)?atrDist(Number(price)-donL):null,
+
+      efficiencyRatio10:finiteOrNull(ind.er10),
+
+      zScore20:finiteOrNull(zCurrent),
+      zMean20:zMean,
+      zStd20:zStd,
+
+      return1Pct:finiteOrNull(liveRoc.return1Pct),
+      return1Atr:finiteOrNull(liveRoc.return1Atr),
+      return3Pct:finiteOrNull(liveRoc.return3Pct),
+      return3Atr:finiteOrNull(liveRoc.return3Atr),
+      return5Pct:finiteOrNull(liveRoc.return5Pct),
+      return5Atr:finiteOrNull(liveRoc.return5Atr),
+      return20Pct:finiteOrNull(liveRoc.return20Pct),
+      return20Atr:finiteOrNull(liveRoc.return20Atr),
+
+      candleBarTime:candle ? candle.barTime || meta.barTime || null : null,
+      candleMayBeForming:candleMayBeForming,
+      candleDirection:candle ? finiteOrNull(candle.direction) : null,
+      candleStreak:candle ? finiteOrNull(candle.streak) : null,
+      candleRangeAtr:candle ? finiteOrNull(candle.rangeAtr) : null,
+      candleBodyAtr:candle ? finiteOrNull(candle.bodyAtr) : null,
+      candleUpperWickAtr:candle ? finiteOrNull(candle.upperWickAtr) : null,
+      candleLowerWickAtr:candle ? finiteOrNull(candle.lowerWickAtr) : null,
+      candleBodyPct:candle ? finiteOrNull(candle.bodyPct) : null,
+      candleUpperWickPct:candle ? finiteOrNull(candle.upperWickPct) : null,
+      candleLowerWickPct:candle ? finiteOrNull(candle.lowerWickPct) : null,
+      candleCloseLocationPct:candle ? finiteOrNull(candle.closeLocationPct) : null,
+
+      ema20Slope1Atr:emaF ? finiteOrNull(emaF.ema20Slope1Atr) : null,
+      ema50Slope1Atr:emaF ? finiteOrNull(emaF.ema50Slope1Atr) : null,
+      ema200Slope1Atr:emaF ? finiteOrNull(emaF.ema200Slope1Atr) : null,
+      ema20Slope5Atr:emaF ? finiteOrNull(emaF.ema20SlopeAtr) : null,
+      ema50Slope5Atr:emaF ? finiteOrNull(emaF.ema50SlopeAtr) : null,
+      ema200Slope5Atr:emaF ? finiteOrNull(emaF.ema200SlopeAtr) : null,
+      ema20Ema50Atr:emaF ? finiteOrNull(emaF.ema20Ema50Atr) : null,
+      ema50Ema200Atr:emaF ? finiteOrNull(emaF.ema50Ema200Atr) : null,
+      ema20Ema200Atr:emaF ? finiteOrNull(emaF.ema20Ema200Atr) : null,
+      emaStackSpanAtr:emaF ? finiteOrNull(emaF.emaStackSpanAtr) : null,
+
+      sessionLabel:session.label,
+      sessionHourUTC:session.hourUTC,
+      sessionUtcProfile:session.boundaries,
+
+      dailyContextStale:!!meta.dailyContextStale,
+      dailyContextError:meta.dailyContextError || null,
+      currentDayOpen:daily ? finiteOrNull(daily.currentDayOpen) : null,
+      distanceCurrentDayOpenAtr:(daily&&price!=null&&daily.currentDayOpen!=null)?atrDist(Number(price)-Number(daily.currentDayOpen)):null,
+      aboveCurrentDayOpen:(daily&&price!=null&&daily.currentDayOpen!=null)?Number(price)>Number(daily.currentDayOpen):null,
+      prevDayDate:daily ? daily.prevDayDate || null : null,
+      prevDayHigh:daily ? finiteOrNull(daily.prevDayHigh) : null,
+      prevDayLow:daily ? finiteOrNull(daily.prevDayLow) : null,
+      prevDayClose:daily ? finiteOrNull(daily.prevDayClose) : null,
+      distancePrevDayHighAtr:(daily&&price!=null&&daily.prevDayHigh!=null)?atrDist(Number(price)-Number(daily.prevDayHigh)):null,
+      distancePrevDayLowAtr:(daily&&price!=null&&daily.prevDayLow!=null)?atrDist(Number(price)-Number(daily.prevDayLow)):null,
+      abovePrevDayHigh:(daily&&price!=null&&daily.prevDayHigh!=null)?Number(price)>Number(daily.prevDayHigh):null,
+      belowPrevDayLow:(daily&&price!=null&&daily.prevDayLow!=null)?Number(price)<Number(daily.prevDayLow):null,
+
+      prevWeekFrom:daily ? daily.prevWeekFrom || null : null,
+      prevWeekTo:daily ? daily.prevWeekTo || null : null,
+      prevWeekHigh:daily ? finiteOrNull(daily.prevWeekHigh) : null,
+      prevWeekLow:daily ? finiteOrNull(daily.prevWeekLow) : null,
+      prevWeekClose:daily ? finiteOrNull(daily.prevWeekClose) : null,
+      distancePrevWeekHighAtr:(daily&&price!=null&&daily.prevWeekHigh!=null)?atrDist(Number(price)-Number(daily.prevWeekHigh)):null,
+      distancePrevWeekLowAtr:(daily&&price!=null&&daily.prevWeekLow!=null)?atrDist(Number(price)-Number(daily.prevWeekLow)):null,
+      abovePrevWeekHigh:(daily&&price!=null&&daily.prevWeekHigh!=null)?Number(price)>Number(daily.prevWeekHigh):null,
+      belowPrevWeekLow:(daily&&price!=null&&daily.prevWeekLow!=null)?Number(price)<Number(daily.prevWeekLow):null
+    };
+  }
+
+  function captureEntryTechnicalSnapshot(item, source) {
+    if (!item) return false;
+    var snap = currentTechnicalSnapshot(item.symbol, item.timeframe);
+    var now = new Date().getTime();
+
+    if (!snap) {
+      item.entryTechnicalSnapshotStatus = "UNAVAILABLE_CONTEXT";
+      item.entryTechnicalSnapshotAttemptAt = now;
+      return false;
+    }
+
+    snap.captureSource = source || "OPEN_TRANSITION";
+    snap.actualEntryAt = item.actualEntryAt != null ? Number(item.actualEntryAt) : null;
+    snap.captureLagMs = snap.actualEntryAt != null && isFinite(snap.actualEntryAt)
+      ? snap.capturedAt - snap.actualEntryAt
+      : null;
+
+    item.entryTechnicalSnapshot = snap;
+    item.entryTechnicalSnapshotStatus = "CAPTURED";
+    item.entryTechnicalSnapshotAttemptAt = now;
+    return true;
+  }
+
   function edgeNumericSnapshot(R) {
     if (!R || R.state === "INVALID") return null;
 
     var ind = edgeCurrentIndicators();
+    var tech = currentTechnicalSnapshot(value("symbol"), value("tf"));
     var atr = n("atr");
     var price = n("price");
     var swingHigh = n("swingHigh");
@@ -4112,14 +4522,121 @@ textarea.journalNotes{
     var rsi13 = ind ? finiteOrNull(ind.rsi13) : null;
 
     return {
-      schema:1,
+      schema:3,
       capturedAt:new Date().getTime(),
       price:finiteOrNull(price),
       atr:finiteOrNull(atr),
+      atrPct:tech ? finiteOrNull(tech.atrPct) : ((price != null && atr != null && Number(price)!==0) ? Math.abs(Number(atr)/Number(price))*100 : null),
       ema20:e20,
       ema50:e50,
       ema200:e200,
       rsi13:rsi13,
+      indicatorCalcVersion:tech ? tech.indicatorCalcVersion : null,
+      indicatorParams:tech ? tech.indicatorParams : null,
+      marketFetchedAt:tech ? tech.marketFetchedAt : null,
+      marketBarTime:tech ? tech.marketBarTime : null,
+      providerSymbol:tech ? tech.providerSymbol : null,
+      marketMode:tech ? tech.marketMode : null,
+      bbMiddle:tech ? tech.bbMiddle : null,
+      bbUpper:tech ? tech.bbUpper : null,
+      bbLower:tech ? tech.bbLower : null,
+      bbWidthPct:tech ? tech.bbWidthPct : null,
+      bbWidthAtr:tech ? tech.bbWidthAtr : null,
+      bbPercentB:tech ? tech.bbPercentB : null,
+      macd:tech ? tech.macd : null,
+      macdSignal:tech ? tech.macdSignal : null,
+      macdDiff:tech ? tech.macdDiff : null,
+      macdAboveSignal:tech ? tech.macdAboveSignal : null,
+      macdAboveZero:tech ? tech.macdAboveZero : null,
+      psar:tech ? tech.psar : null,
+      psarSide:tech ? tech.psarSide : null,
+      psarDistanceAtr:tech ? tech.psarDistanceAtr : null,
+      adx14:tech ? tech.adx14 : null,
+      plusDI14:tech ? tech.plusDI14 : null,
+      minusDI14:tech ? tech.minusDI14 : null,
+      diSpread:tech ? tech.diSpread : null,
+      heikinOpen:tech ? tech.heikinOpen : null,
+      heikinHigh:tech ? tech.heikinHigh : null,
+      heikinLow:tech ? tech.heikinLow : null,
+      heikinClose:tech ? tech.heikinClose : null,
+      heikinDirection:tech ? tech.heikinDirection : null,
+      heikinStreak:tech ? tech.heikinStreak : null,
+      heikinBodyAtr:tech ? tech.heikinBodyAtr : null,
+
+      donchianUpper20:tech ? tech.donchianUpper20 : null,
+      donchianLower20:tech ? tech.donchianLower20 : null,
+      donchianMiddle20:tech ? tech.donchianMiddle20 : null,
+      donchianWidthAtr:tech ? tech.donchianWidthAtr : null,
+      donchianPositionPct:tech ? tech.donchianPositionPct : null,
+      donchianBreakoutHigh:tech ? tech.donchianBreakoutHigh : null,
+      donchianBreakoutLow:tech ? tech.donchianBreakoutLow : null,
+      distanceToDonchianUpperAtr:tech ? tech.distanceToDonchianUpperAtr : null,
+      distanceToDonchianLowerAtr:tech ? tech.distanceToDonchianLowerAtr : null,
+
+      efficiencyRatio10:tech ? tech.efficiencyRatio10 : null,
+      zScore20:tech ? tech.zScore20 : null,
+      zMean20:tech ? tech.zMean20 : null,
+      zStd20:tech ? tech.zStd20 : null,
+
+      return1Pct:tech ? tech.return1Pct : null,
+      return1Atr:tech ? tech.return1Atr : null,
+      return3Pct:tech ? tech.return3Pct : null,
+      return3Atr:tech ? tech.return3Atr : null,
+      return5Pct:tech ? tech.return5Pct : null,
+      return5Atr:tech ? tech.return5Atr : null,
+      return20Pct:tech ? tech.return20Pct : null,
+      return20Atr:tech ? tech.return20Atr : null,
+
+      candleBarTime:tech ? tech.candleBarTime : null,
+      candleMayBeForming:tech ? tech.candleMayBeForming : null,
+      candleDirection:tech ? tech.candleDirection : null,
+      candleStreak:tech ? tech.candleStreak : null,
+      candleRangeAtr:tech ? tech.candleRangeAtr : null,
+      candleBodyAtr:tech ? tech.candleBodyAtr : null,
+      candleUpperWickAtr:tech ? tech.candleUpperWickAtr : null,
+      candleLowerWickAtr:tech ? tech.candleLowerWickAtr : null,
+      candleBodyPct:tech ? tech.candleBodyPct : null,
+      candleUpperWickPct:tech ? tech.candleUpperWickPct : null,
+      candleLowerWickPct:tech ? tech.candleLowerWickPct : null,
+      candleCloseLocationPct:tech ? tech.candleCloseLocationPct : null,
+
+      ema20Slope1Atr:tech ? tech.ema20Slope1Atr : null,
+      ema50Slope1Atr:tech ? tech.ema50Slope1Atr : null,
+      ema200Slope1Atr:tech ? tech.ema200Slope1Atr : null,
+      ema20Slope5Atr:tech ? tech.ema20Slope5Atr : null,
+      ema50Slope5Atr:tech ? tech.ema50Slope5Atr : null,
+      ema200Slope5Atr:tech ? tech.ema200Slope5Atr : null,
+      ema20Ema50Atr:tech ? tech.ema20Ema50Atr : null,
+      ema50Ema200Atr:tech ? tech.ema50Ema200Atr : null,
+      ema20Ema200Atr:tech ? tech.ema20Ema200Atr : null,
+      emaStackSpanAtr:tech ? tech.emaStackSpanAtr : null,
+
+      sessionLabel:tech ? tech.sessionLabel : null,
+      sessionHourUTC:tech ? tech.sessionHourUTC : null,
+      sessionUtcProfile:tech ? tech.sessionUtcProfile : null,
+
+      dailyContextStale:tech ? tech.dailyContextStale : null,
+      currentDayOpen:tech ? tech.currentDayOpen : null,
+      distanceCurrentDayOpenAtr:tech ? tech.distanceCurrentDayOpenAtr : null,
+      aboveCurrentDayOpen:tech ? tech.aboveCurrentDayOpen : null,
+      prevDayDate:tech ? tech.prevDayDate : null,
+      prevDayHigh:tech ? tech.prevDayHigh : null,
+      prevDayLow:tech ? tech.prevDayLow : null,
+      prevDayClose:tech ? tech.prevDayClose : null,
+      distancePrevDayHighAtr:tech ? tech.distancePrevDayHighAtr : null,
+      distancePrevDayLowAtr:tech ? tech.distancePrevDayLowAtr : null,
+      abovePrevDayHigh:tech ? tech.abovePrevDayHigh : null,
+      belowPrevDayLow:tech ? tech.belowPrevDayLow : null,
+      prevWeekFrom:tech ? tech.prevWeekFrom : null,
+      prevWeekTo:tech ? tech.prevWeekTo : null,
+      prevWeekHigh:tech ? tech.prevWeekHigh : null,
+      prevWeekLow:tech ? tech.prevWeekLow : null,
+      prevWeekClose:tech ? tech.prevWeekClose : null,
+      distancePrevWeekHighAtr:tech ? tech.distancePrevWeekHighAtr : null,
+      distancePrevWeekLowAtr:tech ? tech.distancePrevWeekLowAtr : null,
+      abovePrevWeekHigh:tech ? tech.abovePrevWeekHigh : null,
+      belowPrevWeekLow:tech ? tech.belowPrevWeekLow : null,
+
       priceEma20Atr:(price != null && e20 != null) ? atrDistance(Number(price) - e20) : null,
       priceEma50Atr:(price != null && e50 != null) ? atrDistance(Number(price) - e50) : null,
       priceEma200Atr:(price != null && e200 != null) ? atrDistance(Number(price) - e200) : null,
@@ -4965,7 +5482,7 @@ textarea.journalNotes{
 
   function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
 
-  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.4.1",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.5",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
 
   function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
 
@@ -5581,17 +6098,48 @@ textarea.journalNotes{
     var d = storageRead(MARKET_DATA_SETTINGS_KEY, null);
     if (!d || typeof d !== "object") {
       d = {
-        schema:9,
+        schema:11,
         atrPeriod:14,
         autoRefreshSec:0,
         symbolOverrides:{},
         conversionMeta:{},
+        dailyContextBySymbol:{},
+        sessionUtc:{ asia:0, london:8, newYork:13, late:21 },
+        chartDisplay:{
+          bb:true,
+          sar:true,
+          atr:true,
+          macd:true,
+          adx:true,
+          heikin:true,
+          donchian:true,
+          prevDay:true,
+          prevWeek:true,
+          er:true
+        },
         lastMeta:null
       };
     }
     if (!d.symbolOverrides) d.symbolOverrides = {};
     if (!d.conversionMeta) d.conversionMeta = {};
-    d.schema = 9;
+    if (!d.dailyContextBySymbol || typeof d.dailyContextBySymbol !== "object") d.dailyContextBySymbol = {};
+    if (!d.sessionUtc || typeof d.sessionUtc !== "object") d.sessionUtc = {};
+    if (!isFinite(Number(d.sessionUtc.asia))) d.sessionUtc.asia = 0;
+    if (!isFinite(Number(d.sessionUtc.london))) d.sessionUtc.london = 8;
+    if (!isFinite(Number(d.sessionUtc.newYork))) d.sessionUtc.newYork = 13;
+    if (!isFinite(Number(d.sessionUtc.late))) d.sessionUtc.late = 21;
+    if (!d.chartDisplay || typeof d.chartDisplay !== "object") d.chartDisplay = {};
+    if (d.chartDisplay.bb == null) d.chartDisplay.bb = true;
+    if (d.chartDisplay.sar == null) d.chartDisplay.sar = true;
+    if (d.chartDisplay.atr == null) d.chartDisplay.atr = true;
+    if (d.chartDisplay.macd == null) d.chartDisplay.macd = true;
+    if (d.chartDisplay.adx == null) d.chartDisplay.adx = true;
+    if (d.chartDisplay.heikin == null) d.chartDisplay.heikin = true;
+    if (d.chartDisplay.donchian == null) d.chartDisplay.donchian = true;
+    if (d.chartDisplay.prevDay == null) d.chartDisplay.prevDay = true;
+    if (d.chartDisplay.prevWeek == null) d.chartDisplay.prevWeek = false;
+    if (d.chartDisplay.er == null) d.chartDisplay.er = true;
+    d.schema = 11;
     return d;
   }
 
@@ -5792,6 +6340,20 @@ textarea.journalNotes{
     if (el("marketAutoRefreshSec")) {
       el("marketAutoRefreshSec").value = String(settings.autoRefreshSec || 0);
     }
+    if (el("showBB")) el("showBB").checked = !!settings.chartDisplay.bb;
+    if (el("showSAR")) el("showSAR").checked = !!settings.chartDisplay.sar;
+    if (el("showATRPanel")) el("showATRPanel").checked = !!settings.chartDisplay.atr;
+    if (el("showMACDPanel")) el("showMACDPanel").checked = !!settings.chartDisplay.macd;
+    if (el("showADXPanel")) el("showADXPanel").checked = !!settings.chartDisplay.adx;
+    if (el("showHeikinPanel")) el("showHeikinPanel").checked = !!settings.chartDisplay.heikin;
+    if (el("showDonchian")) el("showDonchian").checked = !!settings.chartDisplay.donchian;
+    if (el("showPrevDay")) el("showPrevDay").checked = !!settings.chartDisplay.prevDay;
+    if (el("showPrevWeek")) el("showPrevWeek").checked = !!settings.chartDisplay.prevWeek;
+    if (el("showERPanel")) el("showERPanel").checked = !!settings.chartDisplay.er;
+    if (el("sessionAsiaUtc")) el("sessionAsiaUtc").value = String(settings.sessionUtc.asia);
+    if (el("sessionLondonUtc")) el("sessionLondonUtc").value = String(settings.sessionUtc.london);
+    if (el("sessionNewYorkUtc")) el("sessionNewYorkUtc").value = String(settings.sessionUtc.newYork);
+    if (el("sessionLateUtc")) el("sessionLateUtc").value = String(settings.sessionUtc.late);
 
     syncProviderSymbolField();
 
@@ -5842,6 +6404,19 @@ textarea.journalNotes{
     settings.atrPeriod = period;
     settings.autoRefreshSec = autoSec;
 
+    function cleanSessionHour(id, fallback) {
+      var node = el(id);
+      var v = node ? parseInt(node.value, 10) : fallback;
+      if (!isFinite(v) || v < 0 || v > 23) v = fallback;
+      return v;
+    }
+    settings.sessionUtc = {
+      asia:cleanSessionHour("sessionAsiaUtc", 0),
+      london:cleanSessionHour("sessionLondonUtc", 8),
+      newYork:cleanSessionHour("sessionNewYorkUtc", 13),
+      late:cleanSessionHour("sessionLateUtc", 21)
+    };
+
     if (typed && typed !== defaultSymbol) {
       settings.symbolOverrides[localSymbol] = typed;
     } else {
@@ -5851,6 +6426,22 @@ textarea.journalNotes{
     saveMarketDataSettings(settings);
     syncProviderSymbolField();
     restartMarketAutoRefresh();
+  }
+
+  function saveMiniTechDisplaySettings() {
+    var settings = getMarketDataSettings();
+    settings.chartDisplay.bb = el("showBB") ? !!el("showBB").checked : true;
+    settings.chartDisplay.sar = el("showSAR") ? !!el("showSAR").checked : true;
+    settings.chartDisplay.atr = el("showATRPanel") ? !!el("showATRPanel").checked : true;
+    settings.chartDisplay.macd = el("showMACDPanel") ? !!el("showMACDPanel").checked : true;
+    settings.chartDisplay.adx = el("showADXPanel") ? !!el("showADXPanel").checked : true;
+    settings.chartDisplay.heikin = el("showHeikinPanel") ? !!el("showHeikinPanel").checked : true;
+    settings.chartDisplay.donchian = el("showDonchian") ? !!el("showDonchian").checked : true;
+    settings.chartDisplay.prevDay = el("showPrevDay") ? !!el("showPrevDay").checked : true;
+    settings.chartDisplay.prevWeek = el("showPrevWeek") ? !!el("showPrevWeek").checked : false;
+    settings.chartDisplay.er = el("showERPanel") ? !!el("showERPanel").checked : true;
+    saveMarketDataSettings(settings);
+    renderStrategyMiniChart();
   }
 
   function saveTwelveDataKey() {
@@ -6122,6 +6713,552 @@ textarea.journalNotes{
     return atr;
   }
 
+
+  function wilderAtrSeries(bars, period) {
+    var out = [], tr = [], i, high, low, prevClose, v, atr = 0;
+    if (!bars || bars.length < period || period <= 0) return out;
+
+    for (i = 0; i < bars.length; i++) out.push(null);
+
+    for (i = 0; i < bars.length; i++) {
+      high = Number(bars[i].high);
+      low = Number(bars[i].low);
+      if (!isFinite(high) || !isFinite(low)) return [];
+      if (i === 0) {
+        v = high - low;
+      } else {
+        prevClose = Number(bars[i - 1].close);
+        if (!isFinite(prevClose)) return [];
+        v = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+      }
+      if (!isFinite(v) || v < 0) return [];
+      tr.push(v);
+    }
+
+    for (i = 0; i < period; i++) atr += tr[i];
+    atr /= period;
+    out[period - 1] = atr;
+
+    for (i = period; i < tr.length; i++) {
+      atr = ((atr * (period - 1)) + tr[i]) / period;
+      out[i] = atr;
+    }
+    return out;
+  }
+
+  function bollingerSeries(bars, period, sigma) {
+    var mid = [], upper = [], lower = [], widthPct = [], percentB = [];
+    var i, j, c, sum, mean, variance, sd, width;
+
+    if (!bars || bars.length < period || period <= 0 || sigma <= 0) {
+      return {mid:mid, upper:upper, lower:lower, widthPct:widthPct, percentB:percentB};
+    }
+
+    for (i = 0; i < bars.length; i++) {
+      mid.push(null); upper.push(null); lower.push(null); widthPct.push(null); percentB.push(null);
+    }
+
+    for (i = period - 1; i < bars.length; i++) {
+      sum = 0;
+      for (j = i - period + 1; j <= i; j++) {
+        c = Number(bars[j].close);
+        if (!isFinite(c)) return {mid:[],upper:[],lower:[],widthPct:[],percentB:[]};
+        sum += c;
+      }
+      mean = sum / period;
+      variance = 0;
+      for (j = i - period + 1; j <= i; j++) {
+        c = Number(bars[j].close);
+        variance += Math.pow(c - mean, 2);
+      }
+      variance /= period;
+      sd = Math.sqrt(Math.max(0, variance));
+      mid[i] = mean;
+      upper[i] = mean + sigma * sd;
+      lower[i] = mean - sigma * sd;
+      width = upper[i] - lower[i];
+      widthPct[i] = mean !== 0 ? (width / Math.abs(mean)) * 100 : null;
+      percentB[i] = width > 0 ? ((Number(bars[i].close) - lower[i]) / width) * 100 : null;
+    }
+
+    return {mid:mid, upper:upper, lower:lower, widthPct:widthPct, percentB:percentB};
+  }
+
+  function emaNullableSeries(values, period) {
+    var out = [], i, finiteCount = 0, sum = 0, prev = null, alpha = 2 / (period + 1);
+    if (!values || period <= 0) return out;
+    for (i = 0; i < values.length; i++) out.push(null);
+
+    for (i = 0; i < values.length; i++) {
+      if (values[i] == null || !isFinite(Number(values[i]))) continue;
+      if (prev == null) {
+        sum += Number(values[i]);
+        finiteCount++;
+        if (finiteCount === period) {
+          prev = sum / period;
+          out[i] = prev;
+        }
+      } else {
+        prev = (Number(values[i]) - prev) * alpha + prev;
+        out[i] = prev;
+      }
+    }
+    return out;
+  }
+
+  function macdSeries(bars, fastPeriod, slowPeriod, signalPeriod) {
+    var fast = emaSeries(bars, fastPeriod);
+    var slow = emaSeries(bars, slowPeriod);
+    var macd = [], i, signal, diff = [];
+
+    if (!bars || fast.length !== bars.length || slow.length !== bars.length) {
+      return {macd:[], signal:[], diff:[]};
+    }
+
+    for (i = 0; i < bars.length; i++) {
+      if (fast[i] == null || slow[i] == null) macd.push(null);
+      else macd.push(Number(fast[i]) - Number(slow[i]));
+    }
+
+    signal = emaNullableSeries(macd, signalPeriod);
+    for (i = 0; i < bars.length; i++) {
+      if (macd[i] == null || signal[i] == null) diff.push(null);
+      else diff.push(Number(macd[i]) - Number(signal[i]));
+    }
+    return {macd:macd, signal:signal, diff:diff};
+  }
+
+  function parabolicSarSeries(bars, step, maxAf) {
+    var sar = [], side = [], i;
+    if (!bars || bars.length < 2 || step <= 0 || maxAf < step) return {sar:sar, side:side};
+
+    for (i = 0; i < bars.length; i++) { sar.push(null); side.push(null); }
+
+    var bull = Number(bars[1].close) >= Number(bars[0].close);
+    var ep = bull
+      ? Math.max(Number(bars[0].high), Number(bars[1].high))
+      : Math.min(Number(bars[0].low), Number(bars[1].low));
+    var af = step;
+    sar[0] = bull ? Number(bars[0].low) : Number(bars[0].high);
+    side[0] = bull ? 1 : -1;
+
+    for (i = 1; i < bars.length; i++) {
+      var prevSar = Number(sar[i - 1]);
+      var nextSar = prevSar + af * (ep - prevSar);
+
+      if (bull) {
+        nextSar = Math.min(nextSar, Number(bars[i - 1].low));
+        if (i > 1) nextSar = Math.min(nextSar, Number(bars[i - 2].low));
+
+        if (Number(bars[i].low) < nextSar) {
+          bull = false;
+          nextSar = ep;
+          ep = Number(bars[i].low);
+          af = step;
+        } else if (Number(bars[i].high) > ep) {
+          ep = Number(bars[i].high);
+          af = Math.min(maxAf, af + step);
+        }
+      } else {
+        nextSar = Math.max(nextSar, Number(bars[i - 1].high));
+        if (i > 1) nextSar = Math.max(nextSar, Number(bars[i - 2].high));
+
+        if (Number(bars[i].high) > nextSar) {
+          bull = true;
+          nextSar = ep;
+          ep = Number(bars[i].high);
+          af = step;
+        } else if (Number(bars[i].low) < ep) {
+          ep = Number(bars[i].low);
+          af = Math.min(maxAf, af + step);
+        }
+      }
+
+      sar[i] = nextSar;
+      side[i] = bull ? 1 : -1;
+    }
+    return {sar:sar, side:side};
+  }
+
+  function adxSeries(bars, period) {
+    var adx = [], plusDI = [], minusDI = [], dx = [];
+    var tr = [], plusDM = [], minusDM = [];
+    var i, upMove, downMove, high, low, prevHigh, prevLow, prevClose, trv;
+
+    if (!bars || bars.length < period * 2 || period <= 0) {
+      return {adx:adx, plusDI:plusDI, minusDI:minusDI, dx:dx};
+    }
+
+    for (i = 0; i < bars.length; i++) {
+      adx.push(null); plusDI.push(null); minusDI.push(null); dx.push(null);
+      tr.push(0); plusDM.push(0); minusDM.push(0);
+    }
+
+    for (i = 1; i < bars.length; i++) {
+      high = Number(bars[i].high);
+      low = Number(bars[i].low);
+      prevHigh = Number(bars[i - 1].high);
+      prevLow = Number(bars[i - 1].low);
+      prevClose = Number(bars[i - 1].close);
+      if (!isFinite(high) || !isFinite(low) || !isFinite(prevHigh) || !isFinite(prevLow) || !isFinite(prevClose)) {
+        return {adx:[], plusDI:[], minusDI:[], dx:[]};
+      }
+
+      upMove = high - prevHigh;
+      downMove = prevLow - low;
+      plusDM[i] = (upMove > downMove && upMove > 0) ? upMove : 0;
+      minusDM[i] = (downMove > upMove && downMove > 0) ? downMove : 0;
+      trv = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+      tr[i] = trv;
+    }
+
+    var smoothTR = 0, smoothPlus = 0, smoothMinus = 0;
+    for (i = 1; i <= period; i++) {
+      smoothTR += tr[i];
+      smoothPlus += plusDM[i];
+      smoothMinus += minusDM[i];
+    }
+
+    function setDiDx(index) {
+      var p = smoothTR > 0 ? 100 * smoothPlus / smoothTR : 0;
+      var m = smoothTR > 0 ? 100 * smoothMinus / smoothTR : 0;
+      var den = p + m;
+      plusDI[index] = p;
+      minusDI[index] = m;
+      dx[index] = den > 0 ? 100 * Math.abs(p - m) / den : 0;
+    }
+
+    setDiDx(period);
+    for (i = period + 1; i < bars.length; i++) {
+      smoothTR = smoothTR - (smoothTR / period) + tr[i];
+      smoothPlus = smoothPlus - (smoothPlus / period) + plusDM[i];
+      smoothMinus = smoothMinus - (smoothMinus / period) + minusDM[i];
+      setDiDx(i);
+    }
+
+    var firstAdxIndex = period * 2 - 1;
+    var adxSeed = 0;
+    for (i = period; i <= firstAdxIndex; i++) {
+      if (dx[i] == null || !isFinite(Number(dx[i]))) {
+        return {adx:[], plusDI:[], minusDI:[], dx:[]};
+      }
+      adxSeed += Number(dx[i]);
+    }
+    adxSeed /= period;
+    adx[firstAdxIndex] = adxSeed;
+
+    for (i = firstAdxIndex + 1; i < bars.length; i++) {
+      adxSeed = ((adxSeed * (period - 1)) + Number(dx[i])) / period;
+      adx[i] = adxSeed;
+    }
+
+    return {adx:adx, plusDI:plusDI, minusDI:minusDI, dx:dx};
+  }
+
+  function heikinAshiSeries(bars) {
+    var out = [], i, b, haOpen, haClose, haHigh, haLow, prevOpen = null, prevClose = null;
+    if (!bars || !bars.length) return out;
+
+    for (i = 0; i < bars.length; i++) {
+      b = bars[i];
+      var o = Number(b.open), h = Number(b.high), l = Number(b.low), c = Number(b.close);
+      if (!isFinite(o) || !isFinite(h) || !isFinite(l) || !isFinite(c)) return [];
+
+      haClose = (o + h + l + c) / 4;
+      haOpen = i === 0 ? (o + c) / 2 : (prevOpen + prevClose) / 2;
+      haHigh = Math.max(h, haOpen, haClose);
+      haLow = Math.min(l, haOpen, haClose);
+
+      out.push({
+        datetime:String(b.datetime),
+        open:haOpen,
+        high:haHigh,
+        low:haLow,
+        close:haClose
+      });
+      prevOpen = haOpen;
+      prevClose = haClose;
+    }
+    return out;
+  }
+
+  function heikinAshiLatestStats(haBars, atrValue) {
+    if (!haBars || !haBars.length) return null;
+    var last = haBars[haBars.length - 1];
+    var direction = last.close > last.open ? 1 : (last.close < last.open ? -1 : 0);
+    var streak = 0, i, d;
+
+    if (direction !== 0) {
+      for (i = haBars.length - 1; i >= 0; i--) {
+        d = haBars[i].close > haBars[i].open ? 1 : (haBars[i].close < haBars[i].open ? -1 : 0);
+        if (d !== direction) break;
+        streak++;
+      }
+    }
+
+    var body = Math.abs(Number(last.close) - Number(last.open));
+    return {
+      open:Number(last.open),
+      high:Number(last.high),
+      low:Number(last.low),
+      close:Number(last.close),
+      direction:direction,
+      streak:streak,
+      bodyAtr:(atrValue != null && isFinite(Number(atrValue)) && Number(atrValue) > 0)
+        ? body / Number(atrValue)
+        : null
+    };
+  }
+
+
+  function donchianSeries(bars, period) {
+    var upper=[], lower=[], middle=[], i, j, hi, lo, h, l;
+    if (!bars || bars.length < period || period <= 0) {
+      return {upper:upper, lower:lower, middle:middle};
+    }
+    for (i=0;i<bars.length;i++) { upper.push(null); lower.push(null); middle.push(null); }
+    for (i=period-1;i<bars.length;i++) {
+      hi=-Infinity; lo=Infinity;
+      for (j=i-period+1;j<=i;j++) {
+        h=Number(bars[j].high); l=Number(bars[j].low);
+        if (!isFinite(h) || !isFinite(l)) return {upper:[],lower:[],middle:[]};
+        if (h>hi) hi=h;
+        if (l<lo) lo=l;
+      }
+      upper[i]=hi;
+      lower[i]=lo;
+      middle[i]=(hi+lo)/2;
+    }
+    return {upper:upper, lower:lower, middle:middle};
+  }
+
+  function efficiencyRatioSeries(bars, period) {
+    var out=[], i, j, direction, volatility, c0, c1;
+    if (!bars || bars.length < period+1 || period <= 0) return out;
+    for (i=0;i<bars.length;i++) out.push(null);
+    for (i=period;i<bars.length;i++) {
+      c0=Number(bars[i-period].close);
+      c1=Number(bars[i].close);
+      if (!isFinite(c0) || !isFinite(c1)) return [];
+      direction=Math.abs(c1-c0);
+      volatility=0;
+      for (j=i-period+1;j<=i;j++) {
+        var a=Number(bars[j].close), b=Number(bars[j-1].close);
+        if (!isFinite(a) || !isFinite(b)) return [];
+        volatility += Math.abs(a-b);
+      }
+      out[i]=volatility>0 ? direction/volatility : 0;
+    }
+    return out;
+  }
+
+  function zScoreSeries(bars, period) {
+    var z=[], mean=[], stdev=[], i, j, sum, mu, variance, c;
+    if (!bars || bars.length < period || period <= 0) return {z:z,mean:mean,stdev:stdev};
+    for (i=0;i<bars.length;i++){z.push(null);mean.push(null);stdev.push(null);}
+    for (i=period-1;i<bars.length;i++) {
+      sum=0;
+      for (j=i-period+1;j<=i;j++) {
+        c=Number(bars[j].close);
+        if (!isFinite(c)) return {z:[],mean:[],stdev:[]};
+        sum+=c;
+      }
+      mu=sum/period;
+      variance=0;
+      for (j=i-period+1;j<=i;j++) {
+        c=Number(bars[j].close);
+        variance += Math.pow(c-mu,2);
+      }
+      variance/=period;
+      mean[i]=mu;
+      stdev[i]=Math.sqrt(Math.max(0,variance));
+      z[i]=stdev[i]>0 ? (Number(bars[i].close)-mu)/stdev[i] : 0;
+    }
+    return {z:z,mean:mean,stdev:stdev};
+  }
+
+  function rocFeatureSet(bars, atrValue) {
+    var out={}, periods=[1,3,5,20], i, n, last, prev, change;
+    if (!bars || bars.length < 2) return out;
+    last=Number(bars[bars.length-1].close);
+    if (!isFinite(last)) return out;
+    for (i=0;i<periods.length;i++) {
+      n=periods[i];
+      if (bars.length<=n) {
+        out["return"+n+"Pct"]=null;
+        out["return"+n+"Atr"]=null;
+        continue;
+      }
+      prev=Number(bars[bars.length-1-n].close);
+      if (!isFinite(prev) || prev===0) {
+        out["return"+n+"Pct"]=null;
+        out["return"+n+"Atr"]=null;
+        continue;
+      }
+      change=last-prev;
+      out["return"+n+"Pct"]=(change/Math.abs(prev))*100;
+      out["return"+n+"Atr"]=(atrValue!=null && isFinite(Number(atrValue)) && Number(atrValue)>0)
+        ? change/Number(atrValue) : null;
+    }
+    return out;
+  }
+
+  function candleStructureLatest(bars, atrValue) {
+    if (!bars || !bars.length) return null;
+    var last=bars[bars.length-1];
+    var o=Number(last.open),h=Number(last.high),l=Number(last.low),c=Number(last.close);
+    if (!isFinite(o)||!isFinite(h)||!isFinite(l)||!isFinite(c)) return null;
+    var range=h-l;
+    var body=Math.abs(c-o);
+    var upper=Math.max(0,h-Math.max(o,c));
+    var lower=Math.max(0,Math.min(o,c)-l);
+    var dir=c>o?1:(c<o?-1:0);
+    var streak=0,i,d;
+    if (dir!==0) {
+      for (i=bars.length-1;i>=0;i--) {
+        d=Number(bars[i].close)>Number(bars[i].open)?1:
+          (Number(bars[i].close)<Number(bars[i].open)?-1:0);
+        if (d!==dir) break;
+        streak++;
+      }
+    }
+    function atrNorm(v){
+      return atrValue!=null && isFinite(Number(atrValue)) && Number(atrValue)>0
+        ? v/Number(atrValue) : null;
+    }
+    return {
+      barTime:last.datetime||null,
+      direction:dir,
+      streak:streak,
+      range:range,
+      body:body,
+      upperWick:upper,
+      lowerWick:lower,
+      rangeAtr:atrNorm(range),
+      bodyAtr:atrNorm(body),
+      upperWickAtr:atrNorm(upper),
+      lowerWickAtr:atrNorm(lower),
+      bodyPct:range>0?body/range*100:null,
+      upperWickPct:range>0?upper/range*100:null,
+      lowerWickPct:range>0?lower/range*100:null,
+      closeLocationPct:range>0?(c-l)/range*100:null
+    };
+  }
+
+  function emaSlopeCompressionLatest(ema20, ema50, ema200, atrValue, lookback) {
+    var n=ema20&&ema20.length?ema20.length:0;
+    if (!n || !ema50 || !ema200 || ema50.length!==n || ema200.length!==n) return null;
+    var i=n-1, atr=Number(atrValue);
+    var a20=ema20[i],a50=ema50[i],a200=ema200[i];
+    if (a20==null||a50==null||a200==null||!isFinite(Number(a20))||!isFinite(Number(a50))||!isFinite(Number(a200))) return null;
+    function slope(series,k){
+      if (i-k<0 || series[i-k]==null || !isFinite(Number(series[i-k])) || !isFinite(atr) || atr<=0) return null;
+      return (Number(series[i])-Number(series[i-k]))/atr;
+    }
+    function gap(a,b){
+      return isFinite(atr)&&atr>0 ? (Number(a)-Number(b))/atr : null;
+    }
+    var maxE=Math.max(Number(a20),Number(a50),Number(a200));
+    var minE=Math.min(Number(a20),Number(a50),Number(a200));
+    return {
+      slopeLookback:lookback,
+      ema20Slope1Atr:slope(ema20,1),
+      ema50Slope1Atr:slope(ema50,1),
+      ema200Slope1Atr:slope(ema200,1),
+      ema20SlopeAtr:slope(ema20,lookback),
+      ema50SlopeAtr:slope(ema50,lookback),
+      ema200SlopeAtr:slope(ema200,lookback),
+      ema20Ema50Atr:gap(a20,a50),
+      ema50Ema200Atr:gap(a50,a200),
+      ema20Ema200Atr:gap(a20,a200),
+      emaStackSpanAtr:isFinite(atr)&&atr>0 ? (maxE-minE)/atr : null
+    };
+  }
+
+  function utcDayStartMs(ms) {
+    var d=new Date(Number(ms));
+    return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  }
+
+  function utcDateKey(ms) {
+    var d=new Date(Number(ms));
+    function p2(x){return x<10?"0"+x:String(x);}
+    return d.getUTCFullYear()+"-"+p2(d.getUTCMonth()+1)+"-"+p2(d.getUTCDate());
+  }
+
+  function utcWeekStartMondayMs(ms) {
+    var dayStart=utcDayStartMs(ms);
+    var d=new Date(dayStart);
+    var dow=d.getUTCDay();
+    var back=(dow+6)%7;
+    return dayStart-back*86400000;
+  }
+
+  function dailyContextFromBars(dailyBars, referenceMs) {
+    if (!dailyBars || !dailyBars.length) return null;
+    var ref=referenceMs!=null&&isFinite(Number(referenceMs))?Number(referenceMs):new Date().getTime();
+    var refDay=utcDayStartMs(ref);
+    var weekStart=utcWeekStartMondayMs(ref);
+    var prevWeekStart=weekStart-7*86400000;
+    var prevDay=null,currentDay=null,weekBars=[],i,b,ms,day;
+    for (i=0;i<dailyBars.length;i++) {
+      b=dailyBars[i];
+      ms=providerUtcMs(b.datetime);
+      if (ms==null) continue;
+      day=utcDayStartMs(ms);
+      if (day===refDay) currentDay=b;
+      if (day<refDay) prevDay=b;
+      if (day>=prevWeekStart && day<weekStart) weekBars.push(b);
+    }
+    var ctx={
+      referenceDate:utcDateKey(ref),
+      currentDayOpen:currentDay&&isFinite(Number(currentDay.open))?Number(currentDay.open):null,
+      prevDayDate:prevDay?String(prevDay.datetime).substring(0,10):null,
+      prevDayOpen:prevDay&&isFinite(Number(prevDay.open))?Number(prevDay.open):null,
+      prevDayHigh:prevDay&&isFinite(Number(prevDay.high))?Number(prevDay.high):null,
+      prevDayLow:prevDay&&isFinite(Number(prevDay.low))?Number(prevDay.low):null,
+      prevDayClose:prevDay&&isFinite(Number(prevDay.close))?Number(prevDay.close):null,
+      prevWeekFrom:weekBars.length?String(weekBars[0].datetime).substring(0,10):null,
+      prevWeekTo:weekBars.length?String(weekBars[weekBars.length-1].datetime).substring(0,10):null,
+      prevWeekOpen:null,prevWeekHigh:null,prevWeekLow:null,prevWeekClose:null
+    };
+    if (weekBars.length) {
+      ctx.prevWeekOpen=Number(weekBars[0].open);
+      ctx.prevWeekClose=Number(weekBars[weekBars.length-1].close);
+      var hi=-Infinity,lo=Infinity;
+      for(i=0;i<weekBars.length;i++){
+        if(Number(weekBars[i].high)>hi)hi=Number(weekBars[i].high);
+        if(Number(weekBars[i].low)<lo)lo=Number(weekBars[i].low);
+      }
+      ctx.prevWeekHigh=isFinite(hi)?hi:null;
+      ctx.prevWeekLow=isFinite(lo)?lo:null;
+    }
+    return ctx;
+  }
+
+  function sessionLabelForUtcMs(ms, cfg) {
+    cfg=cfg||{asia:0,london:8,newYork:13,late:21};
+    var hour=new Date(Number(ms)).getUTCHours();
+    var entries=[
+      {label:"ASIA",h:Number(cfg.asia)},
+      {label:"LONDON",h:Number(cfg.london)},
+      {label:"NEW_YORK",h:Number(cfg.newYork)},
+      {label:"LATE",h:Number(cfg.late)}
+    ];
+    for(var i=0;i<entries.length;i++){
+      if(!isFinite(entries[i].h)||entries[i].h<0||entries[i].h>23) entries[i].h=0;
+    }
+    entries.sort(function(a,b){return a.h-b.h;});
+    var chosen=entries[entries.length-1];
+    for(i=0;i<entries.length;i++){
+      if(hour>=entries[i].h) chosen=entries[i];
+      else break;
+    }
+    return {label:chosen.label,hourUTC:hour,boundaries:{
+      asia:Number(cfg.asia),london:Number(cfg.london),newYork:Number(cfg.newYork),late:Number(cfg.late)
+    }};
+  }
+
   function twelveDataErrorMessage(data, fallback) {
     if (!data) return fallback || "空レスポンス";
     if (data.message) return String(data.message);
@@ -6141,6 +7278,84 @@ textarea.journalNotes{
         }
         return { data:data, creditsUsed:used, creditsLeft:left };
       });
+    });
+  }
+
+
+  function cachedDailyContext(settings, localSymbol, providerSymbol) {
+    settings=settings||getMarketDataSettings();
+    var x=settings.dailyContextBySymbol ? settings.dailyContextBySymbol[localSymbol] : null;
+    if (!x || x.providerSymbol!==providerSymbol || !x.context) return null;
+    return x;
+  }
+
+  function fetchDailyContextCached(localSymbol, providerSymbol, key, force) {
+    var settings=getMarketDataSettings();
+    var cached=cachedDailyContext(settings,localSymbol,providerSymbol);
+    var today=utcDateKey(new Date().getTime());
+    var fresh=!!(cached &&
+      cached.referenceDate===today &&
+      cached.fetchedAt!=null &&
+      isFinite(Number(cached.fetchedAt)) &&
+      (new Date().getTime()-Number(cached.fetchedAt)) < 6*60*60*1000);
+
+    if (!force && fresh) {
+      return Promise.resolve({
+        context:cached.context,
+        cached:true,
+        stale:false,
+        creditsUsed:null,
+        creditsLeft:null
+      });
+    }
+
+    var url="https://api.twelvedata.com/time_series?symbol="+encodeURIComponent(providerSymbol)+
+      "&interval=1day&outputsize=20&timezone=UTC&apikey="+encodeURIComponent(key);
+
+    return fetchTwelveJson(url).then(function(res){
+      var bars=parseTwelveBars(res.data.values);
+      var context=dailyContextFromBars(bars,new Date().getTime());
+      if (!context) throw new Error("日足コンテキストを計算できません。");
+      var now=new Date().getTime();
+      context.providerSymbol=providerSymbol;
+      context.fetchedAt=now;
+
+      var s=getMarketDataSettings();
+      if (!s.dailyContextBySymbol) s.dailyContextBySymbol={};
+      s.dailyContextBySymbol[localSymbol]={
+        providerSymbol:providerSymbol,
+        fetchedAt:now,
+        referenceDate:today,
+        context:context
+      };
+      saveMarketDataSettings(s);
+
+      return {
+        context:context,
+        cached:false,
+        stale:false,
+        creditsUsed:res.creditsUsed||null,
+        creditsLeft:res.creditsLeft||null
+      };
+    }).catch(function(err){
+      if (cached && cached.context) {
+        return {
+          context:cached.context,
+          cached:true,
+          stale:true,
+          error:err&&err.message?String(err.message):"DAILY_CONTEXT_ERROR",
+          creditsUsed:null,
+          creditsLeft:null
+        };
+      }
+      return {
+        context:null,
+        cached:false,
+        stale:true,
+        error:err&&err.message?String(err.message):"DAILY_CONTEXT_ERROR",
+        creditsUsed:null,
+        creditsLeft:null
+      };
     });
   }
 
@@ -6376,6 +7591,23 @@ textarea.journalNotes{
         ? meta.swingFrom + " → " + meta.swingTo
         : "—");
     html += resultRow("ATR方式", "Wilder(" + (settings.atrPeriod || 14) + ")");
+    html += resultRow("Donchian / ER",
+      sameMeta && meta.indicatorLatest && meta.indicatorLatest.donchianUpper20!=null
+        ? "DC20 / ER10 " + (meta.indicatorLatest.er10==null?"—":Number(meta.indicatorLatest.er10).toFixed(3))
+        : "—");
+    html += resultRow("前日 H/L",
+      sameMeta && meta.dailyContext && meta.dailyContext.prevDayHigh!=null
+        ? Number(meta.dailyContext.prevDayHigh).toFixed(6).replace(/0+$/,"").replace(/\.$/,"") +
+          " / " + Number(meta.dailyContext.prevDayLow).toFixed(6).replace(/0+$/,"").replace(/\.$/,"")
+        : "—");
+    html += resultRow("前週 H/L",
+      sameMeta && meta.dailyContext && meta.dailyContext.prevWeekHigh!=null
+        ? Number(meta.dailyContext.prevWeekHigh).toFixed(6).replace(/0+$/,"").replace(/\.$/,"") +
+          " / " + Number(meta.dailyContext.prevWeekLow).toFixed(6).replace(/0+$/,"").replace(/\.$/,"")
+        : "—");
+    html += resultRow("Session",
+      sessionLabelForUtcMs(new Date().getTime(), settings.sessionUtc).label +
+      (sameMeta && meta.dailyContextStale ? " / DAILY STALE" : ""));
     html += resultRow("Bar Time",
       sameMeta
         ? meta.barTime
@@ -6487,7 +7719,8 @@ textarea.journalNotes{
 
     Promise.all([
       fetchTwelveJson(priceUrl),
-      fetchTwelveJson(seriesUrl)
+      fetchTwelveJson(seriesUrl),
+      fetchDailyContextCached(localSymbol, providerSymbol, key, !fromTimer)
     ]).then(function (responses) {
       var price = extractTwelvePrice(responses[0].data);
       if (price == null || price <= 0) throw new Error("現在値を解釈できません。");
@@ -6518,14 +7751,48 @@ textarea.journalNotes{
       var ema200All = emaSeries(bars, 200);
       var rsi13All = wilderRsiSeries(bars, 13);
 
+      // v3.6 technical observation layer. These are calculated regardless of display toggles.
+      var atrSeriesAll = wilderAtrSeries(bars, period);
+      var bb20 = bollingerSeries(bars, 20, 2);
+      var macd12269 = macdSeries(bars, 12, 26, 9);
+      var psar = parabolicSarSeries(bars, 0.02, 0.20);
+      var adx14 = adxSeries(bars, 14);
+      var heikinAll = heikinAshiSeries(bars);
+
+      // v3.6 market-structure / feature logging.
+      var donchian20 = donchianSeries(bars, 20);
+      var er10All = efficiencyRatioSeries(bars, 10);
+      var z20 = zScoreSeries(bars, 20);
+      var rocFeatures = rocFeatureSet(bars, atrValue);
+      var candleFeatures = candleStructureLatest(bars, atrValue);
+      var emaFeatures = emaSlopeCompressionLatest(ema20All, ema50All, ema200All, atrValue, 5);
+      var dailyContextResult = responses[2] || {};
+      var dailyContext = dailyContextResult.context || null;
+
       if (ema20All.length !== bars.length ||
           ema50All.length !== bars.length ||
           ema200All.length !== bars.length ||
-          rsi13All.length !== bars.length) {
-        throw new Error("EMA / RSIを計算できません。");
+          rsi13All.length !== bars.length ||
+          atrSeriesAll.length !== bars.length ||
+          bb20.mid.length !== bars.length ||
+          macd12269.macd.length !== bars.length ||
+          macd12269.signal.length !== bars.length ||
+          psar.sar.length !== bars.length ||
+          adx14.adx.length !== bars.length ||
+          adx14.plusDI.length !== bars.length ||
+          adx14.minusDI.length !== bars.length ||
+          heikinAll.length !== bars.length ||
+          donchian20.upper.length !== bars.length ||
+          donchian20.lower.length !== bars.length ||
+          er10All.length !== bars.length ||
+          z20.z.length !== bars.length ||
+          z20.mean.length !== bars.length ||
+          z20.stdev.length !== bars.length) {
+        throw new Error("テクニカル指標を計算できません。");
       }
 
       var lastBar = bars[bars.length - 1];
+      var heikinLatest = heikinAshiLatestStats(heikinAll, atrValue);
       var S = SYMBOLS[localSymbol];
       var digits = S.customSpec
         ? (n("customDigits") == null ? S.digits : Math.max(0, Math.round(n("customDigits"))))
@@ -6566,18 +7833,90 @@ textarea.journalNotes{
           ema20:ema20All.slice(Math.max(0, ema20All.length - 100)),
           ema50:ema50All.slice(Math.max(0, ema50All.length - 100)),
           ema200:ema200All.slice(Math.max(0, ema200All.length - 100)),
-          rsi13:rsi13All.slice(Math.max(0, rsi13All.length - 100))
+          rsi13:rsi13All.slice(Math.max(0, rsi13All.length - 100)),
+          atr:atrSeriesAll.slice(Math.max(0, atrSeriesAll.length - 100)),
+          bbMiddle:bb20.mid.slice(Math.max(0, bb20.mid.length - 100)),
+          bbUpper:bb20.upper.slice(Math.max(0, bb20.upper.length - 100)),
+          bbLower:bb20.lower.slice(Math.max(0, bb20.lower.length - 100)),
+          bbWidthPct:bb20.widthPct.slice(Math.max(0, bb20.widthPct.length - 100)),
+          bbPercentB:bb20.percentB.slice(Math.max(0, bb20.percentB.length - 100)),
+          macd:macd12269.macd.slice(Math.max(0, macd12269.macd.length - 100)),
+          macdSignal:macd12269.signal.slice(Math.max(0, macd12269.signal.length - 100)),
+          macdDiff:macd12269.diff.slice(Math.max(0, macd12269.diff.length - 100)),
+          psar:psar.sar.slice(Math.max(0, psar.sar.length - 100)),
+          psarSide:psar.side.slice(Math.max(0, psar.side.length - 100)),
+          adx14:adx14.adx.slice(Math.max(0, adx14.adx.length - 100)),
+          plusDI14:adx14.plusDI.slice(Math.max(0, adx14.plusDI.length - 100)),
+          minusDI14:adx14.minusDI.slice(Math.max(0, adx14.minusDI.length - 100)),
+          donchianUpper20:donchian20.upper.slice(Math.max(0, donchian20.upper.length - 100)),
+          donchianLower20:donchian20.lower.slice(Math.max(0, donchian20.lower.length - 100)),
+          donchianMiddle20:donchian20.middle.slice(Math.max(0, donchian20.middle.length - 100)),
+          er10:er10All.slice(Math.max(0, er10All.length - 100)),
+          zScore20:z20.z.slice(Math.max(0, z20.z.length - 100)),
+          zMean20:z20.mean.slice(Math.max(0, z20.mean.length - 100)),
+          zStd20:z20.stdev.slice(Math.max(0, z20.stdev.length - 100))
         },
+        heikin100:heikinAll.slice(Math.max(0, heikinAll.length - 100)).map(function (b) {
+          return [b.datetime, b.open, b.high, b.low, b.close];
+        }),
         indicatorLatest:{
           ema20:lastFiniteSeriesValue(ema20All),
           ema50:lastFiniteSeriesValue(ema50All),
           ema200:lastFiniteSeriesValue(ema200All),
-          rsi13:lastFiniteSeriesValue(rsi13All)
+          rsi13:lastFiniteSeriesValue(rsi13All),
+          atr:lastFiniteSeriesValue(atrSeriesAll),
+          atrPct:lastBar && Number(lastBar.close) !== 0 ? (atrValue / Math.abs(Number(lastBar.close))) * 100 : null,
+          bbMiddle:lastFiniteSeriesValue(bb20.mid),
+          bbUpper:lastFiniteSeriesValue(bb20.upper),
+          bbLower:lastFiniteSeriesValue(bb20.lower),
+          bbWidthPct:lastFiniteSeriesValue(bb20.widthPct),
+          bbPercentB:lastFiniteSeriesValue(bb20.percentB),
+          macd:lastFiniteSeriesValue(macd12269.macd),
+          macdSignal:lastFiniteSeriesValue(macd12269.signal),
+          macdDiff:lastFiniteSeriesValue(macd12269.diff),
+          psar:lastFiniteSeriesValue(psar.sar),
+          psarSide:lastFiniteSeriesValue(psar.side),
+          adx14:lastFiniteSeriesValue(adx14.adx),
+          plusDI14:lastFiniteSeriesValue(adx14.plusDI),
+          minusDI14:lastFiniteSeriesValue(adx14.minusDI),
+          heikin:heikinLatest,
+          donchianUpper20:lastFiniteSeriesValue(donchian20.upper),
+          donchianLower20:lastFiniteSeriesValue(donchian20.lower),
+          donchianMiddle20:lastFiniteSeriesValue(donchian20.middle),
+          donchianUpperPrev20:donchian20.upper.length>1 && donchian20.upper[donchian20.upper.length-2]!=null ? Number(donchian20.upper[donchian20.upper.length-2]) : null,
+          donchianLowerPrev20:donchian20.lower.length>1 && donchian20.lower[donchian20.lower.length-2]!=null ? Number(donchian20.lower[donchian20.lower.length-2]) : null,
+          er10:lastFiniteSeriesValue(er10All),
+          zScore20:lastFiniteSeriesValue(z20.z),
+          zMean20:lastFiniteSeriesValue(z20.mean),
+          zStd20:lastFiniteSeriesValue(z20.stdev),
+          roc:rocFeatures,
+          candle:candleFeatures,
+          emaFeature:emaFeatures
         },
-        indicatorPeriods:{ ema20:20, ema50:50, ema200:200, rsi13:13 },
+        indicatorPeriods:{
+          ema20:20, ema50:50, ema200:200, rsi13:13,
+          atr:period,
+          bbPeriod:20, bbSigma:2,
+          macdFast:12, macdSlow:26, macdSignal:9,
+          psarStep:0.02, psarMax:0.20,
+          adx:14,
+          heikinAshiVersion:1,
+          donchian:20,
+          efficiencyRatio:10,
+          zScore:20,
+          emaSlopeLookback:5,
+          returnPeriods:[1,3,5,20]
+        },
+        indicatorCalcVersion:3,
+        featureCalcVersion:1,
+        dailyContext:dailyContext,
+        dailyContextCached:!!dailyContextResult.cached,
+        dailyContextStale:!!dailyContextResult.stale,
+        dailyContextError:dailyContextResult.error || null,
+        sessionUtcProfile:settings.sessionUtc || {asia:0,london:8,newYork:13,late:21},
         indicatorSourceBars:bars.length,
-        creditsUsed:responses[0].creditsUsed || responses[1].creditsUsed || null,
-        creditsLeft:responses[1].creditsLeft || responses[0].creditsLeft || null
+        creditsUsed:responses[0].creditsUsed || responses[1].creditsUsed || dailyContextResult.creditsUsed || null,
+        creditsLeft:responses[1].creditsLeft || responses[0].creditsLeft || dailyContextResult.creditsLeft || null
       };
       saveMarketDataSettings(settings);
 
@@ -6792,14 +8131,27 @@ textarea.journalNotes{
     return out;
   }
 
-  function miniChartRange(bars, currentPrice, swingHigh, swingLow) {
+  function miniChartRange(bars, currentPrice, swingHigh, swingLow, extraSeries) {
     var min = Infinity, max = -Infinity;
-    var i, b;
+    var i, j, b, v;
 
     for (i = 0; i < bars.length; i++) {
       b = bars[i];
       if (b.low < min) min = b.low;
       if (b.high > max) max = b.high;
+    }
+
+    if (extraSeries && typeof extraSeries.length === "number") {
+      for (i = 0; i < extraSeries.length; i++) {
+        if (!extraSeries[i] || typeof extraSeries[i].length !== "number") continue;
+        for (j = 0; j < extraSeries[i].length; j++) {
+          v = extraSeries[i][j];
+          if (v == null || !isFinite(Number(v))) continue;
+          v = Number(v);
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+      }
     }
 
     if (currentPrice != null && isFinite(Number(currentPrice))) {
@@ -6856,13 +8208,67 @@ textarea.journalNotes{
     return d;
   }
 
-  function miniChartSvg(R, bars, meta) {
+  function miniTechDisplay() {
+    var s = getMarketDataSettings();
+    return s.chartDisplay || {bb:true,sar:true,atr:true,macd:true,adx:true,heikin:true,donchian:true,prevDay:true,prevWeek:false,er:true};
+  }
+
+  function miniHeikinBarsFromMeta(meta) {
+    var out = [], i, r;
+    if (!meta || !meta.heikin100 || typeof meta.heikin100.length !== "number") return out;
+    for (i = 0; i < meta.heikin100.length; i++) {
+      r = meta.heikin100[i];
+      if (!r || r.length < 5) continue;
+      if (!isFinite(Number(r[1])) || !isFinite(Number(r[2])) ||
+          !isFinite(Number(r[3])) || !isFinite(Number(r[4]))) continue;
+      out.push({
+        datetime:String(r[0]),
+        open:Number(r[1]),
+        high:Number(r[2]),
+        low:Number(r[3]),
+        close:Number(r[4])
+      });
+    }
+    return out;
+  }
+
+  function miniChartSvg(R, bars, meta, display) {
     if (!bars || bars.length === 0) return "";
+
+    display = display || miniTechDisplay();
 
     var currentPrice = n("price");
     var swingHigh = n("swingHigh");
     var swingLow = n("swingLow");
-    var range = miniChartRange(bars, currentPrice, swingHigh, swingLow);
+
+    var count = bars.length;
+    var ema20 = miniChartIndicatorSeries(meta, "ema20", count);
+    var ema50 = miniChartIndicatorSeries(meta, "ema50", count);
+    var ema200 = miniChartIndicatorSeries(meta, "ema200", count);
+    var rsi13 = miniChartIndicatorSeries(meta, "rsi13", count);
+    var bbMid = miniChartIndicatorSeries(meta, "bbMiddle", count);
+    var bbUpper = miniChartIndicatorSeries(meta, "bbUpper", count);
+    var bbLower = miniChartIndicatorSeries(meta, "bbLower", count);
+    var psar = miniChartIndicatorSeries(meta, "psar", count);
+    var donUpper = miniChartIndicatorSeries(meta, "donchianUpper20", count);
+    var donLower = miniChartIndicatorSeries(meta, "donchianLower20", count);
+    var donMid = miniChartIndicatorSeries(meta, "donchianMiddle20", count);
+    var dc = meta && meta.dailyContext ? meta.dailyContext : null;
+
+    var extras = [];
+    if (display.bb) extras.push(bbUpper, bbLower);
+    if (display.sar) extras.push(psar);
+    if (display.donchian) extras.push(donUpper, donLower);
+    if (display.prevDay && dc) {
+      if (dc.prevDayHigh!=null) extras.push([Number(dc.prevDayHigh)]);
+      if (dc.prevDayLow!=null) extras.push([Number(dc.prevDayLow)]);
+    }
+    if (display.prevWeek && dc) {
+      if (dc.prevWeekHigh!=null) extras.push([Number(dc.prevWeekHigh)]);
+      if (dc.prevWeekLow!=null) extras.push([Number(dc.prevWeekLow)]);
+    }
+
+    var range = miniChartRange(bars, currentPrice, swingHigh, swingLow, extras);
     if (!range) return "";
 
     var W = 390, H = 338;
@@ -6872,14 +8278,8 @@ textarea.journalNotes{
     var plotW = W - left - right;
     var priceH = priceBottom - priceTop;
     var rsiH = rsiBottom - rsiTop;
-    var count = bars.length;
     var slot = plotW / count;
     var bodyW = Math.max(1.1, Math.min(3.4, slot * 0.62));
-
-    var ema20 = miniChartIndicatorSeries(meta, "ema20", count);
-    var ema50 = miniChartIndicatorSeries(meta, "ema50", count);
-    var ema200 = miniChartIndicatorSeries(meta, "ema200", count);
-    var rsi13 = miniChartIndicatorSeries(meta, "rsi13", count);
 
     function yPrice(v) {
       return priceTop + ((range.max - Number(v)) / range.span) * priceH;
@@ -6895,10 +8295,9 @@ textarea.journalNotes{
     }
 
     var svg = "";
-    svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Mini candlestick chart with EMA20 EMA50 EMA200 and RSI13">';
+    svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Mini candlestick chart with EMA RSI Bollinger Bands and Parabolic SAR">';
     svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#ffffff"/>';
 
-    // Price grid and scale.
     var t, tv, ty;
     for (t = 0; t <= 4; t++) {
       tv = range.max - (range.span * t / 4);
@@ -6907,7 +8306,6 @@ textarea.journalNotes{
       svg += '<text x="' + (W-4) + '" y="' + (ty+3).toFixed(1) + '" text-anchor="end" fill="#89939c" font-size="8.5" font-family="Helvetica,Arial,sans-serif">' + esc(R.fmt(tv)) + '</text>';
     }
 
-    // Candles.
     var i, b, x, yo, yc, yh, yl, up, stroke, fill, by, bh;
     for (i = 0; i < count; i++) {
       b = bars[i];
@@ -6926,16 +8324,54 @@ textarea.journalNotes{
       svg += '<rect x="' + (x-bodyW/2).toFixed(2) + '" y="' + by.toFixed(1) + '" width="' + bodyW.toFixed(2) + '" height="' + bh.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="0.65"/>';
     }
 
-    // EMA overlays.
     var p20 = miniSvgPath(ema20, xFor, yPrice);
     var p50 = miniSvgPath(ema50, xFor, yPrice);
     var p200 = miniSvgPath(ema200, xFor, yPrice);
-
     if (p20) svg += '<path d="' + p20 + '" fill="none" stroke="#2e6da4" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>';
     if (p50) svg += '<path d="' + p50 + '" fill="none" stroke="#a27613" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>';
     if (p200) svg += '<path d="' + p200 + '" fill="none" stroke="#6b5d91" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round"/>';
 
-    // Swing high / low.
+    if (display.bb) {
+      var pBbMid = miniSvgPath(bbMid, xFor, yPrice);
+      var pBbUpper = miniSvgPath(bbUpper, xFor, yPrice);
+      var pBbLower = miniSvgPath(bbLower, xFor, yPrice);
+      if (pBbUpper) svg += '<path d="' + pBbUpper + '" fill="none" stroke="#8f7d58" stroke-width="1.0" stroke-dasharray="3 2"/>';
+      if (pBbLower) svg += '<path d="' + pBbLower + '" fill="none" stroke="#8f7d58" stroke-width="1.0" stroke-dasharray="3 2"/>';
+      if (pBbMid) svg += '<path d="' + pBbMid + '" fill="none" stroke="#b1a58d" stroke-width="0.8"/>';
+    }
+
+    if (display.donchian) {
+      var pDonU = miniSvgPath(donUpper, xFor, yPrice);
+      var pDonL = miniSvgPath(donLower, xFor, yPrice);
+      var pDonM = miniSvgPath(donMid, xFor, yPrice);
+      if (pDonU) svg += '<path d="' + pDonU + '" fill="none" stroke="#567d7a" stroke-width="1.05"/>';
+      if (pDonL) svg += '<path d="' + pDonL + '" fill="none" stroke="#567d7a" stroke-width="1.05"/>';
+      if (pDonM) svg += '<path d="' + pDonM + '" fill="none" stroke="#8aa5a3" stroke-width="0.75" stroke-dasharray="2 2"/>';
+    }
+
+    function drawContextLevel(v,label,color,dash,labelDy) {
+      if (v==null || !isFinite(Number(v))) return;
+      var yy=yPrice(Number(v));
+      svg += '<line x1="' + left + '" y1="' + yy.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + yy.toFixed(1) + '" stroke="' + color + '" stroke-width="0.9" stroke-dasharray="' + dash + '"/>';
+      svg += '<text x="' + (W-right) + '" y="' + (yy+(labelDy||-3)).toFixed(1) + '" text-anchor="end" fill="' + color + '" font-size="7.5" font-weight="bold">' + label + '</text>';
+    }
+
+    if (display.prevDay && dc) {
+      drawContextLevel(dc.prevDayHigh,"PDH","#4e7296","5 3",-3);
+      drawContextLevel(dc.prevDayLow,"PDL","#4e7296","5 3",9);
+    }
+    if (display.prevWeek && dc) {
+      drawContextLevel(dc.prevWeekHigh,"PWH","#8d6f45","7 3",-3);
+      drawContextLevel(dc.prevWeekLow,"PWL","#8d6f45","7 3",9);
+    }
+
+    if (display.sar) {
+      for (i = 0; i < psar.length; i++) {
+        if (psar[i] == null || !isFinite(Number(psar[i]))) continue;
+        svg += '<circle cx="' + xFor(i).toFixed(2) + '" cy="' + yPrice(psar[i]).toFixed(1) + '" r="1.4" fill="#9b4f2d"/>';
+      }
+    }
+
     if (swingHigh != null && isFinite(Number(swingHigh))) {
       var ySh = yPrice(swingHigh);
       svg += '<line x1="' + left + '" y1="' + ySh.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + ySh.toFixed(1) + '" stroke="#6e7780" stroke-width="0.9" stroke-dasharray="4 3"/>';
@@ -6947,7 +8383,6 @@ textarea.journalNotes{
       svg += '<text x="' + (W-right) + '" y="' + (ySl+10).toFixed(1) + '" text-anchor="end" fill="#6e7780" font-size="8" font-family="Helvetica,Arial,sans-serif">L100</text>';
     }
 
-    // Current price.
     if (currentPrice != null && isFinite(Number(currentPrice))) {
       var yPx = yPrice(currentPrice);
       svg += '<line x1="' + left + '" y1="' + yPx.toFixed(1) + '" x2="' + (W-right+4) + '" y2="' + yPx.toFixed(1) + '" stroke="#325f87" stroke-width="1.05"/>';
@@ -6955,7 +8390,6 @@ textarea.journalNotes{
       svg += '<text x="' + (W-5) + '" y="' + (yPx+3).toFixed(1) + '" text-anchor="end" fill="#fff" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">' + esc(R.fmt(currentPrice)) + '</text>';
     }
 
-    // Separator and RSI panel.
     svg += '<line x1="' + left + '" y1="233" x2="' + (W-right+4) + '" y2="233" stroke="#cfd5da" stroke-width="1"/>';
     svg += '<text x="' + left + '" y="242" fill="#596673" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">RSI13</text>';
 
@@ -6977,7 +8411,6 @@ textarea.journalNotes{
       svg += '<text x="' + (W-right) + '" y="' + Math.max(rsiTop+8, latestRsiY-4).toFixed(1) + '" text-anchor="end" fill="#455a70" font-size="8.5" font-weight="bold" font-family="Helvetica,Arial,sans-serif">' + Number(latestRsi).toFixed(1) + '</text>';
     }
 
-    // Bottom time labels.
     var first = bars[0].datetime || "";
     var last = bars[bars.length-1].datetime || "";
     svg += '<text x="' + left + '" y="332" fill="#89939c" font-size="8" font-family="Helvetica,Arial,sans-serif">' + esc(first) + '</text>';
@@ -6985,6 +8418,199 @@ textarea.journalNotes{
 
     svg += '</svg>';
     return svg;
+  }
+
+  function miniMacdSvg(meta, count) {
+    if (!meta || !count || count < 1) return "";
+    var macd = miniChartIndicatorSeries(meta, "macd", count);
+    var signal = miniChartIndicatorSeries(meta, "macdSignal", count);
+    var W = 390, H = 142, left = 8, right = 56, top = 10, bottom = 122;
+    var plotW = W-left-right, plotH = bottom-top;
+    var min = 0, max = 0, i, v;
+
+    for (i = 0; i < count; i++) {
+      if (macd[i] != null && isFinite(Number(macd[i]))) { v=Number(macd[i]); if(v<min)min=v;if(v>max)max=v; }
+      if (signal[i] != null && isFinite(Number(signal[i]))) { v=Number(signal[i]); if(v<min)min=v;if(v>max)max=v; }
+    }
+    if (min === max) { min -= 1; max += 1; }
+    var pad = (max-min)*0.08;
+    min -= pad; max += pad;
+    var span=max-min;
+    function xFor(k){return left + plotW*(k+0.5)/count;}
+    function yFor(x){return top + ((max-Number(x))/span)*plotH;}
+
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="MACD line and signal line">';
+    svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#fff"/>';
+    var y0=yFor(0);
+    svg+='<line x1="'+left+'" y1="'+y0.toFixed(1)+'" x2="'+(W-right+4)+'" y2="'+y0.toFixed(1)+'" stroke="#cfd5da" stroke-width="1"/>';
+    var pm=miniSvgPath(macd,xFor,yFor), ps=miniSvgPath(signal,xFor,yFor);
+    if(pm)svg+='<path d="'+pm+'" fill="none" stroke="#2e6da4" stroke-width="1.45"/>';
+    if(ps)svg+='<path d="'+ps+'" fill="none" stroke="#a27613" stroke-width="1.35"/>';
+    svg+='<text x="'+(W-4)+'" y="'+(top+7)+'" text-anchor="end" fill="#89939c" font-size="8">'+esc(max.toFixed(3))+'</text>';
+    svg+='<text x="'+(W-4)+'" y="'+(bottom)+'" text-anchor="end" fill="#89939c" font-size="8">'+esc(min.toFixed(3))+'</text>';
+    svg+='</svg>';
+    return svg;
+  }
+
+  function miniAdxSvg(meta, count) {
+    if (!meta || !count || count < 1) return "";
+    var adx = miniChartIndicatorSeries(meta, "adx14", count);
+    var plus = miniChartIndicatorSeries(meta, "plusDI14", count);
+    var minus = miniChartIndicatorSeries(meta, "minusDI14", count);
+    var W=390,H=142,left=8,right=56,top=10,bottom=122,plotW=W-left-right,plotH=bottom-top;
+    function xFor(k){return left+plotW*(k+0.5)/count;}
+    function yFor(x){x=Math.max(0,Math.min(100,Number(x)));return top+((100-x)/100)*plotH;}
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="ADX plus DI minus DI">';
+    svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#fff"/>';
+    var levels=[100,50,0],i;
+    for(i=0;i<levels.length;i++){
+      var yy=yFor(levels[i]);
+      svg+='<line x1="'+left+'" y1="'+yy.toFixed(1)+'" x2="'+(W-right+4)+'" y2="'+yy.toFixed(1)+'" stroke="#e1e5e8" stroke-width="1"/>';
+      svg+='<text x="'+(W-4)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end" fill="#89939c" font-size="8">'+levels[i]+'</text>';
+    }
+    var pa=miniSvgPath(adx,xFor,yFor),pp=miniSvgPath(plus,xFor,yFor),pm=miniSvgPath(minus,xFor,yFor);
+    if(pa)svg+='<path d="'+pa+'" fill="none" stroke="#455a70" stroke-width="1.55"/>';
+    if(pp)svg+='<path d="'+pp+'" fill="none" stroke="#2f7b49" stroke-width="1.2"/>';
+    if(pm)svg+='<path d="'+pm+'" fill="none" stroke="#a64039" stroke-width="1.2"/>';
+    svg+='</svg>';
+    return svg;
+  }
+
+  function miniErSvg(meta, count) {
+    if (!meta || !count || count < 1) return "";
+    var er=miniChartIndicatorSeries(meta,"er10",count);
+    var W=390,H=142,left=8,right=56,top=10,bottom=122,plotW=W-left-right,plotH=bottom-top;
+    function xFor(k){return left+plotW*(k+0.5)/count;}
+    function yFor(x){x=Math.max(0,Math.min(1,Number(x)));return top+((1-x))*plotH;}
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Kaufman Efficiency Ratio 10">';
+    svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#fff"/>';
+    var levels=[1,.5,0],i;
+    for(i=0;i<levels.length;i++){
+      var yy=yFor(levels[i]);
+      svg+='<line x1="'+left+'" y1="'+yy.toFixed(1)+'" x2="'+(W-right+4)+'" y2="'+yy.toFixed(1)+'" stroke="#e1e5e8" stroke-width="1"/>';
+      svg+='<text x="'+(W-4)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end" fill="#89939c" font-size="8">'+levels[i].toFixed(1)+'</text>';
+    }
+    var path=miniSvgPath(er,xFor,yFor);
+    if(path)svg+='<path d="'+path+'" fill="none" stroke="#6a4d89" stroke-width="1.5"/>';
+    svg+='</svg>';
+    return svg;
+  }
+
+  function miniHeikinSvg(R, haBars) {
+    if (!haBars || !haBars.length) return "";
+    var W=390,H=172,left=8,right=56,top=10,bottom=150;
+    var range=miniChartRange(haBars,null,null,null,null);
+    if(!range)return "";
+    var count=haBars.length,plotW=W-left-right,plotH=bottom-top,slot=plotW/count;
+    var bodyW=Math.max(1.1,Math.min(3.4,slot*0.62));
+    function xFor(i){return left+slot*i+slot*0.5;}
+    function yFor(v){return top+((range.max-Number(v))/range.span)*plotH;}
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Heikin Ashi chart">';
+    svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#fff"/>';
+    var t;
+    for(t=0;t<=3;t++){
+      var tv=range.max-range.span*t/3,ty=top+plotH*t/3;
+      svg+='<line x1="'+left+'" y1="'+ty.toFixed(1)+'" x2="'+(W-right+4)+'" y2="'+ty.toFixed(1)+'" stroke="#edf0f2" stroke-width="1"/>';
+      svg+='<text x="'+(W-4)+'" y="'+(ty+3).toFixed(1)+'" text-anchor="end" fill="#89939c" font-size="8">'+esc(R.fmt(tv))+'</text>';
+    }
+    var i,b,x,yo,yc,yh,yl,up,stroke,fill,by,bh;
+    for(i=0;i<count;i++){
+      b=haBars[i];x=xFor(i);yo=yFor(b.open);yc=yFor(b.close);yh=yFor(b.high);yl=yFor(b.low);
+      up=b.close>=b.open;stroke=up?"#2f7b49":"#a64039";fill=up?"#dfeee4":"#f2dfdd";
+      by=Math.min(yo,yc);bh=Math.max(1.2,Math.abs(yo-yc));
+      svg+='<line x1="'+x.toFixed(2)+'" y1="'+yh.toFixed(1)+'" x2="'+x.toFixed(2)+'" y2="'+yl.toFixed(1)+'" stroke="'+stroke+'" stroke-width="0.75"/>';
+      svg+='<rect x="'+(x-bodyW/2).toFixed(2)+'" y="'+by.toFixed(1)+'" width="'+bodyW.toFixed(2)+'" height="'+bh.toFixed(1)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="0.65"/>';
+    }
+    svg+='</svg>';
+    return svg;
+  }
+
+  function setMiniPanelVisible(id, visible) {
+    var node=el(id);
+    if(!node)return;
+    node.className = visible ? "miniTechPanel" : "miniTechPanel miniTechHidden";
+  }
+
+  function renderMiniTechPanels(R, bars, meta, display) {
+    display=display||miniTechDisplay();
+    var latest=meta&&meta.indicatorLatest?meta.indicatorLatest:{};
+    var params=meta&&meta.indicatorPeriods?meta.indicatorPeriods:{};
+
+    setMiniPanelVisible("miniAtrPanel",!!display.atr);
+    setMiniPanelVisible("miniMacdPanel",!!display.macd);
+    setMiniPanelVisible("miniAdxPanel",!!display.adx);
+    setMiniPanelVisible("miniErPanel",!!display.er);
+    setMiniPanelVisible("miniHeikinPanel",!!display.heikin);
+
+    if(!meta || !bars || !bars.length){
+      if(display.atr && el("miniAtrMetrics")) el("miniAtrMetrics").innerHTML='<div class="miniChartPlaceholder">Market Data取得後に表示します。</div>';
+      if(display.macd && el("miniMacdCanvas")) el("miniMacdCanvas").innerHTML='<div class="miniChartPlaceholder">Market Data取得後に表示します。</div>';
+      if(display.adx && el("miniAdxCanvas")) el("miniAdxCanvas").innerHTML='<div class="miniChartPlaceholder">Market Data取得後に表示します。</div>';
+      if(display.er && el("miniErCanvas")) el("miniErCanvas").innerHTML='<div class="miniChartPlaceholder">Market Data取得後に表示します。</div>';
+      if(display.heikin && el("miniHeikinCanvas")) el("miniHeikinCanvas").innerHTML='<div class="miniChartPlaceholder">Market Data取得後に表示します。</div>';
+      return;
+    }
+
+    if(display.atr && el("miniAtrMetrics")){
+      var atr=latest.atr!=null?Number(latest.atr):(meta&&meta.atr!=null?Number(meta.atr):null);
+      var px=n("price");
+      if(px==null && meta&&meta.price!=null)px=Number(meta.price);
+      var atrPct=(atr!=null&&isFinite(atr)&&px!=null&&isFinite(Number(px))&&Number(px)!==0)
+        ? atr/Math.abs(Number(px))*100:null;
+      el("miniAtrMetrics").innerHTML=
+        '<div class="miniAtrMetric"><div class="k">ATR'+esc(String(params.atr||""))+'</div><div class="v">'+
+        (atr==null||!isFinite(atr)?"—":esc(R.fmt(atr)))+'</div></div>'+
+        '<div class="miniAtrMetric"><div class="k">ATR / Price</div><div class="v">'+
+        (atrPct==null?"—":esc(atrPct.toFixed(3))+"%")+'</div></div>';
+      if(el("miniAtrMeta"))el("miniAtrMeta").innerHTML="価格比もログ保存";
+    }
+
+    if(display.macd && el("miniMacdCanvas")){
+      var hasMacd=meta.indicators100 && meta.indicators100.macd && meta.indicators100.macdSignal;
+      el("miniMacdCanvas").innerHTML=hasMacd
+        ? miniMacdSvg(meta,bars.length)
+        : '<div class="miniChartPlaceholder">MACDはMarket Data再取得後に表示します。</div>';
+      if(el("miniMacdMeta")){
+        var m=latest.macd,s=latest.macdSignal;
+        el("miniMacdMeta").innerHTML=(m==null||s==null)?"12 / 26 / 9":
+          "M "+esc(Number(m).toFixed(4))+" / S "+esc(Number(s).toFixed(4));
+      }
+    }
+
+    if(display.adx && el("miniAdxCanvas")){
+      var hasAdx=meta.indicators100 && meta.indicators100.adx14 && meta.indicators100.plusDI14 && meta.indicators100.minusDI14;
+      el("miniAdxCanvas").innerHTML=hasAdx
+        ? miniAdxSvg(meta,bars.length)
+        : '<div class="miniChartPlaceholder">ADX / DIはMarket Data再取得後に表示します。</div>';
+      if(el("miniAdxMeta")){
+        var a=latest.adx14,p=latest.plusDI14,mn=latest.minusDI14;
+        el("miniAdxMeta").innerHTML=(a==null?"14":"ADX "+esc(Number(a).toFixed(1)))+
+          (p==null||mn==null?"":" / +DI "+esc(Number(p).toFixed(1))+" / -DI "+esc(Number(mn).toFixed(1)));
+      }
+    }
+
+    if(display.er && el("miniErCanvas")){
+      var hasEr=meta.indicators100 && meta.indicators100.er10;
+      el("miniErCanvas").innerHTML=hasEr
+        ? miniErSvg(meta,bars.length)
+        : '<div class="miniChartPlaceholder">ER10はMarket Data再取得後に表示します。</div>';
+      if(el("miniErMeta")){
+        el("miniErMeta").innerHTML=latest.er10==null?"ER10":"ER10 "+esc(Number(latest.er10).toFixed(3));
+      }
+    }
+
+    if(display.heikin && el("miniHeikinCanvas")){
+      var ha=miniHeikinBarsFromMeta(meta);
+      el("miniHeikinCanvas").innerHTML=ha.length?miniHeikinSvg(R,ha):
+        '<div class="miniChartPlaceholder">平均足はMarket Data再取得後に表示します。</div>';
+      if(el("miniHeikinMeta")){
+        var hs=latest.heikin;
+        if(hs&&hs.direction!=null){
+          var dir=Number(hs.direction)>0?"陽":(Number(hs.direction)<0?"陰":"同値");
+          el("miniHeikinMeta").innerHTML=esc(dir)+" / streak "+esc(String(hs.streak||0));
+        }else el("miniHeikinMeta").innerHTML="別枠表示";
+      }
+    }
   }
 
   function renderStrategyMiniChart() {
@@ -6995,17 +8621,30 @@ textarea.journalNotes{
     if (!canvas || !header || !metaNode || !footer) return;
 
     var settings = getMarketDataSettings();
+    var display = settings.chartDisplay || miniTechDisplay();
     var meta = settings.lastMeta;
     var localSymbol = value("symbol");
     var tf = value("tf");
     var S = SYMBOLS[localSymbol];
+
+    if(el("showBB"))el("showBB").checked=!!display.bb;
+    if(el("showSAR"))el("showSAR").checked=!!display.sar;
+    if(el("showATRPanel"))el("showATRPanel").checked=!!display.atr;
+    if(el("showMACDPanel"))el("showMACDPanel").checked=!!display.macd;
+    if(el("showADXPanel"))el("showADXPanel").checked=!!display.adx;
+    if(el("showHeikinPanel"))el("showHeikinPanel").checked=!!display.heikin;
+    if(el("showDonchian"))el("showDonchian").checked=!!display.donchian;
+    if(el("showPrevDay"))el("showPrevDay").checked=!!display.prevDay;
+    if(el("showPrevWeek"))el("showPrevWeek").checked=!!display.prevWeek;
+    if(el("showERPanel"))el("showERPanel").checked=!!display.er;
 
     header.childNodes[0].nodeValue = "MINI CHART ";
     metaNode.innerHTML = esc(S.label + " / " + tf);
 
     if (!meta || meta.localSymbol !== localSymbol || meta.timeframe !== tf) {
       canvas.innerHTML = '<div class="miniChartPlaceholder">この銘柄・時間足のOHLCデータはまだありません。<br>Market Data取得後に表示します。</div>';
-      footer.innerHTML = "直近100本 / API取得待ち";
+      footer.innerHTML = "直近100本 / API取得待ち / 追加テクニカルも未計算";
+      renderMiniTechPanels({fmt:function(v){return String(v);}},[],null,display);
       return;
     }
 
@@ -7013,19 +8652,20 @@ textarea.journalNotes{
     if (bars.length < 2) {
       canvas.innerHTML = '<div class="miniChartPlaceholder">保存済みOHLCがありません。<br>Market Dataを一度取得してください。</div>';
       footer.innerHTML = "直近100本 / 再取得が必要";
+      renderMiniTechPanels({fmt:function(v){return String(v);}},[],meta,display);
       return;
     }
 
     var R = lastResult;
     if (!R || R.state === "INVALID") {
-      // Build a minimal formatter using the selected symbol digits.
       var digits = S.customSpec
         ? (n("customDigits") == null ? S.digits : Math.max(0, Math.round(n("customDigits"))))
         : S.digits;
       R = { fmt:function(v){ return Number(v).toFixed(digits); } };
     }
 
-    canvas.innerHTML = miniChartSvg(R, bars, meta);
+    canvas.innerHTML = miniChartSvg(R, bars, meta, display);
+    renderMiniTechPanels(R,bars,meta,display);
 
     var footerText = "OHLC " + bars.length + "本";
     if (meta.barTime) footerText += " / latest " + meta.barTime;
@@ -7033,7 +8673,6 @@ textarea.journalNotes{
 
     var latest = meta.indicatorLatest || {};
     var indicatorHtml = "";
-
     if (latest.ema20 != null && latest.ema50 != null &&
         latest.ema200 != null && latest.rsi13 != null) {
       indicatorHtml =
@@ -7041,13 +8680,31 @@ textarea.journalNotes{
         '<span><i class="miniIndicatorKey ema20"></i>EMA20 ' + esc(R.fmt(latest.ema20)) + '</span>' +
         '<span><i class="miniIndicatorKey ema50"></i>EMA50 ' + esc(R.fmt(latest.ema50)) + '</span>' +
         '<span><i class="miniIndicatorKey ema200"></i>EMA200 ' + esc(R.fmt(latest.ema200)) + '</span>' +
-        '<span><i class="miniIndicatorKey rsi13"></i>RSI13 ' + esc(Number(latest.rsi13).toFixed(1)) + '</span>' +
-        '</div>';
+        '<span><i class="miniIndicatorKey rsi13"></i>RSI13 ' + esc(Number(latest.rsi13).toFixed(1)) + '</span>';
+
+      if(display.bb && latest.bbUpper!=null && latest.bbLower!=null){
+        indicatorHtml+='<span><i class="miniIndicatorKey bb"></i>BB2σ '+
+          esc(R.fmt(latest.bbLower))+'–'+esc(R.fmt(latest.bbUpper))+'</span>';
+      }
+      if(display.sar && latest.psar!=null){
+        indicatorHtml+='<span><i class="miniIndicatorKey sar"></i>SAR '+esc(R.fmt(latest.psar))+'</span>';
+      }
+      if(display.donchian && latest.donchianUpper20!=null && latest.donchianLower20!=null){
+        indicatorHtml+='<span><i class="miniIndicatorKey donchian"></i>DC20 '+
+          esc(R.fmt(latest.donchianLower20))+'–'+esc(R.fmt(latest.donchianUpper20))+'</span>';
+      }
+      indicatorHtml += '</div>';
+
+      indicatorHtml += '<div class="miniStructureLegend">';
+      if(latest.er10!=null) indicatorHtml += '<span>ER10 '+esc(Number(latest.er10).toFixed(3))+'</span>';
+      if(meta.dailyContext && meta.dailyContextStale) indicatorHtml += '<span>前日/前週: STALE CACHE</span>';
+      indicatorHtml += '</div>';
     } else {
       indicatorHtml =
-        '<div class="miniIndicatorLegend"><span>EMA / RSIはMarket Data再取得後に表示</span></div>';
+        '<div class="miniIndicatorLegend"><span>テクニカルはMarket Data再取得後に表示</span></div>';
     }
 
+    indicatorHtml += '<div class="miniTechLogNote">LOG: 既存テクニカル + Donchian / ER / 前日・前週H/L / Session / ROC1・3・5・20 / Z20 / Candle Structure / EMA slope / EMA Compression を表示設定に関係なく保存。</div>';
     footer.innerHTML = esc(footerText) + indicatorHtml;
   }
 
@@ -7529,7 +9186,7 @@ textarea.journalNotes{
         actualEntry:null, actualEntryAt:null,
         actualExit:null, actualExitAt:null,
         actualAmount:null,
-        numericEvidenceVersion:1,
+        numericEvidenceVersion:3,
         numericSnapshot:edgeNumericSnapshot(R),
         edgeEvidenceVersion:2,
         edgeStates:null,
@@ -7544,7 +9201,7 @@ textarea.journalNotes{
     if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
 
     return {
-      numericEvidenceVersion:1,
+      numericEvidenceVersion:3,
       numericSnapshot:edgeNumericSnapshot(R),
       edgeEvidenceVersion:2,
       edgeStates:edgeStateSnapshot(R.edge),
@@ -7627,6 +9284,45 @@ textarea.journalNotes{
     return null;
   }
 
+  function technicalLogCompact(snapshot) {
+    if (!snapshot) return "—";
+    var parts=[];
+    if(snapshot.sessionLabel)parts.push("SESSION "+String(snapshot.sessionLabel));
+    if(snapshot.atrPct!=null&&isFinite(Number(snapshot.atrPct)))parts.push("ATR% "+Number(snapshot.atrPct).toFixed(3));
+    if(snapshot.donchianPositionPct!=null&&isFinite(Number(snapshot.donchianPositionPct)))parts.push("DCpos "+Number(snapshot.donchianPositionPct).toFixed(0)+"%");
+    if(snapshot.efficiencyRatio10!=null&&isFinite(Number(snapshot.efficiencyRatio10)))parts.push("ER "+Number(snapshot.efficiencyRatio10).toFixed(3));
+    if(snapshot.zScore20!=null&&isFinite(Number(snapshot.zScore20)))parts.push("Z20 "+Number(snapshot.zScore20).toFixed(2));
+    if(snapshot.emaStackSpanAtr!=null&&isFinite(Number(snapshot.emaStackSpanAtr)))parts.push("EMA span "+Number(snapshot.emaStackSpanAtr).toFixed(2)+"ATR");
+    if(snapshot.candleDirection!=null){
+      parts.push("実足 "+(Number(snapshot.candleDirection)>0?"陽":(Number(snapshot.candleDirection)<0?"陰":"同値"))+
+        (snapshot.candleStreak!=null?"×"+String(snapshot.candleStreak):""));
+    }
+    if(snapshot.bbPercentB!=null&&isFinite(Number(snapshot.bbPercentB)))parts.push("BB%B "+Number(snapshot.bbPercentB).toFixed(1));
+    if(snapshot.macd!=null&&snapshot.macdSignal!=null)parts.push("MACD "+Number(snapshot.macd).toFixed(4)+"/"+Number(snapshot.macdSignal).toFixed(4));
+    if(snapshot.adx14!=null&&isFinite(Number(snapshot.adx14)))parts.push("ADX "+Number(snapshot.adx14).toFixed(1));
+    if(snapshot.psarSide!=null)parts.push("SAR "+(Number(snapshot.psarSide)>0?"下/上昇":"上/下降"));
+    if(snapshot.heikinDirection!=null)parts.push("平均足 "+(Number(snapshot.heikinDirection)>0?"陽":(Number(snapshot.heikinDirection)<0?"陰":"同値"))+"×"+String(snapshot.heikinStreak||0));
+    return parts.length?parts.join(" / "):"保存済み（追加指標なし・再取得前）";
+  }
+
+  function renderJournalTechnicalLogSummary(item) {
+    var node=el("journalTechnicalLogSummary");
+    if(!node)return;
+    if(!item){
+      node.innerHTML="<strong>テクニカルログ</strong><br>記録を選択してください。";
+      return;
+    }
+    var plan=item.numericSnapshot||null;
+    var entry=item.entryTechnicalSnapshot||null;
+    var entryStatus=item.entryTechnicalSnapshotStatus||"未取得";
+    node.innerHTML=
+      "<strong>テクニカルログ</strong><br>"+
+      "PLAN: "+(plan?"保存済み":"—")+"<br><span class=\"discoverySmall\">"+esc(technicalLogCompact(plan))+"</span><br>"+
+      "ENTRY: "+esc(entryStatus)+(entry?"":"")+
+      (entry?"<br><span class=\"discoverySmall\">"+esc(technicalLogCompact(entry))+"</span>":"")+
+      '<div class="excursionMeta">表示ON/OFFとは独立して保存。ENTRYはOPENへ進めた時の現在Market Dataを別保存します。</div>';
+  }
+
   function openJournalEditor(id) {
     var item = getJournalItem(id);
     if (!item) {
@@ -7647,6 +9343,7 @@ textarea.journalNotes{
     el("journalEditNotes").value = item.notes || "";
     el("journalEditorEmpty").style.display = "none";
     el("journalEditor").style.display = "block";
+    renderJournalTechnicalLogSummary(item);
     renderJournalExcursionSummary(item);
   }
 
@@ -7764,6 +9461,10 @@ textarea.journalNotes{
     if (status === "OPEN" || status === "WIN" || status === "LOSS" || status === "BE") {
       excursionEnsureBaseline(item);
       excursionRefreshDerived(item);
+    }
+
+    if (status === "OPEN" && previousStatus !== "OPEN") {
+      captureEntryTechnicalSnapshot(item, "JOURNAL_OPEN");
     }
 
     if (!saveJournal(data)) {
@@ -8705,6 +10406,31 @@ textarea.journalNotes{
     }
   }
 
+  function hookV35Controls() {
+    var ids=["showBB","showSAR","showATRPanel","showMACDPanel","showADXPanel","showHeikinPanel",
+      "showDonchian","showPrevDay","showPrevWeek","showERPanel"];
+    for(var i=0;i<ids.length;i++){
+      var node=el(ids[i]);
+      if(!node)continue;
+      node.onchange=saveMiniTechDisplaySettings;
+    }
+  }
+
+
+  function hookV36Controls() {
+    var ids=["sessionAsiaUtc","sessionLondonUtc","sessionNewYorkUtc","sessionLateUtc"];
+    for(var i=0;i<ids.length;i++){
+      var node=el(ids[i]);
+      if(!node)continue;
+      node.onchange=function(){
+        saveMarketDataUiSettings();
+        renderMarketDataStatus();
+        renderStrategyMiniChart();
+      };
+    }
+  }
+
+
   function hookV34Controls() {
     if (el("journalReconstructExcursion")) {
       el("journalReconstructExcursion").onclick = function () {
@@ -8795,6 +10521,8 @@ textarea.journalNotes{
     hookV32Controls();
     hookV33Controls();
     hookV34Controls();
+    hookV35Controls();
+    hookV36Controls();
     hookEdgeControls();
     restoreDeclaredMethodUi();
     refreshPresetSelect();
@@ -8847,7 +10575,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v3.4.1</li>
+    <li class="group">ENTRY CONSOLE v3.6</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -9009,13 +10737,58 @@ textarea.journalNotes{
         MINI CHART
         <span id="strategyMiniChartMeta" class="miniChartMeta">—</span>
       </div>
+
+      <div class="miniTechControls">
+        <div class="miniTechControlsTitle">追加テクニカル表示</div>
+        <div class="miniTechToggleGrid">
+          <label class="miniTechToggle"><input id="showBB" type="checkbox">BB 20 ±2σ</label>
+          <label class="miniTechToggle"><input id="showSAR" type="checkbox">Parabolic SAR</label>
+          <label class="miniTechToggle"><input id="showATRPanel" type="checkbox">ATR / ATR%</label>
+          <label class="miniTechToggle"><input id="showMACDPanel" type="checkbox">MACD 12/26/9</label>
+          <label class="miniTechToggle"><input id="showADXPanel" type="checkbox">ADX14 +DI/-DI</label>
+          <label class="miniTechToggle"><input id="showHeikinPanel" type="checkbox">平均足</label>
+          <label class="miniTechToggle"><input id="showDonchian" type="checkbox">Donchian 20</label>
+          <label class="miniTechToggle"><input id="showPrevDay" type="checkbox">前日 High/Low</label>
+          <label class="miniTechToggle"><input id="showPrevWeek" type="checkbox">前週 High/Low</label>
+          <label class="miniTechToggle"><input id="showERPanel" type="checkbox">Kaufman ER10</label>
+        </div>
+        <div class="miniTechLogNote">表示OFFは画面だけです。Market Data取得時の計算・Journal用ログ保存はOFFでも続きます。ROC / Z-Score / Candle Structure / EMA slope / Compression / Sessionはログ専用です。</div>
+      </div>
+
       <div id="strategyMiniChart" class="miniChartCanvas">
         <div class="miniChartPlaceholder">Market Data取得後、選択中の銘柄・時間足の直近100本を表示します。</div>
       </div>
+
+      <div id="miniAtrPanel" class="miniTechPanel">
+        <div class="miniTechPanelHeader"><span>ATR</span><span id="miniAtrMeta" class="miniTechPanelMeta">—</span></div>
+        <div id="miniAtrMetrics" class="miniAtrMetrics"></div>
+      </div>
+
+      <div id="miniMacdPanel" class="miniTechPanel">
+        <div class="miniTechPanelHeader"><span>MACD</span><span id="miniMacdMeta" class="miniTechPanelMeta">12 / 26 / 9</span></div>
+        <div id="miniMacdCanvas" class="miniTechCanvas"></div>
+      </div>
+
+      <div id="miniAdxPanel" class="miniTechPanel">
+        <div class="miniTechPanelHeader"><span>ADX / DI</span><span id="miniAdxMeta" class="miniTechPanelMeta">14</span></div>
+        <div id="miniAdxCanvas" class="miniTechCanvas"></div>
+      </div>
+
+      <div id="miniErPanel" class="miniTechPanel">
+        <div class="miniTechPanelHeader"><span>Kaufman Efficiency Ratio</span><span id="miniErMeta" class="miniTechPanelMeta">ER10</span></div>
+        <div id="miniErCanvas" class="miniTechCanvas"></div>
+      </div>
+
+      <div id="miniHeikinPanel" class="miniTechPanel">
+        <div class="miniTechPanelHeader"><span>平均足</span><span id="miniHeikinMeta" class="miniTechPanelMeta">別枠表示</span></div>
+        <div id="miniHeikinCanvas" class="miniTechCanvas"></div>
+      </div>
+
       <div id="strategyMiniChartFooter" class="miniChartFooter">
-        実OHLCのみ表示。EMA20/50/200とRSI13は同一時間足データからローカル計算します。
+        実OHLC + EMA20/50/200 + RSI13。表示ON/OFFに関係なく全特徴量ログを計算します。
       </div>
     </div>
+    <div class="panelNote">v3.6の追加特徴量は<strong>観測・ログ用</strong>です。Donchian / 前日・前週H/L / ERは表示できますが、ROC / Z-Score / Candle Structure / EMA slope / Compression / Sessionはログ中心です。現時点ではGate / Edge Score / Entry判定を自動変更しません。ログがたまってから条件差を検証し、採用するルールだけを後で固定します。</div>
   </div>
 
   <!-- ACCOUNT -->
@@ -9136,6 +10909,10 @@ textarea.journalNotes{
           <option value="300">5分</option>
         </select>
       </div>
+      <div class="row"><label for="sessionAsiaUtc">Session ASIA 開始 UTC</label><input id="sessionAsiaUtc" type="number" min="0" max="23" step="1" value="0"></div>
+      <div class="row"><label for="sessionLondonUtc">Session LONDON 開始 UTC</label><input id="sessionLondonUtc" type="number" min="0" max="23" step="1" value="8"></div>
+      <div class="row"><label for="sessionNewYorkUtc">Session NEW YORK 開始 UTC</label><input id="sessionNewYorkUtc" type="number" min="0" max="23" step="1" value="13"></div>
+      <div class="row"><label for="sessionLateUtc">Session LATE 開始 UTC</label><input id="sessionLateUtc" type="number" min="0" max="23" step="1" value="21"></div>
     </fieldset>
 
     <div id="providerSymbolHint" class="statusBox">
@@ -9167,13 +10944,18 @@ textarea.journalNotes{
       API Keyはソースコードへ埋め込みません。「この端末に保存」を押した場合だけ、このブラウザのlocalStorageへ保存します。
       GitHub Pagesには送信しません。必要換算は銘柄のQuote通貨と口座通貨から自動判定し、必要なFXレートだけ取得します。
       API取得後の換算値は手入力でブローカー値へ修正でき、修正済みレートは自動更新で上書きしません。
+      Sessionラベルは分析用のUTC区分です。初期境界 00 / 08 / 13 / 21 UTC は<strong>暫定値</strong>で、ブローカー時間やDSTを自動保証しません。必要なら変更してください。
     </div>
 
     <div class="panelNote">
       ATRはWilder方式でローカル計算し、初期値はATR14です。Swing High/Low 100は、取得した同一時間足の直近100 OHLCバーについて
-      <strong>最高High / 最低Low</strong> を計算します。EMA20 / EMA50 / EMA200 と RSI13 も同一時間足の終値から端末側で計算します。
-      指標計算用に約350本を取得し、ミニチャートには直近100本だけ表示します。M3はProviderの1分足を3本ずつ集約してから指標計算し、
-      M30はProviderの30分足を直接使用します。APIデータのリアルタイム性・遅延・利用可能銘柄はProvider契約と市場に依存するため、「LIVE」とは表示しません。
+      <strong>最高High / 最低Low</strong> を計算します。EMA20 / EMA50 / EMA200 / RSI13 / BB20 ±2σ / MACD 12-26-9 /
+      Parabolic SAR 0.02-0.20 / ADX14 +DI/-DI / ATR% / 平均足に加え、v3.6では Donchian20 / Kaufman ER10 / ROC 1・3・5・20 /
+      Z-Score20 / 実ローソク足構造 / EMA slope / EMA間隔・Compression を同じOHLCから端末側で計算します。
+      前日・前週High/Lowは別の日足コンテキストから取得し、6時間以内はキャッシュを再利用します。追加表示のON/OFFは画面だけに作用し、Journal用ログ計算には影響しません。
+      Volumeを必要とするMFI/VWAPは今回は計算しません。指標計算用に約350本を取得し、ミニチャートには直近100本だけ表示します。
+      M3はProviderの1分足を3本ずつ集約してから指標計算し、M30はProviderの30分足を直接使用します。
+      APIデータのリアルタイム性・遅延・利用可能銘柄はProvider契約と市場に依存するため、「LIVE」とは表示しません。
     </div>
   </div>
 
@@ -9349,6 +11131,7 @@ textarea.journalNotes{
         <button id="journalUpdate" class="actionButton primary" type="button">更新</button>
         <button id="journalDelete" class="actionButton danger" type="button">この記録を削除</button>
       </div>
+      <div id="journalTechnicalLogSummary" class="excursionBox"><strong>テクニカルログ</strong><br>PLAN / ENTRYの保存状態を表示します。</div>
       <div id="journalExcursionSummary" class="excursionBox"><strong>MAE / MFE</strong><br>OPEN後に追跡します。</div>
       <div class="excursionAction"><button id="journalReconstructExcursion" class="actionButton" type="button">1分足でMAE/MFE再構築</button></div>
     </div>
@@ -9794,13 +11577,15 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v3.4.1 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v3.6 — 建玉設計コンソール。</p>
       <p>v3.1.1では、銘柄/時間足変更直後の再計算、Edge Factorのtrue/false/null全状態保存、同一Evidence母集団でのON/OFF比較、MTF Edgeの鮮度確認、Stress仮定のWATCH Signature除外を追加しています。旧v3.1 Journalの発火ID欠落はOFFへ推定せずUnknownとして扱います。</p>
       <p>v3.1.2では、LONG/SHORT別の勝率・負率、本日/トータルの獲得pips・獲得金額、Entry時間帯別の獲得pips・金額をJournal Analyticsへ追加しています。pipsは実約定価格差、金額は実現金額入力を優先し未入力時のみ実現R×保存Riskを使用します。本日はExit日時、時間別はEntry日時で判定します。</p>
       <p>v3.2では、Edge Discoveryとして単独Factorと2/3 Factor組み合わせのON/OFF比較・前半/後半Δ、Journal保存時の数値スナップショット、Observed Playbookの自動言語化、Declared Methodの構造化保存、Declared vs Observed一致率を追加しています。組み合わせランキングは探索用で、自動Edge採用や因果推論は行いません。</p>
       <p>v3.3では、損益ボードを追加し、実現金額ベースの累積損益グラフ（棒=日次損益 / 線=累積損益）と月次損益カレンダーを表示します。金額は実現金額入力を優先し、未入力時のみ実現R×保存Riskを使用します。異なる口座通貨は合算せず、JPY/USDなど1通貨ずつ切り替えて表示します。</p>
       <p>v3.4では、OPEN中の現在価格更新からMAE/MFE（最大逆行/最大順行）を記録し、CLOSED後にTwelve Dataの1分足OHLCをEntry〜Exit区間へ取得して再構築できます。境界1分足はEntry前/Exit後の値動きを混ぜないため完全に保有していた1分足だけを採用し、Entry/Exit実約定価格を端点として使います。再構築値とLIVE観測値はより極端な方を保持します。</p>
       <p>v3.4.1では、iPhone Safariで損益カレンダーに全体tableの最小幅が継承されて横にはみ出す表示不具合を修正しました。カレンダーだけmin-widthを解除し、7列をカード幅へ固定しています。</p>
+      <p>v3.5では、ミニチャートへBB20 ±2σとParabolic SARを追加し、下段へATR/ATR%、MACD（Line + Signalのみ）、ADX14 +DI/-DI、平均足の独立パネルを追加しました。追加表示は個別ON/OFFできますが、計算とJournalのPLANログは常時保存し、OPEN遷移時には現在Market Dataが同一銘柄・時間足ならENTRYテクニカルログも別保存します。追加指標は現段階ではGate/Edge判定には使いません。</p>
+      <p>v3.6では、市場構造としてDonchian20、前日/前週High-Low、Kaufman ER10を追加しました。さらにログ専用特徴量としてROC 1/3/5/20、Z-Score20、実ローソク足のBody/Wick/Range、EMA20/50/200の1本・5本Slope、EMA間隔とCompression、UTC Sessionラベルを保存します。前日/前週レベルは日足コンテキストを別取得し、Session境界はユーザー変更可能な暫定UTC区分です。これらはv3.6時点では観測用で、Gate/Edge Scoreを自動変更しません。</p>
       <p>Phase 2では、入力の端末内自動保存と、ユーザー定義のBroker/銘柄Presetを追加しています。Presetは銘柄仕様とBroker/Risk関連設定だけを保存し、残高・現在値・ATR・SwingはPresetには含めません。</p>
       <p>Phase 3では、複数の建玉設計をRisk予約として保存し、名目総リスク・登録時証拠金合計・FX通貨方向の集中を管理します。Portfolioへの登録は約定確認ではありません。</p>
       <p>Phase 4では、建玉設計をTrade Journalへ保存し、Status・実現R・メモを記録できます。集計は保存された実績だけを対象にし、未入力の実現Rを推定しません。</p>

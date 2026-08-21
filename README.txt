@@ -1,4 +1,4 @@
-DEPA FX v3.4.1 (iPhone Calendar Layout Fix)
+DEPA FX v3.6 (Market Structure / Feature Logging)
 
 Upload these files to the repository root:
 - index.html
@@ -195,3 +195,38 @@ v3.4.1:
 - Forces seven equal-width columns inside the P/L card.
 - Overrides global nowrap for calendar cells and allows compact amount wrapping.
 - Adds narrow-screen sizing for <=430px viewports.
+
+v3.5:
+- Adds Bollinger Bands 20 ±2σ overlay to the mini chart.
+- Adds Parabolic SAR overlay (step 0.02 / max 0.20).
+- Adds separate lower ATR panel with ATR value and ATR/Price %.
+- Adds separate MACD 12/26/9 panel (MACD line + Signal line; no histogram display).
+- Adds separate ADX14 panel with +DI / -DI.
+- Adds a separate Heikin Ashi panel below the normal candlestick chart.
+- Every added display can be turned ON/OFF independently.
+- Display toggles do NOT disable calculations or Journal logging.
+- MFI/VWAP and other volume-dependent indicators are intentionally not included in this version.
+- Market Data metadata stores the new indicator series, latest values, calculation version and parameters.
+- PLAN numeric snapshots now store ATR%, BB values/%B/width, MACD, SAR, ADX/+DI/-DI and Heikin Ashi state.
+- When a Journal/Trade moves to OPEN, a separate ENTRY technical snapshot is captured when current Market Data matches the same symbol/timeframe.
+- ENTRY capture stores capture time, actual entry time and capture lag; it does not pretend that a delayed manual edit represents exact historical entry conditions.
+- New indicators are observation/logging only in v3.5 and do not alter Gates, Edge Score or Entry verdicts.
+
+v3.6:
+- Adds Donchian Channel 20 overlay (display ON/OFF, logging always ON).
+- Adds Previous Day High/Low overlay using separate daily context.
+- Adds Previous Week High/Low overlay; default display OFF to avoid compressing the mobile price chart.
+- Adds Kaufman Efficiency Ratio ER10 as a separate lower panel.
+- Adds log-only ROC / return features for 1, 3, 5 and 20 bars in percent and ATR units.
+- Adds log-only Z-Score20 with rolling mean/std.
+- Adds log-only real candlestick structure: direction, streak, range/body/wicks in ATR and percent.
+- Adds EMA20/50/200 1-bar and 5-bar slopes normalized by ATR.
+- Adds EMA gap/compression features and BB/Donchian width in ATR.
+- Adds current price distance/position relative to Donchian, previous day and previous week levels.
+- Adds configurable UTC session labels (ASIA/LONDON/NEW_YORK/LATE); defaults 00/08/13/21 UTC are provisional analysis labels, not guaranteed exchange/broker sessions.
+- Daily context is cached up to 6 hours. If refresh fails, existing cached levels may be retained and marked stale.
+- Display toggles never disable feature calculation or Journal logging.
+- PLAN numericSnapshot uses schema 3 / numericEvidenceVersion 3.
+- ENTRY technical snapshot uses schema 2 and records capture lag from actualEntryAt.
+- New v3.6 features are observational only and do not alter Gates, Edge Score, WATCH or Entry verdicts.
+- MFI/VWAP remain intentionally excluded because volume-dependent features are out of scope for this version.
