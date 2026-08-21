@@ -1,4 +1,4 @@
-const CACHE_NAME = "depa-fx-v3-6-v1";
+const CACHE_NAME = "depa-fx-v3-9-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,8 @@ const APP_SHELL = [
   "./icon-192.png",
   "./icon-512.png",
   "./icon-maskable-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./manual.pdf"
 ];
 
 self.addEventListener("install", event => {

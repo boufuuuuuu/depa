@@ -1,7 +1,7 @@
 {
   "name": "DEPA FX SYSTEM",
   "short_name": "DEPA FX",
-  "description": "FX / CFD risk, portfolio and trade journal console",
+  "description": "FX / CFD risk, journal, intuition, research validation and EA release-governance console",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
