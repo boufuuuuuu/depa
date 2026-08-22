@@ -1216,7 +1216,7 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v3.9
+   DEPA FX SYSTEM — ENTRY CONSOLE v4.0
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
@@ -1415,6 +1415,16 @@ textarea.journalNotes{
     var gridBaseLot = n("gridBaseLot");
     var gridMult = n("gridMult");
 
+    var nanpinDirSel = value("nanpinDir") === "SELL" ? -1 : 1;
+    var nanpinStepAtr = n("nanpinStepAtr");
+    var nanpinLevels = n("nanpinLevels");
+    var nanpinBaseLot = n("nanpinBaseLot");
+    var nanpinLotMode = value("nanpinLotMode") || "ADD";
+    var nanpinAddLot = n("nanpinAddLot");
+    var nanpinMultiplier = n("nanpinMultiplier");
+    var nanpinSlAtr = n("nanpinSlAtr");
+    var nanpinTpAtr = n("nanpinTpAtr");
+
     var baseS = SYMBOLS[symbol];
     var customPip = n("customPip");
     var customContract = n("customContract");
@@ -1491,15 +1501,23 @@ textarea.journalNotes{
     if (!price || price <= 0) missing.push("現在値");
     if (!atr || atr <= 0) missing.push("ATR");
 
-    if (entryType !== "GRID") {
+    if (entryType !== "GRID" && entryType !== "NANPIN") {
       if (!swingHigh || swingHigh <= 0) missing.push("直近高値");
       if (!swingLow || swingLow <= 0) missing.push("直近安値");
       if (swingHigh && swingLow && swingHigh <= swingLow) missing.push("高値>安値の関係");
-    } else {
+    } else if (entryType === "GRID") {
       if (gridStepAtr == null || gridStepAtr <= 0) missing.push("グリッド幅");
       if (gridLevels == null || gridLevels < 1) missing.push("段数");
       if (gridBaseLot == null || gridBaseLot <= 0) missing.push("初期ロット");
       if (gridMult == null || gridMult <= 0) missing.push("ロット倍率");
+    } else {
+      if (nanpinStepAtr == null || nanpinStepAtr <= 0) missing.push("ナンピン間隔");
+      if (nanpinLevels == null || nanpinLevels < 1 || nanpinLevels > 50) missing.push("予定段数 1-50");
+      if (nanpinBaseLot == null || nanpinBaseLot <= 0) missing.push("ナンピン初期ロット");
+      if (nanpinLotMode === "ADD" && (nanpinAddLot == null || nanpinAddLot < 0)) missing.push("加算Lot>=0");
+      if (nanpinLotMode === "MULT" && (nanpinMultiplier == null || nanpinMultiplier <= 0)) missing.push("ロット倍率>0");
+      if (nanpinSlAtr == null || nanpinSlAtr <= 0) missing.push("個別SL ATR倍");
+      if (nanpinTpAtr == null || nanpinTpAtr <= 0) missing.push("個別TP ATR倍");
     }
 
     if (q2aPreview == null) {
@@ -1682,6 +1700,206 @@ textarea.journalNotes{
         S: S,
         tf: tf,
         fmt: fmt
+      };
+    }
+
+
+    /* ============ NANPIN / MARTINGALE ============ */
+    if (entryType === "NANPIN") {
+      var npDir = nanpinDirSel;
+      var npStepPrice = atr * nanpinStepAtr;
+      var npLevels = Math.max(1, Math.min(50, Math.round(nanpinLevels)));
+      var npSlDistance = atr * nanpinSlAtr;
+      var npTpDistance = atr * nanpinTpAtr;
+      var npRows = [];
+      var npCumLot = 0;
+      var npCumCost = 0;
+      var npSlLoss = 0;
+      var npSpreadCost = 0;
+      var npSlippageCost = 0;
+      var npCommissionCost = 0;
+      var npLotOk = true;
+      var npLotReasons = [];
+      var npDistanceOk = true;
+      var npCoexistenceOk = true;
+      var npI, npEntry, npLotRaw, npLot, npSl, npTp, npAvg, npBe, npPrior;
+
+      for (npI = 0; npI < npLevels; npI++) {
+        npEntry = price - npDir * npStepPrice * npI;
+        if (nanpinLotMode === "ADD") {
+          npLotRaw = nanpinBaseLot + nanpinAddLot * npI;
+        } else {
+          npLotRaw = nanpinBaseLot * Math.pow(nanpinMultiplier, npI);
+        }
+
+        if (!isFinite(npLotRaw) || npLotRaw <= 0) {
+          npLotOk = false;
+          npLotReasons.push("第" + (npI + 1) + "段Lot不正");
+          npLotRaw = 0;
+        }
+
+        if (maxLot != null && npLotRaw > maxLot + 1e-12) {
+          npLotOk = false;
+          npLotReasons.push("第" + (npI + 1) + "段予定Lot " + npLotRaw.toFixed(4) + " > 最大Lot " + maxLot);
+        }
+
+        var npAdopted = maxLot != null ? Math.min(npLotRaw, maxLot) : npLotRaw;
+        npLot = floorToStep(npAdopted, lotStep);
+
+        if (npLot < minLot - 1e-12) {
+          npLotOk = false;
+          npLotReasons.push("第" + (npI + 1) + "段<最小Lot");
+        }
+
+        npSl = npEntry - npDir * npSlDistance;
+        npTp = npEntry + npDir * npTpDistance;
+
+        var npSlPips = toPips(Math.abs(npEntry - npSl));
+        var npTpPips = toPips(Math.abs(npTp - npEntry));
+        if (npSlPips < slMin || npTpPips < slMin) npDistanceOk = false;
+
+        // If an earlier individual SL would be touched before this later entry,
+        // the basket BE remains a hypothetical "all earlier positions still open" value.
+        for (npPrior = 0; npPrior < npRows.length; npPrior++) {
+          if (npDir > 0 && npRows[npPrior].sl >= npEntry) npCoexistenceOk = false;
+          if (npDir < 0 && npRows[npPrior].sl <= npEntry) npCoexistenceOk = false;
+        }
+
+        npCumLot += npLot;
+        npCumCost += npEntry * npLot;
+        npAvg = npCumLot > 0 ? npCumCost / npCumLot : npEntry;
+        npBe = npAvg + npDir * costPips * S.pip;
+
+        var npRowSlLoss = npSlPips * pipVal * npLot;
+        var npRowSpread = sp * pipVal * npLot;
+        var npRowSlippage = slip * pipVal * npLot;
+        var npRowCommission = com * npLot;
+
+        npSlLoss += npRowSlLoss;
+        npSpreadCost += npRowSpread;
+        npSlippageCost += npRowSlippage;
+        npCommissionCost += npRowCommission;
+
+        npRows.push({
+          i:npI + 1,
+          p:npEntry,
+          lotRaw:npLotRaw,
+          lot:npLot,
+          cumLot:+npCumLot.toFixed(8),
+          avg:npAvg,
+          be:npBe,
+          sl:npSl,
+          tp:npTp,
+          slPips:npSlPips,
+          tpPips:npTpPips,
+          slLoss:npRowSlLoss,
+          spreadCost:npRowSpread,
+          slippageCost:npRowSlippage,
+          commissionCost:npRowCommission
+        });
+      }
+
+      push(
+        "NP-0",
+        "ナンピンLot仕様",
+        npLotOk,
+        npLotOk
+          ? "全段がLot仕様に適合"
+          : npLotReasons.join(" / ")
+      );
+
+      push(
+        "G-06",
+        "個別SL / TP距離",
+        npDistanceOk,
+        "SL " + toPips(npSlDistance).toFixed(1) + "pips / TP " +
+          toPips(npTpDistance).toFixed(1) + "pips / Broker下限 " + slMin + "pips"
+      );
+
+      var npTradingCosts = npSpreadCost + npSlippageCost + npCommissionCost;
+      var npCumulativeLoss = npSlLoss + npTradingCosts;
+      var npRiskUsage = riskAmt > 0 ? (npCumulativeLoss / riskAmt) * 100 : 0;
+      var npRiskOk = npCumulativeLoss <= riskAmt;
+
+      push(
+        "NP-1",
+        "全段累積SL損失",
+        npRiskOk,
+        "各ポジション個別SLの計画損失合計 " + commas(npCumulativeLoss) + " " + acctCcy +
+          " / 許容 " + commas(riskAmt) + " " + acctCcy
+      );
+
+      var npMarginReq = (npCumLot * S.contract * price * q2a) / leverage;
+      var npMarginLimit = balance * (marginCap / 100);
+      var npMarginOk = npMarginReq <= npMarginLimit;
+      push(
+        "NP-2",
+        "全段同時保有の証拠金上限",
+        npMarginOk,
+        "上限仮定 " + commas(npMarginReq) + " " + acctCcy +
+          " / 設定上限 " + commas(npMarginLimit) + " " + acctCcy
+      );
+
+      push(
+        "NP-3",
+        "ナンピン方向",
+        true,
+        npDir > 0 ? "BUY / 買い下がり" : "SELL / 売り上がり"
+      );
+
+      var npGrowthText = nanpinLotMode === "ADD"
+        ? "加算: 初期 " + nanpinBaseLot + " + 段×" + nanpinAddLot
+        : "乗算: 初期 " + nanpinBaseLot + " × " + nanpinMultiplier + "^(段-1)";
+      push("NP-4", "ロット増加方式", true, npGrowthText);
+
+      var npAllOk = allGatesOk(gates);
+      var npLast = npRows[npRows.length - 1];
+
+      return {
+        state:npAllOk ? "ENTRY" : "NO-TRADE",
+        gates:gates,
+        mode:"NANPIN",
+        dir:npDir,
+        rows:npRows,
+        entry:npRows[0].p,
+        sl:npRows[0].sl,
+        tp1:npRows[0].tp,
+        tp2:null,
+        lot:npCumLot,
+        cumLot:npCumLot,
+        avg:npLast.avg,
+        be:npLast.be,
+        costBe:npLast.be,
+        firstEntry:npRows[0].p,
+        worstLoss:npCumulativeLoss,
+        cumulativePlannedLoss:npCumulativeLoss,
+        marginReq:npMarginReq,
+        marginLimit:npMarginLimit,
+        marginCapPct:marginCap,
+        riskAmt:riskAmt,
+        riskUsage:npRiskUsage,
+        slLoss:npSlLoss,
+        spreadCost:npSpreadCost,
+        slippageCost:npSlippageCost,
+        commissionCost:npCommissionCost,
+        tradingCosts:npTradingCosts,
+        costPips:costPips,
+        freezeLevelPips:freezeLevel,
+        pipVal:pipVal,
+        acctCcy:acctCcy,
+        S:S,
+        tf:tf,
+        px:price,
+        stepPrice:npStepPrice,
+        levels:npLevels,
+        lotMode:nanpinLotMode,
+        baseLot:nanpinBaseLot,
+        addLot:nanpinLotMode === "ADD" ? nanpinAddLot : null,
+        multiplier:nanpinLotMode === "MULT" ? nanpinMultiplier : null,
+        slAtr:nanpinSlAtr,
+        tpAtr:nanpinTpAtr,
+        coexistenceOk:npCoexistenceOk,
+        fmt:fmt
       };
     }
 
@@ -2160,6 +2378,10 @@ textarea.journalNotes{
     return true;
   }
 
+  function isMultiPlanMode(mode) {
+    return mode === "GRID" || mode === "NANPIN";
+  }
+
   function stateText(state) {
     if (state === "ENTRY") return { main: "エントリー", sub: "全ゲート通過・価格帯到達", cls: "entry" };
     if (state === "WATCH") return { main: "監視", sub: "全ゲート通過・価格待ち", cls: "watch" };
@@ -2194,12 +2416,15 @@ textarea.journalNotes{
       el("riskList").innerHTML = '<li><span>状態</span><strong>入力待ち</strong></li>';
       el("gridTable").getElementsByTagName("tbody")[0].innerHTML = "";
       el("gridSummary").innerHTML = "";
+      el("nanpinTable").getElementsByTagName("tbody")[0].innerHTML = "";
+      el("nanpinSummary").innerHTML = "";
       return;
     }
 
     renderRisk(R);
 
     if (R.mode === "GRID") renderGrid(R);
+    else if (R.mode === "NANPIN") renderNanpin(R);
     else {
       renderPosition(R);
       renderManagement(R);
@@ -2224,7 +2449,7 @@ textarea.journalNotes{
       el("navRisk").innerHTML = "—";
     }
 
-    if (R.state !== "INVALID" && R.mode !== "GRID") {
+    if (R.state !== "INVALID" && !isMultiPlanMode(R.mode)) {
       el("navPosition").innerHTML = (R.dir > 0 ? "BUY " : "SELL ") + R.fmt(R.entry);
     } else {
       el("navPosition").innerHTML = "—";
@@ -2234,6 +2459,12 @@ textarea.journalNotes{
       el("navGrid").innerHTML = R.cumLot.toFixed(2) + " lot";
     } else {
       el("navGrid").innerHTML = "—";
+    }
+
+    if (R.state !== "INVALID" && R.mode === "NANPIN") {
+      el("navNanpin").innerHTML = R.rows.length + "段 / " + R.cumLot.toFixed(2) + " lot";
+    } else {
+      el("navNanpin").innerHTML = "—";
     }
   }
 
@@ -2249,12 +2480,19 @@ textarea.journalNotes{
     if (el("counterDirRow")) el("counterDirRow").style.display = mode === "COUNTER" ? "block" : "none";
     if (el("counterSlRow")) el("counterSlRow").style.display = mode === "COUNTER" ? "block" : "none";
     if (el("gridDirRow")) el("gridDirRow").style.display = mode === "GRID" ? "block" : "none";
-    el("swingFields").style.display = mode === "GRID" ? "none" : "block";
+    if (el("nanpinDirRow")) el("nanpinDirRow").style.display = mode === "NANPIN" ? "block" : "none";
+    el("swingFields").style.display = isMultiPlanMode(mode) ? "none" : "block";
     el("gridFields").style.display = mode === "GRID" ? "block" : "none";
+    el("nanpinFields").style.display = mode === "NANPIN" ? "block" : "none";
 
-    el("navPositionRow").style.display = mode === "GRID" ? "none" : "block";
-    el("navManagementRow").style.display = mode === "GRID" ? "none" : "block";
+    var npLotMode = value("nanpinLotMode") || "ADD";
+    if (el("nanpinAddLotRow")) el("nanpinAddLotRow").style.display = mode === "NANPIN" && npLotMode === "ADD" ? "block" : "none";
+    if (el("nanpinMultRow")) el("nanpinMultRow").style.display = mode === "NANPIN" && npLotMode === "MULT" ? "block" : "none";
+
+    el("navPositionRow").style.display = isMultiPlanMode(mode) ? "none" : "block";
+    el("navManagementRow").style.display = isMultiPlanMode(mode) ? "none" : "block";
     el("navGridRow").style.display = mode === "GRID" ? "block" : "none";
+    el("navNanpinRow").style.display = mode === "NANPIN" ? "block" : "none";
   }
 
   function renderGates(R) {
@@ -2280,18 +2518,18 @@ textarea.journalNotes{
   function renderRisk(R) {
     var html = "";
 
-    if (R.mode === "GRID") {
+    if (isMultiPlanMode(R.mode)) {
       html += resultRow("許容損失", commas(R.riskAmt) + " " + R.acctCcy);
-      html += resultRow("SL本体", commas(R.slLoss) + " " + R.acctCcy);
+      html += resultRow(R.mode === "NANPIN" ? "個別SL損失合計" : "SL本体", commas(R.slLoss) + " " + R.acctCcy);
       html += resultRow("Spread", commas(R.spreadCost) + " " + R.acctCcy);
       html += resultRow("Commission", commas(R.commissionCost) + " " + R.acctCcy);
       html += resultRow("Slippage", commas(R.slippageCost) + " " + R.acctCcy);
-      html += resultRow("実リスク", commas(R.worstLoss) + " " + R.acctCcy,
+      html += resultRow(R.mode === "NANPIN" ? "全段累積計画損失" : "実リスク", commas(R.worstLoss) + " " + R.acctCcy,
         R.worstLoss <= R.riskAmt ? "go" : "stop");
       html += resultRow("Risk Usage", R.riskUsage.toFixed(1) + "%",
         R.riskUsage <= 100 ? "go" : "stop");
       html += resultRow("累計ロット", R.cumLot.toFixed(2));
-      html += resultRow("必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
+      html += resultRow(R.mode === "NANPIN" ? "証拠金上限仮定" : "必要証拠金", commas(R.marginReq) + " " + R.acctCcy);
       html += resultRow("証拠金上限", commas(R.marginLimit) + " " + R.acctCcy +
         " (" + R.marginCapPct.toFixed(1) + "%)");
       html += resultRow("1lot pip価値", commas(R.pipVal) + " " + R.acctCcy);
@@ -2378,6 +2616,45 @@ textarea.journalNotes{
     sum += resultRow("平均建値", R.fmt(R.avg));
 
     el("gridSummary").innerHTML = sum;
+  }
+
+
+
+  function renderNanpin(R) {
+    var tbody = el("nanpinTable").getElementsByTagName("tbody")[0];
+    var html = "", i, r;
+
+    for (i = 0; i < R.rows.length; i++) {
+      r = R.rows[i];
+      html += "<tr>" +
+        "<td>" + r.i + "</td>" +
+        "<td>" + esc(R.fmt(r.p)) + "</td>" +
+        "<td>" + lotFixed(r.lot) + "</td>" +
+        "<td>" + lotFixed(r.cumLot) + "</td>" +
+        "<td>" + esc(R.fmt(r.sl)) + "</td>" +
+        "<td>" + esc(R.fmt(r.tp)) + "</td>" +
+        "<td>" + esc(R.fmt(r.be)) + "</td>" +
+        "</tr>";
+    }
+    tbody.innerHTML = html;
+
+    var sum = "";
+    sum += resultRow("方向", R.dir > 0 ? "BUY / 買い下がり" : "SELL / 売り上がり");
+    sum += resultRow("予定段数", String(R.rows.length));
+    sum += resultRow("初回Entry基準", R.fmt(R.firstEntry) + "（計算時の現在値）");
+    sum += resultRow("Lot方式", R.lotMode === "ADD"
+      ? "加算 / +" + lotFixed(R.addLot) + " lot"
+      : "乗算 / ×" + Number(R.multiplier).toFixed(3));
+    sum += resultRow("最終累計Lot", lotFixed(R.cumLot));
+    sum += resultRow("最終平均建値", R.fmt(R.avg));
+    sum += resultRow("最終BE（コスト後）", R.fmt(R.costBe), "hi");
+    sum += resultRow("全段累積SL損失", commas(R.cumulativePlannedLoss) + " " + R.acctCcy,
+      R.cumulativePlannedLoss <= R.riskAmt ? "go" : "stop");
+    sum += resultRow("Risk Usage", R.riskUsage.toFixed(1) + "%",
+      R.riskUsage <= 100 ? "go" : "stop");
+    sum += resultRow("全段同時保有の証拠金上限", commas(R.marginReq) + " " + R.acctCcy);
+    sum += resultRow("BE同時保有仮定", R.coexistenceOk ? "全段で成立" : "一部段で先行SLが先に到達", R.coexistenceOk ? "go" : "stop");
+    el("nanpinSummary").innerHTML = sum;
   }
 
 
@@ -2494,7 +2771,7 @@ textarea.journalNotes{
     var currentMissing = [];
     if (n("price") == null || n("price") <= 0) currentMissing.push("Price");
     if (n("atr") == null || n("atr") <= 0) currentMissing.push("ATR");
-    if (value("entryType") !== "GRID") {
+    if (value("entryType") !== "GRID" && value("entryType") !== "NANPIN") {
       if (n("swingHigh") == null || n("swingHigh") <= 0) currentMissing.push("Swing High");
       if (n("swingLow") == null || n("swingLow") <= 0) currentMissing.push("Swing Low");
     }
@@ -3342,6 +3619,8 @@ textarea.journalNotes{
       mode:pSnap.entryType, direction:pSnap.direction, acctCcy:pSnap.acctCcy,
       plannedEntry:pSnap.entry, plannedSl:pSnap.sl, plannedTp1:pSnap.tp1, plannedTp2:pSnap.tp2,
       plannedLot:pSnap.lot, plannedRisk:pSnap.risk, plannedMargin:pSnap.margin,
+      multiPositionPlan:researchClone(jSnap.multiPositionPlan||pSnap.positionPlan||null),
+      basketBreakEven:finiteOrNull(jSnap.basketBreakEven!=null?jSnap.basketBreakEven:pSnap.basketBreakEven),
       d1bias:value("d1bias"), depth:value("depth"),
       basisVersion:1, entryBasis:jSnap.entryBasis || "RULE",
       basisDeclaredAt:jSnap.basisDeclaredAt || new Date().getTime(), basisSource:jSnap.basisSource || "PLAN",
@@ -4611,8 +4890,8 @@ textarea.journalNotes{
     var swingHigh = n("swingHigh");
     var swingLow = n("swingLow");
     var leg = (swingHigh != null && swingLow != null) ? (swingHigh - swingLow) : null;
-    var entry = R.mode === "GRID" ? R.avg : R.entry;
-    var sl = R.mode === "GRID" ? R.finalSL : R.sl;
+    var entry = isMultiPlanMode(R.mode) ? R.avg : R.entry;
+    var sl = R.mode === "GRID" ? R.finalSL : (R.mode === "NANPIN" ? null : R.sl);
 
     var rangePos = null;
     if (leg != null && isFinite(leg) && leg > 0 && price != null && isFinite(price)) {
@@ -4640,7 +4919,7 @@ textarea.journalNotes{
     var rsi13 = ind ? finiteOrNull(ind.rsi13) : null;
 
     return {
-      schema:3,
+      schema:4,
       capturedAt:new Date().getTime(),
       price:finiteOrNull(price),
       atr:finiteOrNull(atr),
@@ -4764,7 +5043,19 @@ textarea.journalNotes{
       leg:finiteOrNull(leg),
       legAtr:(leg != null) ? atrDistance(leg) : null,
       depthPct:R.mode === "TREND" && n("depth") != null ? Number(n("depth")) * 100 : null,
-      plannedRR:R.mode === "GRID" ? null : finiteOrNull(R.netRR),
+      plannedRR:isMultiPlanMode(R.mode) ? null : finiteOrNull(R.netRR),
+      multiPlanMode:R.mode==="NANPIN"?"NANPIN":(R.mode==="GRID"?"GRID":null),
+      nanpinLevels:R.mode==="NANPIN"?R.levels:null,
+      nanpinLotMode:R.mode==="NANPIN"?R.lotMode:null,
+      nanpinBaseLot:R.mode==="NANPIN"?finiteOrNull(R.baseLot):null,
+      nanpinAddLot:R.mode==="NANPIN"?finiteOrNull(R.addLot):null,
+      nanpinMultiplier:R.mode==="NANPIN"?finiteOrNull(R.multiplier):null,
+      nanpinStepAtr:R.mode==="NANPIN"?finiteOrNull(n("nanpinStepAtr")):null,
+      nanpinSlAtr:R.mode==="NANPIN"?finiteOrNull(R.slAtr):null,
+      nanpinTpAtr:R.mode==="NANPIN"?finiteOrNull(R.tpAtr):null,
+      nanpinCumLot:R.mode==="NANPIN"?finiteOrNull(R.cumLot):null,
+      nanpinBreakEven:R.mode==="NANPIN"?finiteOrNull(R.costBe):null,
+      nanpinCumulativePlannedLoss:R.mode==="NANPIN"?finiteOrNull(R.cumulativePlannedLoss):null,
       riskPct:finiteOrNull(n("riskPct")),
       slAtr:atrDistance(slDist),
       distanceToEntryAtr:atrDistance(distEntry),
@@ -5593,7 +5884,7 @@ textarea.journalNotes{
   var HYPOTHESIS_STORE_KEY = "depaFX.hypotheses.v1";
   var CANDIDATE_STORE_KEY = "depaFX.researchCandidates.v1";
   var RULE_SPEC_STORE_KEY = "depaFX.ruleSpecs.v1";
-  var RESEARCH_APP_VERSION = "3.9";
+  var RESEARCH_APP_VERSION = "4.0";
   var hypothesisForkBase = null;
   var ruleForkBase = null;
   var hypothesisEvidenceDraft = [];
@@ -5752,18 +6043,22 @@ textarea.journalNotes{
         actualExitAt:x.actualExitAt||null,
         actualAmount:finiteOrNull(x.actualAmount),
         realizedR:finiteOrNull(x.realizedR),
+        positionPlan:researchClone(x.multiPositionPlan||x.positionPlan||null),
+        basketBreakEven:finiteOrNull(x.basketBreakEven),
         accountCurrency:x.acctCcy||x.accountCurrency||null
       };
     }
     if(!R)return null;
     return {
-      plannedEntry:finiteOrNull(R.mode==="GRID"?R.avg:R.entry),
-      plannedSL:finiteOrNull(R.mode==="GRID"?R.finalSL:R.sl),
-      plannedTP1:finiteOrNull(R.mode==="GRID"?R.tpAll:R.tp1),
-      plannedTP2:finiteOrNull(R.mode==="GRID"?null:R.tp2),
-      plannedLot:finiteOrNull(R.mode==="GRID"?R.cumLot:R.lot),
-      plannedRisk:finiteOrNull(R.mode==="GRID"?R.worstLoss:R.riskReal),
-      plannedRR:finiteOrNull(R.mode==="GRID"?null:R.netRR),
+      plannedEntry:finiteOrNull(isMultiPlanMode(R.mode)?R.avg:R.entry),
+      plannedSL:finiteOrNull(R.mode==="GRID"?R.finalSL:(R.mode==="NANPIN"?null:R.sl)),
+      plannedTP1:finiteOrNull(R.mode==="GRID"?R.tpAll:(R.mode==="NANPIN"?null:R.tp1)),
+      plannedTP2:finiteOrNull(isMultiPlanMode(R.mode)?null:R.tp2),
+      plannedLot:finiteOrNull(isMultiPlanMode(R.mode)?R.cumLot:R.lot),
+      plannedRisk:finiteOrNull(isMultiPlanMode(R.mode)?R.worstLoss:R.riskReal),
+      plannedRR:finiteOrNull(isMultiPlanMode(R.mode)?null:R.netRR),
+      positionPlan:R.mode==="NANPIN"?researchClone(R.rows):null,
+      basketBreakEven:R.mode==="NANPIN"?finiteOrNull(R.costBe):null,
       actualEntry:null,actualEntryAt:null,actualExit:null,actualExitAt:null,actualAmount:null,realizedR:null,
       accountCurrency:R.acctCcy||null
     };
@@ -8831,17 +9126,25 @@ textarea.journalNotes{
   /* ---------- SCENARIO STRESS TEST ---------- */
 
   function stressedLoss(R, spreadMult, extraSlip, gapAtr) {
-    var lot=R.mode==="GRID"?R.cumLot:R.lot;
+    var lot=isMultiPlanMode(R.mode)?R.cumLot:R.lot;
     if(!lot||lot<=0||!R.pipVal||!R.S||!R.S.pip)return null;
-    var slPips=R.mode==="GRID"?Math.abs(R.avg-R.finalSL)/R.S.pip:R.slPips;
     var spread=Math.max(0,n("spreadPips")||0)*spreadMult;
     var slip=Math.max(0,n("slippagePips")||0)+Math.max(0,extraSlip||0);
     var atrPips=(n("atr")||0)/R.S.pip;
     var commission=Math.max(0,n("commission")||0)*lot;
+
+    if(R.mode==="NANPIN"){
+      // Individual SL losses are already summed across rows. Stress adds the
+      // chosen spread/slippage/gap scenario to the planned cumulative loss model.
+      var stressedTrading=(spread+slip+Math.max(0,gapAtr||0)*atrPips)*R.pipVal*lot+commission;
+      return R.slLoss+stressedTrading;
+    }
+
+    var slPips=R.mode==="GRID"?Math.abs(R.avg-R.finalSL)/R.S.pip:R.slPips;
     return (slPips+spread+slip+Math.max(0,gapAtr||0)*atrPips)*R.pipVal*lot+commission;
   }
 
-  function renderStressTest(){if(!el("stressSummary"))return;var R=lastResult;if(!R||R.state==="INVALID"){el("stressSummary").innerHTML=resultRow("状態","入力待ち");if(el("navStress"))el("navStress").innerHTML="—";return;}var sm=parseFloat(el("stressSpreadMult").value),xs=parseFloat(el("stressExtraSlip").value),ga=parseFloat(el("stressGapAtr").value);if(!isFinite(sm)||sm<1)sm=1;if(!isFinite(xs)||xs<0)xs=0;if(!isFinite(ga)||ga<0)ga=0;var base=R.mode==="GRID"?R.worstLoss:R.riskReal;var sSpread=stressedLoss(R,sm,0,0),sSlip=stressedLoss(R,1,xs,0),sGap=stressedLoss(R,1,0,ga),combined=stressedLoss(R,sm,xs,ga),bal=n("balance")||0;function txt(v){return v==null?"—":commas(v)+" "+R.acctCcy+(bal>0?" ("+(v/bal*100).toFixed(2)+"%)":"");}var p=portfolioTotals(getPortfolio().items);var html="";html+=resultRow("Base Risk",txt(base));html+=resultRow("Spread x"+sm.toFixed(1),txt(sSpread));html+=resultRow("Extra Slippage +"+xs.toFixed(1)+"p",txt(sSlip));html+=resultRow("Gap +"+ga.toFixed(2)+" ATR",txt(sGap));html+=resultRow("Combined",txt(combined),combined!=null&&R.riskAmt&&combined<=R.riskAmt?"go":"stop");html+=resultRow("許容Risk",txt(R.riskAmt));html+=resultRow("Portfolio名目SL合計",p.mixedCurrency?"— CCY MIXED":((p.acctCcy&&p.acctCcy!==R.acctCcy)?("— "+p.acctCcy+" / current "+R.acctCcy):txt(p.risk)));el("stressSummary").innerHTML=html;if(el("navStress"))el("navStress").innerHTML=bal>0&&combined!=null?(combined/bal*100).toFixed(1)+"%":"—";}
+  function renderStressTest(){if(!el("stressSummary"))return;var R=lastResult;if(!R||R.state==="INVALID"){el("stressSummary").innerHTML=resultRow("状態","入力待ち");if(el("navStress"))el("navStress").innerHTML="—";return;}var sm=parseFloat(el("stressSpreadMult").value),xs=parseFloat(el("stressExtraSlip").value),ga=parseFloat(el("stressGapAtr").value);if(!isFinite(sm)||sm<1)sm=1;if(!isFinite(xs)||xs<0)xs=0;if(!isFinite(ga)||ga<0)ga=0;var base=isMultiPlanMode(R.mode)?R.worstLoss:R.riskReal;var sSpread=stressedLoss(R,sm,0,0),sSlip=stressedLoss(R,1,xs,0),sGap=stressedLoss(R,1,0,ga),combined=stressedLoss(R,sm,xs,ga),bal=n("balance")||0;function txt(v){return v==null?"—":commas(v)+" "+R.acctCcy+(bal>0?" ("+(v/bal*100).toFixed(2)+"%)":"");}var p=portfolioTotals(getPortfolio().items);var html="";html+=resultRow("Base Risk",txt(base));html+=resultRow("Spread x"+sm.toFixed(1),txt(sSpread));html+=resultRow("Extra Slippage +"+xs.toFixed(1)+"p",txt(sSlip));html+=resultRow("Gap +"+ga.toFixed(2)+" ATR",txt(sGap));html+=resultRow("Combined",txt(combined),combined!=null&&R.riskAmt&&combined<=R.riskAmt?"go":"stop");html+=resultRow("許容Risk",txt(R.riskAmt));html+=resultRow("Portfolio名目SL合計",p.mixedCurrency?"— CCY MIXED":((p.acctCcy&&p.acctCcy!==R.acctCcy)?("— "+p.acctCcy+" / current "+R.acctCcy):txt(p.risk)));el("stressSummary").innerHTML=html;if(el("navStress"))el("navStress").innerHTML=bal>0&&combined!=null?(combined/bal*100).toFixed(1)+"%":"—";}
 
   /* ---------- v3.7.2: LOCAL-DATA PORTABILITY ---------- */
   var BACKUP_META_KEY = "depaFX.backupMeta.v1";
@@ -8937,7 +9240,7 @@ textarea.journalNotes{
 
   function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
 
-  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===BACKUP_META_KEY)continue;if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"3.9",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";storageWrite(BACKUP_META_KEY,{schema:1,exportedAt:new Date().getTime(),journalCount:getJournal().items.length,tradeCount:getTrades().items.length,portfolioCount:getPortfolio().items.length});renderBackupReadiness();el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===BACKUP_META_KEY)continue;if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"4.0",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";storageWrite(BACKUP_META_KEY,{schema:1,exportedAt:new Date().getTime(),journalCount:getJournal().items.length,tradeCount:getTrades().items.length,portfolioCount:getPortfolio().items.length});renderBackupReadiness();el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
 
   function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
 
@@ -8952,6 +9255,7 @@ textarea.journalNotes{
     if(el("createTradePlan"))el("createTradePlan").onclick=createTradePlanFromCurrent;
     if(el("createTradeFromPosition"))el("createTradeFromPosition").onclick=createTradePlanFromCurrent;
     if(el("createTradeFromGrid"))el("createTradeFromGrid").onclick=createTradePlanFromCurrent;
+    if(el("createTradeFromNanpin"))el("createTradeFromNanpin").onclick=createTradePlanFromCurrent;
     if(el("updateTrade"))el("updateTrade").onclick=updateSelectedTrade;
     var af=["analyticsSymbol","analyticsTf","analyticsMode","analyticsGroupBy"],i;if(el("analyticsSymbol"))for(i=0;i<af.length;i++)el(af[i]).onchange=renderAnalytics;
     if(el("fetchMtf"))el("fetchMtf").onclick=fetchMtfDashboard;
@@ -8972,7 +9276,7 @@ textarea.journalNotes{
 
   var WATCH_SIGNATURE_IDS = [
     "symbol", "tf", "d1bias", "entryType", "entryBasis", "depth",
-    "counterDir", "gridDir", "slFloorAtr", "counterSlAtr",
+    "counterDir", "gridDir", "nanpinDir", "slFloorAtr", "counterSlAtr",
     "acctCcy", "balance", "riskPct", "leverage",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
@@ -8980,7 +9284,9 @@ textarea.journalNotes{
     "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
     "customPip", "customContract", "customDigits",
     "swingHigh", "swingLow", "slAnchor",
-    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult",
+    "nanpinStepAtr", "nanpinLevels", "nanpinBaseLot", "nanpinLotMode",
+    "nanpinAddLot", "nanpinMultiplier", "nanpinSlAtr", "nanpinTpAtr"
   ];
 
   function defaultWatchSettings() {
@@ -9073,7 +9379,9 @@ textarea.journalNotes{
 
   function currentWatchEntry(R) {
     if (!R || R.state === "INVALID") return null;
-    return R.mode === "GRID" ? R.avg : R.entry;
+    if (R.mode === "GRID") return R.avg;
+    if (R.mode === "NANPIN") return R.firstEntry;
+    return R.entry;
   }
 
   function currentWatchAtr() {
@@ -9303,9 +9611,9 @@ textarea.journalNotes{
       var settings = getWatchSettings();
       var price = n("price");
       var atr = currentWatchAtr();
-      var entry = currentWatchEntry(R);
+      var entry = w.mode === "NANPIN" ? Number(w.entry) : currentWatchEntry(R);
 
-      if (price == null || atr == null || entry == null) {
+      if (price == null || atr == null || entry == null || !isFinite(entry)) {
         renderWatchPanel();
         return;
       }
@@ -9483,6 +9791,7 @@ textarea.journalNotes{
     var arm = el("armCurrentWatch");
     var armPos = el("armWatchFromPosition");
     var armGrid = el("armWatchFromGrid");
+    var armNanpin = el("armWatchFromNanpin");
     var disarm = el("disarmWatch");
     var req = el("requestNotificationPermission");
     var clear = el("clearWatchEvents");
@@ -9495,6 +9804,7 @@ textarea.journalNotes{
     if (arm) arm.onclick = armCurrentWatch;
     if (armPos) armPos.onclick = armCurrentWatch;
     if (armGrid) armGrid.onclick = armCurrentWatch;
+    if (armNanpin) armNanpin.onclick = armCurrentWatch;
     if (disarm) disarm.onclick = disarmCurrentWatch;
     if (req) req.onclick = requestWatchNotificationPermission;
     if (clear) clear.onclick = clearWatchEvents;
@@ -12231,6 +12541,32 @@ textarea.journalNotes{
     return levels;
   }
 
+  function nanpinMapLevels(R) {
+    var levels = [];
+    var px = n("price");
+    if (finiteChartValue(px)) levels.push(chartLevel("CURRENT", px, "current", true));
+    if (finiteChartValue(R.avg)) levels.push(chartLevel("BASKET AVG", R.avg, "entry", true));
+    if (finiteChartValue(R.costBe)) levels.push(chartLevel("COST BE", R.costBe, "manage", true));
+
+    var rows=R.rows||[], picks=[],i;
+    if(rows.length){
+      picks.push(0);
+      if(rows.length>2)picks.push(Math.floor((rows.length-1)/2));
+      if(rows.length>1)picks.push(rows.length-1);
+    }
+    var seen={};
+    for(i=0;i<picks.length;i++){
+      var idx=picks[i];
+      if(seen[idx])continue;
+      seen[idx]=true;
+      var row=rows[idx];
+      levels.push(chartLevel("N"+row.i+" ENTRY",row.p,"grid",false));
+      levels.push(chartLevel("N"+row.i+" SL",row.sl,"sl",false));
+      levels.push(chartLevel("N"+row.i+" TP",row.tp,"tp",false));
+    }
+    return levels;
+  }
+
   function chartRange(levels) {
     var min = Infinity, max = -Infinity, i, v;
     for (i = 0; i < levels.length; i++) {
@@ -12323,9 +12659,9 @@ textarea.journalNotes{
     svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#ffffff"/>';
 
     // Risk / reward zones for orientation only.
-    var center = R.mode === "GRID" ? R.avg : R.entry;
-    var take = R.mode === "GRID" ? R.tpAll : R.tp1;
-    var stop = R.mode === "GRID" ? R.finalSL : R.sl;
+    var center = isMultiPlanMode(R.mode) ? R.avg : R.entry;
+    var take = R.mode === "GRID" ? R.tpAll : (R.mode === "NANPIN" && R.rows.length ? R.rows[R.rows.length-1].tp : R.tp1);
+    var stop = R.mode === "GRID" ? R.finalSL : (R.mode === "NANPIN" && R.rows.length ? R.rows[R.rows.length-1].sl : R.sl);
 
     if (finiteChartValue(center) && finiteChartValue(take)) {
       var yC = yFor(center), yT = yFor(take);
@@ -12425,7 +12761,8 @@ textarea.journalNotes{
     }
 
     var S = SYMBOLS[value("symbol")];
-    var levels = R.mode === "GRID" ? gridMapLevels(R) : normalMapLevels(R);
+    var levels = R.mode === "GRID" ? gridMapLevels(R) :
+      (R.mode === "NANPIN" ? nanpinMapLevels(R) : normalMapLevels(R));
     var range = chartRange(levels);
 
     header.innerHTML = esc(S.label + " / " + value("tf") + " / " + R.mode);
@@ -12444,6 +12781,10 @@ textarea.journalNotes{
     if (R.mode === "GRID") {
       s += resultRow("GRID段数", String(R.rows.length));
       s += resultRow("平均建値", R.fmt(R.avg));
+    } else if (R.mode === "NANPIN") {
+      s += resultRow("NANPIN段数", String(R.rows.length));
+      s += resultRow("平均建値", R.fmt(R.avg));
+      s += resultRow("コスト後BE", R.fmt(R.costBe));
     } else {
       s += resultRow("Entry距離",
         (Math.abs(R.px - R.entry) / R.S.pip).toFixed(1) + " pips");
@@ -12452,7 +12793,8 @@ textarea.journalNotes{
     summary.innerHTML = s;
     canvas.innerHTML = renderPositionMapSvg(R, levels);
 
-    if (nav) nav.innerHTML = R.mode === "GRID" ? "GRID" : (R.dir > 0 ? "BUY" : "SELL");
+    if (nav) nav.innerHTML = R.mode === "GRID" ? "GRID" :
+      (R.mode === "NANPIN" ? "NANPIN" : (R.dir > 0 ? "BUY" : "SELL"));
   }
 
 
@@ -12613,6 +12955,81 @@ textarea.journalNotes{
     var S = SYMBOLS[symbol];
     var digits = R.S && R.S.digits != null ? R.S.digits : S.digits;
 
+    if (R.mode === "NANPIN") {
+      if (!R.cumLot || R.cumLot <= 0 || !R.worstLoss || R.worstLoss <= 0) return null;
+      return {
+        id:makeJournalId(),
+        createdAt:new Date().getTime(),
+        updatedAt:new Date().getTime(),
+        symbol:symbol,
+        label:S.label,
+        timeframe:value("tf"),
+        d1bias:value("d1bias"),
+        depth:null,
+        mode:"NANPIN",
+        direction:R.dir > 0 ? "BUY" : "SELL",
+        basisVersion:1,
+        entryBasis:value("entryBasis") || "RULE",
+        basisDeclaredAt:new Date().getTime(),
+        basisSource:"PLAN",
+        basisOriginal:null,
+        basisEditedAt:null,
+        intuitionNote:"",
+        preDecisionVersion:1,
+        preDecisionRecordedAt:new Date().getTime(),
+        preDecisionConfidence:(function(){var v=parseFloat(value("preDecisionConfidence"));return isFinite(v)?Math.max(0,Math.min(100,v)):null;}()),
+        preDecisionFalsifier:String(value("preDecisionFalsifier")||"").substring(0,600),
+        reviewVersion:1,
+        ruleAdherence:"UNKNOWN",
+        decisionQuality:"UNKNOWN",
+        riskDiscipline:"UNKNOWN",
+        manualIntervention:"UNKNOWN",
+        executionQuality:"UNKNOWN",
+        newsContext:"UNKNOWN",
+        exceptionReason:"",
+        reviewUpdatedAt:null,
+        stateAtSave:R.state,
+        entry:R.avg,
+        sl:null,
+        tp1:null,
+        tp2:null,
+        lot:R.cumLot,
+        plannedRR:null,
+        risk:R.worstLoss,
+        acctCcy:R.acctCcy,
+        digits:digits,
+        pipSize:R.S && R.S.pip != null ? R.S.pip : null,
+        pipValuePerLot:R.pipVal != null ? R.pipVal : null,
+        providerSymbolAtSave:currentProviderSymbol(getMarketDataSettings()),
+        excursionVersion:1,
+        actualEntry:null, actualEntryAt:null,
+        actualExit:null, actualExitAt:null,
+        actualAmount:null,
+        numericEvidenceVersion:4,
+        numericSnapshot:edgeNumericSnapshot(R),
+        edgeEvidenceVersion:2,
+        edgeStates:null,
+        edgeFactors:[],
+        edgeScore:null,
+        multiPositionPlanVersion:1,
+        multiPositionPlan:researchClone(R.rows),
+        basketBreakEven:R.costBe,
+        lotProgression:{
+          mode:R.lotMode,
+          baseLot:R.baseLot,
+          addLot:R.addLot,
+          multiplier:R.multiplier,
+          levels:R.levels,
+          stepAtr:n("nanpinStepAtr"),
+          slAtr:R.slAtr,
+          tpAtr:R.tpAtr
+        },
+        status:"PLANNED",
+        realizedR:null,
+        notes:""
+      };
+    }
+
     if (R.mode === "GRID") {
       if (!R.cumLot || R.cumLot <= 0 || !R.worstLoss || R.worstLoss <= 0) return null;
       return {
@@ -12663,7 +13080,7 @@ textarea.journalNotes{
         actualEntry:null, actualEntryAt:null,
         actualExit:null, actualExitAt:null,
         actualAmount:null,
-        numericEvidenceVersion:3,
+        numericEvidenceVersion:4,
         numericSnapshot:edgeNumericSnapshot(R),
         edgeEvidenceVersion:2,
         edgeStates:null,
@@ -12678,7 +13095,7 @@ textarea.journalNotes{
     if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
 
     return {
-      numericEvidenceVersion:3,
+      numericEvidenceVersion:4,
       numericSnapshot:edgeNumericSnapshot(R),
       edgeEvidenceVersion:2,
       edgeStates:edgeStateSnapshot(R.edge),
@@ -13225,12 +13642,14 @@ textarea.journalNotes{
   function hookPhase4Controls() {
     var saveBtn = el("saveToJournal");
     var saveGridBtn = el("saveGridToJournal");
+    var saveNanpinBtn = el("saveNanpinToJournal");
     var updateBtn = el("journalUpdate");
     var deleteBtn = el("journalDelete");
     var clearBtn = el("clearJournal");
 
     if (saveBtn) saveBtn.onclick = saveCurrentToJournal;
     if (saveGridBtn) saveGridBtn.onclick = saveCurrentToJournal;
+    if (saveNanpinBtn) saveNanpinBtn.onclick = saveCurrentToJournal;
     if (updateBtn) updateBtn.onclick = updateSelectedJournal;
     if (deleteBtn) deleteBtn.onclick = deleteSelectedJournal;
     if (clearBtn) clearBtn.onclick = clearJournalAll;
@@ -13374,6 +13793,32 @@ textarea.journalNotes{
     var symbol = value("symbol");
     var S = SYMBOLS[symbol];
     var digits = R.S && R.S.digits != null ? R.S.digits : S.digits;
+
+    if (R.mode === "NANPIN") {
+      if (!R.cumLot || R.cumLot <= 0 || !R.worstLoss || R.worstLoss <= 0) return null;
+      return {
+        id:makePortfolioId(),
+        createdAt:new Date().getTime(),
+        symbol:symbol,
+        label:S.label,
+        direction:R.dir > 0 ? "BUY" : "SELL",
+        state:R.state + "/NANPIN",
+        timeframe:value("tf"),
+        entryType:"NANPIN",
+        entry:R.avg,
+        sl:null,
+        tp1:null,
+        tp2:null,
+        lot:R.cumLot,
+        risk:R.worstLoss,
+        margin:R.marginReq,
+        acctCcy:R.acctCcy,
+        riskUsage:R.riskUsage,
+        digits:digits,
+        basketBreakEven:R.costBe,
+        positionPlan:researchClone(R.rows)
+      };
+    }
 
     if (R.mode === "GRID") {
       if (!R.cumLot || R.cumLot <= 0 || !R.worstLoss || R.worstLoss <= 0) return null;
@@ -13626,8 +14071,10 @@ textarea.journalNotes{
 
   function hookPhase3Controls() {
     var addBtn = el("addToPortfolio");
+    var addNanpinBtn = el("addNanpinToPortfolio");
     var clearBtn = el("clearPortfolio");
     if (addBtn) addBtn.onclick = addCurrentToPortfolio;
+    if (addNanpinBtn) addNanpinBtn.onclick = addCurrentToPortfolio;
     if (clearBtn) clearBtn.onclick = clearPortfolioAll;
   }
 
@@ -13641,7 +14088,7 @@ textarea.journalNotes{
 
   var WORKSPACE_IDS = [
     "symbol", "tf", "d1bias", "entryType", "entryBasis", "preDecisionConfidence", "preDecisionFalsifier", "depth",
-    "counterDir", "gridDir", "slFloorAtr", "counterSlAtr",
+    "counterDir", "gridDir", "nanpinDir", "slFloorAtr", "counterSlAtr",
     "acctCcy", "balance", "riskPct", "leverage",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
@@ -13652,7 +14099,9 @@ textarea.journalNotes{
     "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv",
     "usdcadConv", "usdchfConv",
     "swingHigh", "swingLow", "slAnchor",
-    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult"
+    "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult",
+    "nanpinStepAtr", "nanpinLevels", "nanpinBaseLot", "nanpinLotMode",
+    "nanpinAddLot", "nanpinMultiplier", "nanpinSlAtr", "nanpinTpAtr"
   ];
 
   var BROKER_PRESET_IDS = [
@@ -14069,8 +14518,9 @@ textarea.journalNotes{
       "portfolioRiskCapPct", "portfolioMarginCapPct", "currencyLegCap", "minRR",
       "customPip", "customContract", "customDigits",
       "price", "atr", "swingHigh", "swingLow", "slAnchor", "d1bias",
-      "entryType", "entryBasis", "preDecisionConfidence", "preDecisionFalsifier", "depth", "counterDir", "gridDir", "slFloorAtr", "counterSlAtr",
+      "entryType", "entryBasis", "preDecisionConfidence", "preDecisionFalsifier", "depth", "counterDir", "gridDir", "nanpinDir", "slFloorAtr", "counterSlAtr",
       "gridStepAtr", "gridLevels", "gridBaseLot", "gridMult",
+      "nanpinStepAtr", "nanpinLevels", "nanpinBaseLot", "nanpinLotMode", "nanpinAddLot", "nanpinMultiplier", "nanpinSlAtr", "nanpinTpAtr",
       "stressSpreadMult", "stressExtraSlip", "stressGapAtr"
     ];
 
@@ -14163,7 +14613,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v3.9</li>
+    <li class="group">ENTRY CONSOLE v4.0</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -14184,7 +14634,7 @@ textarea.journalNotes{
     <li><a href="#trades">Trade Lifecycle <span id="navTrades" class="navValue">0</span></a></li>
     <li><a href="#analytics">Journal Analytics <span id="navAnalytics" class="navValue">—</span></a></li>
     <li><a href="#intuition">Intuition Lab <span id="navIntuition" class="navValue">0</span></a></li>
-    <li class="group">EA RESEARCH v3.9</li>
+    <li class="group">EA RESEARCH v4.0</li>
     <li><a href="#research">Research Pipeline <span id="navResearch" class="navValue">0</span></a></li>
     <li><a href="#plboard">損益ボード <span id="navPlBoard" class="navValue">—</span></a></li>
     <li><a href="#discovery">Edge Discovery <span id="navDiscovery" class="navValue">—</span></a></li>
@@ -14194,6 +14644,7 @@ textarea.journalNotes{
     <li id="navPositionRow"><a href="#position">建玉設計 <span id="navPosition" class="navValue">—</span></a></li>
     <li id="navManagementRow"><a href="#management">建玉後の管理 <span class="navValue">—</span></a></li>
     <li id="navGridRow" style="display:none"><a href="#grid">グリッド構成 <span id="navGrid" class="navValue">—</span></a></li>
+    <li id="navNanpinRow" style="display:none"><a href="#nanpin">ナンピン / マーチン <span id="navNanpin" class="navValue">—</span></a></li>
     <li class="group">SYSTEM</li>
     <li><a href="#storage">保存 / Broker Preset <span id="navSave" class="navValue">LOCAL</span></a></li>
     <li><a href="#backup">Backup / Restore <span id="navBackup" class="navValue">JSON</span></a></li>
@@ -14288,6 +14739,7 @@ textarea.journalNotes{
           <option value="TREND">順張り</option>
           <option value="COUNTER">逆張り</option>
           <option value="GRID">グリッド</option>
+          <option value="NANPIN">ナンピン / マーチン</option>
         </select>
       </div>
       <div class="row">
@@ -14318,6 +14770,13 @@ textarea.journalNotes{
         <select id="gridDir">
           <option value="BUY">買い下がり</option>
           <option value="SELL">売り上がり</option>
+        </select>
+      </div>
+      <div class="row" id="nanpinDirRow" style="display:none">
+        <label for="nanpinDir">ナンピン方向</label>
+        <select id="nanpinDir">
+          <option value="BUY">BUY / 買い下がり</option>
+          <option value="SELL">SELL / 売り上がり</option>
         </select>
       </div>
       <div class="row">
@@ -14471,6 +14930,33 @@ textarea.journalNotes{
         <div class="row"><label for="gridLevels">段数</label><input id="gridLevels" type="number" step="1" value="5"></div>
         <div class="row"><label for="gridBaseLot">初期ロット</label><input id="gridBaseLot" type="number" step="any" value="0.01"></div>
         <div class="row"><label for="gridMult">ロット倍率</label><input id="gridMult" type="number" step="any" value="1.0"></div>
+      </div>
+      <div id="nanpinFields" style="display:none">
+        <div class="row"><label for="nanpinStepAtr">ナンピン間隔 ATR倍</label><input id="nanpinStepAtr" type="number" min="0" step="any" placeholder="例 0.5"></div>
+        <div class="row"><label for="nanpinLevels">予定段数</label><input id="nanpinLevels" type="number" min="1" max="50" step="1" placeholder="例 5"></div>
+        <div class="row"><label for="nanpinBaseLot">初期ロット</label><input id="nanpinBaseLot" type="number" min="0" step="any" placeholder="例 0.01"></div>
+        <div class="row">
+          <label for="nanpinLotMode">ロット増加</label>
+          <select id="nanpinLotMode">
+            <option value="ADD">加算</option>
+            <option value="MULT">乗算</option>
+          </select>
+        </div>
+        <div class="row" id="nanpinAddLotRow">
+          <label for="nanpinAddLot">1段ごとの加算Lot</label>
+          <input id="nanpinAddLot" type="number" min="0" step="any" placeholder="例 0.01">
+        </div>
+        <div class="row" id="nanpinMultRow" style="display:none">
+          <label for="nanpinMultiplier">1段ごとの倍率</label>
+          <input id="nanpinMultiplier" type="number" min="0" step="any" placeholder="例 2.0">
+        </div>
+        <div class="row"><label for="nanpinSlAtr">各ポジション SL ATR倍</label><input id="nanpinSlAtr" type="number" min="0" step="any" placeholder="例 1.0"></div>
+        <div class="row"><label for="nanpinTpAtr">各ポジション TP ATR倍</label><input id="nanpinTpAtr" type="number" min="0" step="any" placeholder="例 1.0"></div>
+        <div class="panelNote">
+          加算: 第n段Lot = 初期Lot + (n-1)×加算Lot。乗算: 第n段Lot = 初期Lot × 倍率^(n-1)。
+          予定段数50は画面計算上の上限で、安全な段数を意味しません。
+          SL / TPは各EntryからATR倍で個別計算します。
+        </div>
       </div>
     </fieldset>
     <div class="panelNote">
@@ -14857,7 +15343,7 @@ textarea.journalNotes{
         <span><i class="mapDot tp"></i>TP</span>
         <span><i class="mapDot sl"></i>SL</span>
         <span><i class="mapDot manage"></i>BE / Add / Avg</span>
-        <span><i class="mapDot grid"></i>GRID Levels</span>
+        <span><i class="mapDot grid"></i>GRID / NANPIN Levels</span>
       </div>
     </div>
 
@@ -14873,8 +15359,9 @@ textarea.journalNotes{
       <li><span>状態</span><strong>入力待ち</strong></li>
     </ul>
     <div class="panelNote">
-      「実リスク」は、SL価格損失 + Spread + Commission + Slippage の合計。
-      Lotはこの合計が許容損失を超えないよう、ロット刻みに対して切り下げます。
+      通常Tradeの「実リスク」は、SL価格損失 + Spread + Commission + Slippage の合計です。
+      GRIDは全段約定後の最終SL、NANPINは各ポジション個別SLの累積計画損失を別モデルで表示します。
+      NANPINの累積損失は単一価格時点の最大損失とは限りません。
     </div>
   </div>
 
@@ -14891,7 +15378,7 @@ textarea.journalNotes{
     </div>
     <div class="panelNote">
       これは約定確認ではありません。現在の建玉設計を「Risk予約」として登録し、総リスク上限に含めます。
-      WATCH状態とGRIDも予約できます。登録後に相場が変わっても、保存された損失額・証拠金は自動更新しません。
+      WATCH状態、GRID、NANPIN / MARTINGALEもRisk予約できます。登録後に相場が変わっても、保存された損失額・証拠金は自動更新しません。
     </div>
   </div>
 
@@ -14922,6 +15409,31 @@ textarea.journalNotes{
       <button id="saveGridToJournal" class="actionButton" type="button">GRID設計をJournalへ保存</button>
       <button id="createTradeFromGrid" class="actionButton" type="button">GRIDをTrade Lifecycleに登録</button>
       <button id="armWatchFromGrid" class="actionButton" type="button">このGRIDをWATCH</button>
+    </div>
+  </div>
+
+
+  <!-- NANPIN / MARTINGALE -->
+  <div id="nanpin" title="ナンピン / マーチン構成">
+    <div class="tableWrap">
+      <table id="nanpinTable">
+        <thead>
+          <tr><th>段</th><th>Entry</th><th>Lot</th><th>累計</th><th>SL</th><th>TP</th><th>BE*</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <ul id="nanpinSummary" class="resultList"></ul>
+    <div class="warning">
+      BE*は「その段までの全ポジションが未決済」の仮定で計算したコスト後の損益分岐価格です。
+      各ポジションのSLが先に約定した場合、実際の保有構成とBEは変わります。
+      「全段累積SL損失」は各ポジションがそれぞれ個別SLへ到達する計画損失の合計で、単一価格時点の最大損失とは限りません。
+    </div>
+    <div class="actionPanel">
+      <button id="addNanpinToPortfolio" class="actionButton primary" type="button">Risk予約としてPortfolioへ追加</button>
+      <button id="saveNanpinToJournal" class="actionButton" type="button">ナンピン設計をJournalへ保存</button>
+      <button id="createTradeFromNanpin" class="actionButton" type="button">ナンピンをTrade Lifecycleに登録</button>
+      <button id="armWatchFromNanpin" class="actionButton" type="button">この設計をWATCH</button>
     </div>
   </div>
 
@@ -15175,7 +15687,7 @@ textarea.journalNotes{
       <li><span>Rule Spec</span><strong>0</strong></li>
     </ul>
     <div class="panelNote">
-      v3.9はP0-P6の研究・検証・限定Release管理までを同じPipelineに接続します。ブローカー自動発注は行いません。
+      v4.0はP0-P6の研究・検証・限定Release管理を維持し、NANPIN / MARTINGALE計画もJournal / Evidenceへ保存できます。ブローカー自動発注は行いません。
       Discoveryの上位結果や中央値を自動でRuleへ昇格させる処理もありません。
     </div>
 
@@ -15557,7 +16069,7 @@ textarea.journalNotes{
     <fieldset>
       <div class="row" style="min-height:96px"><label for="declaredSummary">本人の説明</label><textarea id="declaredSummary" class="journalNotes" maxlength="1200" placeholder="例: D1/H4の方向に沿い、H1で61.8%付近まで押した時だけ狙う"></textarea></div>
       <div class="row"><label for="declaredSymbols">対象銘柄</label><input id="declaredSymbols" type="text" placeholder="例 XAUUSD,USDJPY / 空欄=指定なし"></div>
-      <div class="row"><label for="declaredMode">主Mode</label><select id="declaredMode"><option value="ANY">指定なし</option><option value="TREND">TREND</option><option value="COUNTER">COUNTER</option><option value="GRID">GRID</option></select></div>
+      <div class="row"><label for="declaredMode">主Mode</label><select id="declaredMode"><option value="ANY">指定なし</option><option value="TREND">TREND</option><option value="COUNTER">COUNTER</option><option value="GRID">GRID</option><option value="NANPIN">NANPIN / MARTINGALE</option></select></div>
       <div class="row"><label for="declaredDirection">方向</label><select id="declaredDirection"><option value="ANY">指定なし</option><option value="BUY">LONG</option><option value="SELL">SHORT</option></select></div>
       <div class="row"><label for="declaredTf">主時間足</label><select id="declaredTf"><option value="ANY">指定なし</option><option>M1</option><option>M3</option><option>M5</option><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></div>
       <div class="row"><label for="declaredD1Align">D1 EMA整合</label><select id="declaredD1Align"><option value="ANY">指定なし</option><option value="REQUIRED">必須</option></select></div>
@@ -15625,7 +16137,7 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v3.9 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v4.0 — 建玉設計コンソール。</p>
       <p>v3.1.1では、銘柄/時間足変更直後の再計算、Edge Factorのtrue/false/null全状態保存、同一Evidence母集団でのON/OFF比較、MTF Edgeの鮮度確認、Stress仮定のWATCH Signature除外を追加しています。旧v3.1 Journalの発火ID欠落はOFFへ推定せずUnknownとして扱います。</p>
       <p>v3.1.2では、LONG/SHORT別の勝率・負率、本日/トータルの獲得pips・獲得金額、Entry時間帯別の獲得pips・金額をJournal Analyticsへ追加しています。pipsは実約定価格差、金額は実現金額入力を優先し未入力時のみ実現R×保存Riskを使用します。本日はExit日時、時間別はEntry日時で判定します。</p>
       <p>v3.2では、Edge Discoveryとして単独Factorと2/3 Factor組み合わせのON/OFF比較・前半/後半Δ、Journal保存時の数値スナップショット、Observed Playbookの自動言語化、Declared Methodの構造化保存、Declared vs Observed一致率を追加しています。組み合わせランキングは探索用で、自動Edge採用や因果推論は行いません。</p>
@@ -15634,6 +16146,7 @@ textarea.journalNotes{
       <p>v3.4.1では、iPhone Safariで損益カレンダーに全体tableの最小幅が継承されて横にはみ出す表示不具合を修正しました。カレンダーだけmin-widthを解除し、7列をカード幅へ固定しています。</p>
       <p>v3.5では、ミニチャートへBB20 ±2σとParabolic SARを追加し、下段へATR/ATR%、MACD（Line + Signalのみ）、ADX14 +DI/-DI、平均足の独立パネルを追加しました。追加表示は個別ON/OFFできますが、計算とJournalのPLANログは常時保存し、OPEN遷移時には現在Market Dataが同一銘柄・時間足ならENTRYテクニカルログも別保存します。追加指標は現段階ではGate/Edge判定には使いません。</p>
       <p>v3.6では、市場構造としてDonchian20、前日/前週High-Low、Kaufman ER10を追加しました。さらにログ専用特徴量としてROC 1/3/5/20、Z-Score20、実ローソク足のBody/Wick/Range、EMA20/50/200の1本・5本Slope、EMA間隔とCompression、UTC Sessionラベルを保存します。前日/前週レベルは日足コンテキストを別取得し、Session境界はユーザー変更可能な暫定UTC区分です。これらはv3.6時点では観測用で、Gate/Edge Scoreを自動変更しません。</p>
+      <p><strong>v4.0:</strong> GRIDとは別にNANPIN / MARTINGALE計画を追加しました。初期Lot、加算/乗算、予定段数、ATR基準の各段Entry・個別SL・個別TP、累計Lot、Basket平均、コスト後BEを表示します。各段SL損失の累積計画値と全段同時保有の証拠金上限をRisk Engineへ接続し、Portfolio / Journal / Trade Lifecycle / WATCH / Evidenceへ保存できます。BEは先行ポジションが未決済という仮定値で、個別SLの成立順によって実際のBEは変わります。自動発注やLot自動増加は行いません。</p>
       <p><strong>v3.9:</strong> Research PipelineをP3-P6まで拡張しました。固定Rule Specに対する記録済みEvidence/JournalsのValidation Run、探索/確認期間分離、境界をまたぐ保有のpurge、任意Embargo、コスト摂動、条件感度、任意Moving Block Bootstrap、Regime別集計、Run cacheを追加しています。Parity Testでは凍結Featureに対するResearch EngineのMATCH / NO_MATCH / UNKNOWNと外部EA/アダプタ結果をcase IDで比較します。Shadowは注文を出さず、アプリ起動中のForward判定と想定執行を保存します。Limited ReleaseはValidation / Parity / Shadow証跡とユーザー定義のRisk・Lot・Spread・日次損失・DD・連敗・DQ制約を固定し、Monitor EventからAPP STOP条件を評価します。APP STOPはブローカー側注文を停止しません。Trade Journalには事前Confidence / 反証条件、Rule Adherence、裁量介入、執行品質、ニュース回避、例外理由を追加しました。</p>
       <p><strong>v3.8:</strong> Research Governanceを追加しました。Evidence Bundle v1、Hypothesis Card、Candidate Ledger、Rule Spec Draftを同じ研究パイプラインで管理します。新規PLAN、Intuition Snapshot、ENTRY、EXITではEvidenceを自動凍結し、NO-TRADE/OBSERVATIONは手動保存できます。HypothesisとRule Specは旧版を上書きせず新版として分岐します。Candidateはv3.8ではREGISTERED→SPECIFIEDまでを扱い、Validation以降へ自動昇格しません。Discovery順位、中央値、成績差をEA条件へ自動採用する機能はありません。</p>
       <p><strong>v3.7.2:</strong> EA研究基盤への集中のため、HOMEの一般的な次操作ガイドと固定7日バックアップ期限を削除しました。JSON Backupは最終書き出し日時のみを記録し、Trade Journal CSVの時系列出力、実績額と導出額の分離、UTF-8 BOM出力を維持しました。</p>

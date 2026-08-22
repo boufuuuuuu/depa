@@ -1,7 +1,6 @@
-DEPA FX v3.9 FINAL SYNC
-Research Validation / Parity / Shadow / Release Governance
+DEPA FX v4.0 — NANPIN / MARTINGALE PLANNER
 
-Upload the contents of this folder to the GitHub Pages repository root:
+Deploy these files to the GitHub Pages repository root:
 - index.html
 - manifest.webmanifest
 - service-worker.js
@@ -11,43 +10,26 @@ Upload the contents of this folder to the GitHub Pages repository root:
 - apple-touch-icon.png
 - .nojekyll
 - manual.pdf
-- UPDATE_REPORT_v3.9.md
+- UPDATE_REPORT_v4.0.md
 
-After GitHub Pages deploys:
-1. Open the site once online in Safari.
-2. If the Home Screen app is already installed, launch it online once.
-3. The v3.9-v2 Service Worker cache will replace older DEPA FX caches.
-4. If the old screen remains temporarily, close the Home Screen app and reopen it online.
+New in v4.0:
+- Adds NANPIN / MARTINGALE as a separate mode from GRID.
+- Inputs: direction, ATR step, planned levels, base lot, ADD/MULT progression,
+  add-lot or multiplier, per-position SL ATR and TP ATR.
+- Displays every planned position's Entry / Lot / cumulative Lot / SL / TP / cost-adjusted BE.
+- ADD formula: Base + (level-1)*AddLot.
+- MULT formula: Base * Multiplier^(level-1).
+- Saves detailed multiPositionPlan into Journal / Trade / Portfolio/Evidence.
+- Risk Engine uses cumulative planned individual-SL losses plus costs.
+- Margin display uses an all-levels-simultaneously-open upper-bound assumption.
+- WATCH fixes the armed first-entry price.
+- Position Map shows representative NANPIN levels while the table remains the full plan.
+- No automatic order placement or automatic lot escalation.
+- UI level limit 50 is a technical display/calculation limit, not a safety threshold.
+- Service Worker cache: depa-fx-v4-0-v1.
+- manual.pdf is synchronized to v4.0.
 
-v3.9 final pipeline:
-Evidence -> Hypothesis -> Candidate -> Rule Spec
--> VALIDATING -> Validation Run -> VALIDATED
--> Parity -> Shadow -> Limited Release -> Monitoring
-
-Final synchronized additions:
-- Prospective vs retrospective validation:
-  * PROSPECTIVE_LOCKED only when confirm-start is after Hypothesis registration and Rule freeze.
-  * RETROSPECTIVE_ONLY cannot be used as the promotion PASS.
-- Validation metrics include AvgR, PF, Win%, Max DD R, Trade Sharpe,
-  Downside Deviation R and empirical worst-5% Expected Shortfall R.
-- Validation dataVersion covers Evidence plus outcome/cost/review inputs that affect the Run.
-- Validation stores compact Explore / Confirm / Purged / Embargoed sample ledgers.
-- Release binds Rule version, Validation Data version, Parity, Shadow,
-  EA/Adapter Code Version and Config Version.
-- Release limits include Risk, Lot, Trades/Session, Spread, Slippage,
-  Daily Loss, Max DD, Loss Streak and Allowed DQ.
-- Monitoring shows Observed vs Validation-Expected AvgR/Win%,
-  Avg Loss R, Trades/Day, Avg Spread/Slippage and Session-distribution TVD.
-- APP STOP is an in-app control record only; it does not physically stop an external EA or broker.
-- The bundled manual.pdf is synchronized to this final v3.9 behavior.
-- Service Worker cache: depa-fx-v3-9-v2.
-
-Important boundaries:
-- Validation uses recorded Evidence + Journal outcomes; it is not a complete tick/bid-ask market replay.
-- Parity currently verifies Rule decisions on frozen features; full indicator/runtime/broker parity is separate.
-- Shadow operates only while the app is active and sends no broker orders.
-- No automatic broker ordering, MQL/Pine generation, or automatic parameter optimization is enabled.
-- PASS/COMPLETE/Release do not guarantee future profitability.
-
-Existing localStorage data is preserved by the app update.
-Normal JSON Backup includes the v3.9 research stores.
+Important:
+Basket BE assumes earlier positions are still open. If an earlier individual SL is
+reached before a later Entry, the actual basket composition and BE will differ.
+The cumulative planned SL loss is not necessarily a single-price-point maximum loss.
