@@ -1,4 +1,4 @@
-DEPA FX v4.0 — NANPIN / MARTINGALE PLANNER
+DEPA FX v4.1 — MTF MA MINI CHARTS / ASSET & SYMBOL LEVERAGE
 
 Deploy these files to the GitHub Pages repository root:
 - index.html
@@ -10,26 +10,35 @@ Deploy these files to the GitHub Pages repository root:
 - apple-touch-icon.png
 - .nojekyll
 - manual.pdf
-- UPDATE_REPORT_v4.0.md
+- UPDATE_REPORT_v4.1.md
 
-New in v4.0:
-- Adds NANPIN / MARTINGALE as a separate mode from GRID.
-- Inputs: direction, ATR step, planned levels, base lot, ADD/MULT progression,
-  add-lot or multiplier, per-position SL ATR and TP ATR.
-- Displays every planned position's Entry / Lot / cumulative Lot / SL / TP / cost-adjusted BE.
-- ADD formula: Base + (level-1)*AddLot.
-- MULT formula: Base * Multiplier^(level-1).
-- Saves detailed multiPositionPlan into Journal / Trade / Portfolio/Evidence.
-- Risk Engine uses cumulative planned individual-SL losses plus costs.
-- Margin display uses an all-levels-simultaneously-open upper-bound assumption.
-- WATCH fixes the armed first-entry price.
-- Position Map shows representative NANPIN levels while the table remains the full plan.
-- No automatic order placement or automatic lot escalation.
-- UI level limit 50 is a technical display/calculation limit, not a safety threshold.
-- Service Worker cache: depa-fx-v4-0-v1.
-- manual.pdf is synchronized to v4.0.
+New in v4.1:
+- Multi-Timeframe keeps the numeric table and adds tiny EMA-only charts.
+- Each selected timeframe shows EMA20 / EMA50 / EMA200 using the last 60 stored points.
+- Candles and price line are not drawn.
+- No extra API request is used for the mini charts.
+- MTF cache schema: 13.
 
-Important:
-Basket BE assumes earlier positions are still open. If an earlier individual SL is
-reached before a later Entry, the actual basket composition and BE will differ.
-The cumulative planned SL loss is not necessarily a single-price-point maximum loss.
+Leverage:
+- Existing common leverage remains as fallback.
+- Optional class leverage: FX / Metals / Index / Energy / Crypto.
+- Optional per-symbol leverage override.
+- Precedence: symbol override > asset class > common fallback.
+- Current effective leverage and source are visible in Account, Risk and Margin Gates.
+- Per-symbol overrides are stored in depaFX.symbolLeverageOverrides.v1.
+- Class leverage settings are included in Workspace / Broker Preset / WATCH signature.
+- Effective leverage provenance is saved into Research/Evidence.
+- Numeric Snapshot schema / numericEvidenceVersion: 5.
+
+Service Worker cache:
+- depa-fx-v4-1-v1
+
+Important boundaries:
+- A broker can apply different leverage or margin requirements by asset class, symbol,
+  account type, regulation, position size or other broker rules.
+- DEPA FX does not infer broker leverage/margin terms.
+- For CFDs/crypto/index/energy, the current margin calculation remains a simplified
+  notional/leverage model using the configured contract specification.
+- It may differ from the broker's official margin engine.
+- MTF MA mini charts are observational display only and do not automatically change
+  Gate, Edge Score, WATCH, Entry or EA promotion.

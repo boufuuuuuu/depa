@@ -726,6 +726,27 @@ textarea.journalNotes{
 .mtfChecks{margin:12px 9px;padding:8px 10px;border:1px solid #9da4aa;border-radius:9px;background:#fff;display:flex;flex-wrap:wrap;gap:8px 12px;font-size:12px;}
 .mtfChecks label{white-space:nowrap;}
 .mtfArrowUp{color:#18733a;font-weight:bold}.mtfArrowDown{color:#a32f28;font-weight:bold}.mtfArrowFlat{color:#7a848e;font-weight:bold}
+.mtfMiniGrid{margin:10px 9px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.mtfMiniCard{background:#fff;border:1px solid #b9c1c8;border-radius:10px;padding:7px 8px;box-sizing:border-box;min-width:0;}
+.mtfMiniHead{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;font-size:11px;color:#56616c;}
+.mtfMiniHead strong{font-size:12px;color:#26323d;}
+.mtfMiniChart{height:68px;border:1px solid #d3d8dd;border-radius:7px;background:#f8f9fa;overflow:hidden;}
+.mtfMiniChart svg{width:100%;height:100%;display:block;}
+.mtfMiniLegend{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px;font-size:9px;color:#6b747d;}
+.mtfMiniLegend span{white-space:nowrap;}
+.mtfMiniLegend i{display:inline-block;width:12px;height:2px;margin-right:3px;vertical-align:middle;background:#444;}
+.mtfMiniLegend .e20 i{background:#2f6fa3}.mtfMiniLegend .e50 i{background:#7966a8}.mtfMiniLegend .e200 i{background:#8a5a44}
+.mtfMiniChart .mtfE20{fill:none;stroke:#2f6fa3;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.mtfMiniChart .mtfE50{fill:none;stroke:#7966a8;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.mtfMiniChart .mtfE200{fill:none;stroke:#8a5a44;stroke-width:1.5;vector-effect:non-scaling-stroke}
+
+.mtfLine20{fill:none;stroke:#2f6fa3;stroke-width:1.6;vector-effect:non-scaling-stroke}
+.mtfLine50{fill:none;stroke:#7966a8;stroke-width:1.6;vector-effect:non-scaling-stroke}
+.mtfLine200{fill:none;stroke:#8a5a44;stroke-width:1.6;vector-effect:non-scaling-stroke}
+
+.mtfMiniEmpty{height:68px;display:flex;align-items:center;justify-content:center;color:#89929a;font-size:10px;}
+@media (max-width:420px){.mtfMiniGrid{grid-template-columns:1fr 1fr;gap:6px}.mtfMiniCard{padding:6px}.mtfMiniChart{height:58px;}}
+
 .backupFile{width:100%;box-sizing:border-box;padding:8px;background:#fff;border:1px solid #aaa;border-radius:6px;}
 
 
@@ -1216,56 +1237,191 @@ textarea.journalNotes{
 
   <script>
 /* ============================================================
-   DEPA FX SYSTEM — ENTRY CONSOLE v4.0
+   DEPA FX SYSTEM — ENTRY CONSOLE v4.1
    Classic iUI-style vanilla JavaScript port
    ============================================================ */
 
 (function () {
   var SYMBOLS = {
-    USDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "USD/JPY" },
-    EURJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "EUR/JPY" },
-    GBPJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "GBP/JPY" },
-    AUDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "AUD/JPY" },
-    NZDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "NZD/JPY" },
-    CADJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "CAD/JPY" },
-    CHFJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "CHF/JPY" },
+    USDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "USD/JPY", assetClass: "FX" },
+    EURJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "EUR/JPY", assetClass: "FX" },
+    GBPJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "GBP/JPY", assetClass: "FX" },
+    AUDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "AUD/JPY", assetClass: "FX" },
+    NZDJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "NZD/JPY", assetClass: "FX" },
+    CADJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "CAD/JPY", assetClass: "FX" },
+    CHFJPY: { pip: 0.01, digits: 3, contract: 100000, quote: "JPY", label: "CHF/JPY", assetClass: "FX" },
 
-    EURUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "EUR/USD" },
-    GBPUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "GBP/USD" },
-    AUDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "AUD/USD" },
-    NZDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "NZD/USD" },
-    USDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "USD/CAD" },
-    USDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "USD/CHF" },
+    EURUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "EUR/USD", assetClass: "FX" },
+    GBPUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "GBP/USD", assetClass: "FX" },
+    AUDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "AUD/USD", assetClass: "FX" },
+    NZDUSD: { pip: 0.0001, digits: 5, contract: 100000, quote: "USD", label: "NZD/USD", assetClass: "FX" },
+    USDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "USD/CAD", assetClass: "FX" },
+    USDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "USD/CHF", assetClass: "FX" },
 
-    EURGBP: { pip: 0.0001, digits: 5, contract: 100000, quote: "GBP", label: "EUR/GBP" },
-    EURAUD: { pip: 0.0001, digits: 5, contract: 100000, quote: "AUD", label: "EUR/AUD" },
-    EURNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "EUR/NZD" },
-    EURCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "EUR/CAD" },
-    EURCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "EUR/CHF" },
+    EURGBP: { pip: 0.0001, digits: 5, contract: 100000, quote: "GBP", label: "EUR/GBP", assetClass: "FX" },
+    EURAUD: { pip: 0.0001, digits: 5, contract: 100000, quote: "AUD", label: "EUR/AUD", assetClass: "FX" },
+    EURNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "EUR/NZD", assetClass: "FX" },
+    EURCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "EUR/CAD", assetClass: "FX" },
+    EURCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "EUR/CHF", assetClass: "FX" },
 
-    GBPAUD: { pip: 0.0001, digits: 5, contract: 100000, quote: "AUD", label: "GBP/AUD" },
-    GBPNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "GBP/NZD" },
-    GBPCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "GBP/CAD" },
-    GBPCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "GBP/CHF" },
+    GBPAUD: { pip: 0.0001, digits: 5, contract: 100000, quote: "AUD", label: "GBP/AUD", assetClass: "FX" },
+    GBPNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "GBP/NZD", assetClass: "FX" },
+    GBPCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "GBP/CAD", assetClass: "FX" },
+    GBPCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "GBP/CHF", assetClass: "FX" },
 
-    AUDNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "AUD/NZD" },
-    AUDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "AUD/CAD" },
-    AUDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "AUD/CHF" },
-    NZDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "NZD/CAD" },
-    NZDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "NZD/CHF" },
-    CADCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "CAD/CHF" },
+    AUDNZD: { pip: 0.0001, digits: 5, contract: 100000, quote: "NZD", label: "AUD/NZD", assetClass: "FX" },
+    AUDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "AUD/CAD", assetClass: "FX" },
+    AUDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "AUD/CHF", assetClass: "FX" },
+    NZDCAD: { pip: 0.0001, digits: 5, contract: 100000, quote: "CAD", label: "NZD/CAD", assetClass: "FX" },
+    NZDCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "NZD/CHF", assetClass: "FX" },
+    CADCHF: { pip: 0.0001, digits: 5, contract: 100000, quote: "CHF", label: "CAD/CHF", assetClass: "FX" },
 
-    XAUUSD: { pip: 0.1, digits: 2, contract: 100, quote: "USD", label: "XAU/USD" },
-    XAGUSD: { pip: 0.01, digits: 3, contract: 5000, quote: "USD", label: "XAG/USD" },
+    XAUUSD: { pip: 0.1, digits: 2, contract: 100, quote: "USD", label: "XAU/USD", assetClass: "METALS" },
+    XAGUSD: { pip: 0.01, digits: 3, contract: 5000, quote: "USD", label: "XAG/USD", assetClass: "METALS" },
 
     /* Broker-dependent CFD / crypto specs.
        pip/contract are intentionally null until the user confirms broker specs. */
-    WTI:    { pip: null, digits: 2, contract: null, quote: "USD", label: "WTI", customSpec: true },
-    JP225:  { pip: null, digits: 1, contract: null, quote: "JPY", label: "JP225", customSpec: true },
-    NAS100: { pip: null, digits: 1, contract: null, quote: "USD", label: "NAS100", customSpec: true },
-    BTCUSD: { pip: null, digits: 2, contract: null, quote: "USD", label: "BTC/USD", customSpec: true },
-    ETHUSD: { pip: null, digits: 2, contract: null, quote: "USD", label: "ETH/USD", customSpec: true }
+    WTI:    { pip: null, digits: 2, contract: null, quote: "USD", label: "WTI", customSpec: true, assetClass: "ENERGY" },
+    JP225:  { pip: null, digits: 1, contract: null, quote: "JPY", label: "JP225", customSpec: true, assetClass: "INDEX" },
+    NAS100: { pip: null, digits: 1, contract: null, quote: "USD", label: "NAS100", customSpec: true, assetClass: "INDEX" },
+    BTCUSD: { pip: null, digits: 2, contract: null, quote: "USD", label: "BTC/USD", customSpec: true, assetClass: "CRYPTO" },
+    ETHUSD: { pip: null, digits: 2, contract: null, quote: "USD", label: "ETH/USD", customSpec: true, assetClass: "CRYPTO" }
   };
+
+  function assetClassLabel(assetClass) {
+    if (assetClass === "FX") return "FX";
+    if (assetClass === "METALS") return "貴金属";
+    if (assetClass === "INDEX") return "Index";
+    if (assetClass === "ENERGY") return "Energy";
+    if (assetClass === "CRYPTO") return "Crypto";
+    return "Other";
+  }
+
+  function leverageInputIdForAssetClass(assetClass) {
+    if (assetClass === "FX") return "leverageFx";
+    if (assetClass === "METALS") return "leverageMetals";
+    if (assetClass === "INDEX") return "leverageIndex";
+    if (assetClass === "ENERGY") return "leverageEnergy";
+    if (assetClass === "CRYPTO") return "leverageCrypto";
+    return null;
+  }
+
+  function optionalPositiveInputState(id) {
+    var node = el(id);
+    if (!node) return { provided:false, valid:false, value:null };
+    var raw = String(node.value == null ? "" : node.value).replace(/^\s+|\s+$/g, "");
+    if (!raw) return { provided:false, valid:false, value:null };
+    var x = Number(raw);
+    return { provided:true, valid:isFinite(x) && x > 0, value:(isFinite(x) && x > 0) ? x : null };
+  }
+
+  function getSymbolLeverageOverrides() {
+    var d = storageRead(SYMBOL_LEVERAGE_KEY, {schema:1, items:{}});
+    if (!d || !d.items || typeof d.items !== "object") d = {schema:1, items:{}};
+    return d;
+  }
+
+  function saveSymbolLeverageOverrides(d) {
+    return storageWrite(SYMBOL_LEVERAGE_KEY, d);
+  }
+
+  function effectiveLeverageInfo(symbol) {
+    var spec = SYMBOLS[symbol] || null;
+    var assetClass = spec && spec.assetClass ? spec.assetClass : "OTHER";
+    var overrides = getSymbolLeverageOverrides();
+    var symbolRaw = overrides.items && overrides.items[symbol] != null ? Number(overrides.items[symbol]) : null;
+
+    if (symbolRaw != null && isFinite(symbolRaw) && symbolRaw > 0) {
+      return {
+        value:symbolRaw,
+        assetClass:assetClass,
+        source:"銘柄個別 override",
+        sourceId:SYMBOL_LEVERAGE_KEY,
+        invalid:false
+      };
+    }
+
+    var classId = leverageInputIdForAssetClass(assetClass);
+    var classState = classId ? optionalPositiveInputState(classId) : {provided:false,valid:false,value:null};
+
+    if (classState.provided) {
+      return {
+        value:classState.valid ? classState.value : null,
+        assetClass:assetClass,
+        source:assetClassLabel(assetClass) + " override",
+        sourceId:classId,
+        invalid:!classState.valid
+      };
+    }
+
+    var common = optionalPositiveInputState("leverage");
+    return {
+      value:common.valid ? common.value : null,
+      assetClass:assetClass,
+      source:"共通 fallback",
+      sourceId:"leverage",
+      invalid:common.provided && !common.valid
+    };
+  }
+
+  function loadCurrentSymbolLeverageOverrideUi() {
+    var input = el("leverageSymbolOverride");
+    var note = el("symbolLeverageStatus");
+    if (!input) return;
+    var symbol=value("symbol"),d=getSymbolLeverageOverrides(),v=d.items?d.items[symbol]:null;
+    input.value=(v!=null&&isFinite(Number(v))&&Number(v)>0)?String(v):"";
+    if(note){
+      note.innerHTML=esc(symbol+"："+(input.value?("個別 1:"+input.value):"個別上書きなし")+"。適用順は 銘柄個別 > 資産クラス > 共通fallback。");
+    }
+  }
+
+  function saveCurrentSymbolLeverageOverride() {
+    var symbol=value("symbol"),input=el("leverageSymbolOverride"),raw=input?String(input.value||"").replace(/^\s+|\s+$/g,""):"";
+    var x=Number(raw);
+    if(!raw||!isFinite(x)||x<=0){
+      setStorageStatus("銘柄個別レバレッジは正の数で入力してください。",false);
+      return;
+    }
+    var d=getSymbolLeverageOverrides();
+    d.items[symbol]=x;
+    if(!saveSymbolLeverageOverrides(d)){
+      setStorageStatus("銘柄個別レバレッジを保存できません。",false);
+      return;
+    }
+    render();
+    saveWorkspaceNow();
+    setStorageStatus(symbol+" の個別レバレッジ 1:"+x+" を保存しました。",true);
+  }
+
+  function clearCurrentSymbolLeverageOverride() {
+    var symbol=value("symbol"),d=getSymbolLeverageOverrides();
+    if(d.items&&Object.prototype.hasOwnProperty.call(d.items,symbol))delete d.items[symbol];
+    if(!saveSymbolLeverageOverrides(d)){
+      setStorageStatus("銘柄個別レバレッジの解除に失敗しました。",false);
+      return;
+    }
+    loadCurrentSymbolLeverageOverrideUi();
+    render();
+    saveWorkspaceNow();
+    setStorageStatus(symbol+" の個別レバレッジを解除しました。",true);
+  }
+
+  function renderEffectiveLeverageStatus() {
+    loadCurrentSymbolLeverageOverrideUi();
+    var box = el("effectiveLeverageStatus");
+    if (!box) return;
+    var symbol = value("symbol"), info = effectiveLeverageInfo(symbol);
+    var spec = SYMBOLS[symbol], label = spec ? spec.label : symbol;
+    if (info.value != null) {
+      box.className = "statusBox storageGood";
+      box.innerHTML = "<strong>適用レバレッジ 1:" + esc(String(info.value)) + "</strong><br>" +
+        esc(label + " / " + assetClassLabel(info.assetClass) + " / " + info.source);
+    } else {
+      box.className = "statusBox storageWarn";
+      box.innerHTML = "<strong>適用レバレッジ未設定</strong><br>" +
+        esc(label + " / " + assetClassLabel(info.assetClass) + "。資産クラス欄または共通fallbackを確認してください。");
+    }
+  }
 
   var lastResult = { state: "INVALID", gates: [], reason: "入力不足" };
 
@@ -1373,7 +1529,6 @@ textarea.journalNotes{
     var acctCcy = value("acctCcy");
     var balance = n("balance");
     var riskPct = n("riskPct");
-    var leverage = n("leverage");
     var usdjpy = n("usdjpy");
     var eurusdConv = n("eurusdConv");
     var gbpusdConv = n("gbpusdConv");
@@ -1436,8 +1591,12 @@ textarea.journalNotes{
       contract: baseS.customSpec ? customContract : baseS.contract,
       quote: baseS.quote,
       label: baseS.label,
+      assetClass: baseS.assetClass || "OTHER",
       customSpec: !!baseS.customSpec
     };
+
+    var leverageInfo = effectiveLeverageInfo(symbol);
+    var leverage = leverageInfo.value;
 
     var sp = spreadPips == null ? 0 : spreadPips;
     var slip = slippagePips == null ? 0 : slippagePips;
@@ -1479,7 +1638,7 @@ textarea.journalNotes{
 
     if (!balance || balance <= 0) missing.push("残高");
     if (!riskPct || riskPct <= 0) missing.push("許容リスク%");
-    if (!leverage || leverage <= 0) missing.push("レバレッジ");
+    if (!leverage || leverage <= 0) missing.push("適用レバレッジ");
     if (sp < 0) missing.push("スプレッド>=0");
     if (slip < 0) missing.push("スリッページ>=0");
     if (com < 0) missing.push("手数料>=0");
@@ -1542,7 +1701,10 @@ textarea.journalNotes{
         mode: entryType,
         S: S,
         tf: tf,
-        acctCcy: acctCcy
+        acctCcy: acctCcy,
+        leverage: leverage,
+        leverageSource: leverageInfo.source,
+        assetClass: leverageInfo.assetClass
       };
     }
 
@@ -1697,6 +1859,9 @@ textarea.journalNotes{
         freezeLevelPips: freezeLevel,
         pipVal: pipVal,
         acctCcy: acctCcy,
+        leverage: leverage,
+        leverageSource: leverageInfo.source,
+        assetClass: leverageInfo.assetClass,
         S: S,
         tf: tf,
         fmt: fmt
@@ -1887,6 +2052,9 @@ textarea.journalNotes{
         freezeLevelPips:freezeLevel,
         pipVal:pipVal,
         acctCcy:acctCcy,
+        leverage:leverage,
+        leverageSource:leverageInfo.source,
+        assetClass:leverageInfo.assetClass,
         S:S,
         tf:tf,
         px:price,
@@ -2137,6 +2305,9 @@ textarea.journalNotes{
       pipVal: pipVal,
       riskAmt: riskAmt,
       acctCcy: acctCcy,
+      leverage: leverage,
+      leverageSource: leverageInfo.source,
+      assetClass: leverageInfo.assetClass,
       S: S,
       tf: tf,
       leg: leg,
@@ -2404,6 +2575,7 @@ textarea.journalNotes{
     renderGates(R);
     renderEdge(R);
     renderModeVisibility(R);
+    renderEffectiveLeverageStatus();
     renderPositionMap(R);
     renderStrategyMiniChart();
     renderDataQuality();
@@ -2553,6 +2725,8 @@ textarea.journalNotes{
       html += resultRow("総コスト換算", R.costPips.toFixed(2) + " pips");
     }
 
+    html += resultRow("適用レバレッジ", R.leverage!=null ? ("1:" + R.leverage + " / " + (R.leverageSource||"")) : "未設定");
+    html += resultRow("証拠金モデル", "Leverage based estimate");
     el("riskList").innerHTML = html;
   }
 
@@ -3619,6 +3793,10 @@ textarea.journalNotes{
       mode:pSnap.entryType, direction:pSnap.direction, acctCcy:pSnap.acctCcy,
       plannedEntry:pSnap.entry, plannedSl:pSnap.sl, plannedTp1:pSnap.tp1, plannedTp2:pSnap.tp2,
       plannedLot:pSnap.lot, plannedRisk:pSnap.risk, plannedMargin:pSnap.margin,
+      leverageUsed:pSnap.leverageUsed!=null?pSnap.leverageUsed:null,
+      leverageSource:pSnap.leverageSource||null,
+      assetClass:pSnap.assetClass||null,
+      marginModel:pSnap.marginModel||"LEVERAGE_ESTIMATE",
       multiPositionPlan:researchClone(jSnap.multiPositionPlan||pSnap.positionPlan||null),
       basketBreakEven:finiteOrNull(jSnap.basketBreakEven!=null?jSnap.basketBreakEven:pSnap.basketBreakEven),
       d1bias:value("d1bias"), depth:value("depth"),
@@ -4919,10 +5097,13 @@ textarea.journalNotes{
     var rsi13 = ind ? finiteOrNull(ind.rsi13) : null;
 
     return {
-      schema:4,
+      schema:5,
       capturedAt:new Date().getTime(),
       price:finiteOrNull(price),
       atr:finiteOrNull(atr),
+      leverageEffective:finiteOrNull(R.leverage),
+      leverageSource:R.leverageSource||null,
+      leverageAssetClass:R.assetClass||null,
       atrPct:tech ? finiteOrNull(tech.atrPct) : ((price != null && atr != null && Number(price)!==0) ? Math.abs(Number(atr)/Number(price))*100 : null),
       ema20:e20,
       ema50:e50,
@@ -5057,6 +5238,10 @@ textarea.journalNotes{
       nanpinBreakEven:R.mode==="NANPIN"?finiteOrNull(R.costBe):null,
       nanpinCumulativePlannedLoss:R.mode==="NANPIN"?finiteOrNull(R.cumulativePlannedLoss):null,
       riskPct:finiteOrNull(n("riskPct")),
+      leverageUsed:finiteOrNull(R.leverage),
+      leverageSource:R.leverageSource||null,
+      assetClass:R.assetClass||null,
+      marginModel:"LEVERAGE_ESTIMATE",
       slAtr:atrDistance(slDist),
       distanceToEntryAtr:atrDistance(distEntry),
       spreadPips:finiteOrNull(n("spreadPips")),
@@ -5884,7 +6069,7 @@ textarea.journalNotes{
   var HYPOTHESIS_STORE_KEY = "depaFX.hypotheses.v1";
   var CANDIDATE_STORE_KEY = "depaFX.researchCandidates.v1";
   var RULE_SPEC_STORE_KEY = "depaFX.ruleSpecs.v1";
-  var RESEARCH_APP_VERSION = "4.0";
+  var RESEARCH_APP_VERSION = "4.1";
   var hypothesisForkBase = null;
   var ruleForkBase = null;
   var hypothesisEvidenceDraft = [];
@@ -5998,7 +6183,13 @@ textarea.journalNotes{
       slAnchor:n("slAnchor"), d1bias:value("d1bias"), mode:value("entryType"),
       entryBasis:value("entryBasis"), depth:value("depth"),
       accountCurrency:value("acctCcy"), balance:n("balance"), riskPct:n("riskPct"),
-      leverage:n("leverage"), spreadPips:n("spreadPips"), slippagePips:n("slippagePips"),
+      leverage:(function(){var li=effectiveLeverageInfo(symbol);return li.value;})(),
+      leverageSource:(function(){var li=effectiveLeverageInfo(symbol);return li.source;})(),
+      leverageAssetClass:(function(){var li=effectiveLeverageInfo(symbol);return li.assetClass;})(),
+      leverageCommon:n("leverage"),
+      leverageFx:n("leverageFx"), leverageMetals:n("leverageMetals"), leverageIndex:n("leverageIndex"),
+      leverageEnergy:n("leverageEnergy"), leverageCrypto:n("leverageCrypto"),
+      spreadPips:n("spreadPips"), slippagePips:n("slippagePips"),
       commission:n("commission"), stopLevelPips:n("stopLevelPips"),
       freezeLevelPips:n("freezeLevelPips")
     };
@@ -6045,6 +6236,10 @@ textarea.journalNotes{
         realizedR:finiteOrNull(x.realizedR),
         positionPlan:researchClone(x.multiPositionPlan||x.positionPlan||null),
         basketBreakEven:finiteOrNull(x.basketBreakEven),
+        leverageUsed:finiteOrNull(x.leverageUsed),
+        leverageSource:x.leverageSource||null,
+        assetClass:x.assetClass||null,
+        marginModel:x.marginModel||null,
         accountCurrency:x.acctCcy||x.accountCurrency||null
       };
     }
@@ -6059,6 +6254,10 @@ textarea.journalNotes{
       plannedRR:finiteOrNull(isMultiPlanMode(R.mode)?null:R.netRR),
       positionPlan:R.mode==="NANPIN"?researchClone(R.rows):null,
       basketBreakEven:R.mode==="NANPIN"?finiteOrNull(R.costBe):null,
+      leverageUsed:finiteOrNull(R.leverage),
+      leverageSource:R.leverageSource||null,
+      assetClass:R.assetClass||null,
+      marginModel:"LEVERAGE_ESTIMATE",
       actualEntry:null,actualEntryAt:null,actualExit:null,actualExitAt:null,actualAmount:null,realizedR:null,
       accountCurrency:R.acctCcy||null
     };
@@ -9105,23 +9304,131 @@ textarea.journalNotes{
 
   /* ---------- MULTI-TIMEFRAME DASHBOARD ---------- */
 
-  function getMtfCache(){var d=storageRead(MTF_KEY,{schema:12,symbol:null,frames:{}});if(!d||!d.frames)d={schema:12,symbol:null,frames:{}};return d;}
+  function getMtfCache(){var d=storageRead(MTF_KEY,{schema:13,symbol:null,frames:{}});if(!d||!d.frames)d={schema:13,symbol:null,frames:{}};return d;}
   function selectedMtfFrames(){var pairs=[["M1","mtfM1"],["M3","mtfM3"],["M5","mtfM5"],["M15","mtfM15"],["M30","mtfM30"],["H1","mtfH1"],["H4","mtfH4"],["D1","mtfD1"]],out=[],i;for(i=0;i<pairs.length;i++)if(el(pairs[i][1])&&el(pairs[i][1]).checked)out.push(pairs[i][0]);return out;}
+
+  function mtfTailFinite(series,count) {
+    var out=[],start=Math.max(0,series.length-count),i,v;
+    for(i=start;i<series.length;i++){v=Number(series[i]);if(isFinite(v))out.push(v);}
+    return out;
+  }
 
   function mtfFrameCalc(tf,bars) {
     if(!bars||bars.length<300)return null;
-    var e20=emaSeries(bars,20),e50=emaSeries(bars,50),e200=emaSeries(bars,200),r13=wilderRsiSeries(bars,13),a=wilderAtr(bars,14),sw=swingWindowStats(bars,100);
-    var close=Number(bars[bars.length-1].close),l20=lastFiniteSeriesValue(e20),l50=lastFiniteSeriesValue(e50),l200=lastFiniteSeriesValue(e200),lr=lastFiniteSeriesValue(r13);
+    var e20=emaSeries(bars,20),e50=emaSeries(bars,50),e200=emaSeries(bars,200),
+      r13=wilderRsiSeries(bars,13),a=wilderAtr(bars,14),sw=swingWindowStats(bars,100);
+    var close=Number(bars[bars.length-1].close),l20=lastFiniteSeriesValue(e20),
+      l50=lastFiniteSeriesValue(e50),l200=lastFiniteSeriesValue(e200),lr=lastFiniteSeriesValue(r13);
     if(!isFinite(close)||l20==null||l50==null||l200==null||lr==null||a==null||!sw)return null;
-    return {tf:tf,close:close,ema20:l20,ema50:l50,ema200:l200,rsi13:lr,atr14:a,rangePos:(close-sw.low)/(sw.high-sw.low)*100,barTime:bars[bars.length-1].datetime,bars:bars.length};
+
+    var mini=[],i,start=Math.max(199,bars.length-60),v20,v50,v200;
+    for(i=start;i<bars.length;i++){
+      v20=e20[i];v50=e50[i];v200=e200[i];
+      if(v20==null||v50==null||v200==null)continue;
+      if(!isFinite(Number(v20))||!isFinite(Number(v50))||!isFinite(Number(v200)))continue;
+      mini.push({
+        t:bars[i].datetime,
+        e20:Number(v20),
+        e50:Number(v50),
+        e200:Number(v200)
+      });
+    }
+
+    return {
+      tf:tf,close:close,ema20:l20,ema50:l50,ema200:l200,rsi13:lr,atr14:a,
+      rangePos:(close-sw.low)/(sw.high-sw.low)*100,
+      barTime:bars[bars.length-1].datetime,bars:bars.length,maMini:mini
+    };
   }
 
   function fetchOneMtf(tf,provider,key){var iv=marketDataInterval(tf);if(!iv)return Promise.resolve({tf:tf,error:"interval"});var url="https://api.twelvedata.com/time_series?symbol="+encodeURIComponent(provider)+"&interval="+encodeURIComponent(iv.api)+"&outputsize="+encodeURIComponent(String(iv.output))+"&timezone=UTC&apikey="+encodeURIComponent(key);return fetchTwelveJson(url).then(function(res){var raw=parseTwelveBars(res.data.values),bars=iv.aggregate===3?aggregateThreeMinuteBars(raw):raw,frame=mtfFrameCalc(tf,bars);if(!frame)throw new Error("insufficient/invalid bars");return {tf:tf,frame:frame};}).catch(function(err){return {tf:tf,error:err&&err.message?err.message:String(err)};});}
 
-  function fetchMtfDashboard(){var key=getMarketApiKey(),frames=selectedMtfFrames();if(!key){el("mtfStatus").className="opsStatus error";el("mtfStatus").innerHTML="<strong>API KEY</strong><br>Twelve Data API Keyが必要です。";return;}if(!frames.length){el("mtfStatus").className="opsStatus warn";el("mtfStatus").innerHTML="<strong>SELECT</strong><br>時間足を1つ以上選択してください。";return;}var provider=currentProviderSymbol(getMarketDataSettings()),symbol=value("symbol"),req=[],i;el("mtfStatus").className="opsStatus warn";el("mtfStatus").innerHTML="<strong>FETCHING</strong><br>"+frames.length+"時間足を取得中。";for(i=0;i<frames.length;i++)req.push(fetchOneMtf(frames[i],provider,key));Promise.all(req).then(function(results){var cache={schema:12,symbol:symbol,providerSymbol:provider,fetchedAt:new Date().getTime(),frames:{}},errs=[],j,r;for(j=0;j<results.length;j++){r=results[j];if(r.frame)cache.frames[r.tf]=r.frame;else errs.push(r.tf+": "+r.error);}storageWrite(MTF_KEY,cache);renderMtfDashboard();el("mtfStatus").className=errs.length?"opsStatus warn":"opsStatus ok";el("mtfStatus").innerHTML="<strong>"+(errs.length?"PARTIAL":"READY")+"</strong><br>取得 "+Object.keys(cache.frames).length+" / "+frames.length+(errs.length?"<br>"+esc(errs.join(" / ")):"");});}
+  function fetchMtfDashboard(){var key=getMarketApiKey(),frames=selectedMtfFrames();if(!key){el("mtfStatus").className="opsStatus error";el("mtfStatus").innerHTML="<strong>API KEY</strong><br>Twelve Data API Keyが必要です。";return;}if(!frames.length){el("mtfStatus").className="opsStatus warn";el("mtfStatus").innerHTML="<strong>SELECT</strong><br>時間足を1つ以上選択してください。";return;}var provider=currentProviderSymbol(getMarketDataSettings()),symbol=value("symbol"),req=[],i;el("mtfStatus").className="opsStatus warn";el("mtfStatus").innerHTML="<strong>FETCHING</strong><br>"+frames.length+"時間足を取得中。";for(i=0;i<frames.length;i++)req.push(fetchOneMtf(frames[i],provider,key));Promise.all(req).then(function(results){var cache={schema:13,symbol:symbol,providerSymbol:provider,fetchedAt:new Date().getTime(),frames:{}},errs=[],j,r;for(j=0;j<results.length;j++){r=results[j];if(r.frame)cache.frames[r.tf]=r.frame;else errs.push(r.tf+": "+r.error);}storageWrite(MTF_KEY,cache);renderMtfDashboard();el("mtfStatus").className=errs.length?"opsStatus warn":"opsStatus ok";el("mtfStatus").innerHTML="<strong>"+(errs.length?"PARTIAL":"READY")+"</strong><br>取得 "+Object.keys(cache.frames).length+" / "+frames.length+(errs.length?"<br>"+esc(errs.join(" / ")):"");});}
 
   function rel(a,b){if(a>b)return '<span class="mtfArrowUp">↑</span>';if(a<b)return '<span class="mtfArrowDown">↓</span>';return '<span class="mtfArrowFlat">=</span>';}
-  function renderMtfDashboard(){if(!el("mtfTable"))return;var c=getMtfCache(),tbody=el("mtfTable").getElementsByTagName("tbody")[0],html="",order=["M1","M3","M5","M15","M30","H1","H4","D1"],i,f,S=SYMBOLS[value("symbol")],digits=S.customSpec?(n("customDigits")==null?S.digits:Math.max(0,Math.round(n("customDigits")))):S.digits;if(c.symbol!==value("symbol")){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#77818c">現在銘柄のMTFデータなし</td></tr>';if(el("navMtf"))el("navMtf").innerHTML="—";return;}for(i=0;i<order.length;i++){f=c.frames[order[i]];if(!f)continue;html+='<tr><td>'+order[i]+'</td><td>'+Number(f.close).toFixed(digits)+'</td><td>'+rel(f.close,f.ema20)+'</td><td>'+rel(f.close,f.ema50)+'</td><td>'+rel(f.close,f.ema200)+'</td><td>'+rel(f.ema20,f.ema50)+'</td><td>'+rel(f.ema50,f.ema200)+'</td><td>'+Number(f.rsi13).toFixed(1)+'</td><td>'+Number(f.atr14).toFixed(Math.max(digits,4))+'</td><td>'+Number(f.rangePos).toFixed(0)+'%</td></tr>';}tbody.innerHTML=html||'<tr><td colspan="10" style="text-align:center;color:#77818c">データなし</td></tr>';if(el("navMtf"))el("navMtf").innerHTML=Object.keys(c.frames).length+" TF";}
+
+  function mtfMiniPath(points,key,w,h,pad,minV,maxV) {
+    var out="",i,x,y,v,den=maxV-minV;
+    if(!points||points.length<2||!isFinite(den)||den<=0)return "";
+    for(i=0;i<points.length;i++){
+      v=Number(points[i][key]);
+      if(!isFinite(v))continue;
+      x=pad+(w-pad*2)*(i/(points.length-1));
+      y=h-pad-(h-pad*2)*((v-minV)/den);
+      out+=(out?" L ":"M ")+x.toFixed(2)+" "+y.toFixed(2);
+    }
+    return out;
+  }
+
+  function mtfMiniSvg(points) {
+    var w=180,h=62,pad=4,i,minV=Infinity,maxV=-Infinity,keys=["e20","e50","e200"],j,v;
+    if(!points||points.length<2)return '<div class="mtfMiniEmpty">MA履歴なし</div>';
+    for(i=0;i<points.length;i++){
+      for(j=0;j<keys.length;j++){
+        v=Number(points[i][keys[j]]);
+        if(!isFinite(v))continue;
+        if(v<minV)minV=v;if(v>maxV)maxV=v;
+      }
+    }
+    if(!isFinite(minV)||!isFinite(maxV))return '<div class="mtfMiniEmpty">MA履歴なし</div>';
+    if(maxV===minV){maxV+=1;minV-=1;}
+    var p20=mtfMiniPath(points,"e20",w,h,pad,minV,maxV),
+      p50=mtfMiniPath(points,"e50",w,h,pad,minV,maxV),
+      p200=mtfMiniPath(points,"e200",w,h,pad,minV,maxV);
+    return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" aria-label="EMA20 EMA50 EMA200 mini chart">'+
+      '<path class="mtfLine200" d="'+p200+'"></path>'+
+      '<path class="mtfLine50" d="'+p50+'"></path>'+
+      '<path class="mtfLine20" d="'+p20+'"></path>'+
+      '</svg>';
+  }
+
+  function renderMtfMiniCharts(c,order) {
+    var grid=el("mtfMiniGrid"),html="",i,f,stack;
+    if(!grid)return;
+    if(!c||c.symbol!==value("symbol")||!c.frames){
+      grid.innerHTML='<div class="mtfMiniCard"><div class="mtfMiniEmpty">現在銘柄のMAデータなし</div></div>';
+      return;
+    }
+    for(i=0;i<order.length;i++){
+      f=c.frames[order[i]];
+      if(!f)continue;
+      stack=(f.ema20>f.ema50&&f.ema50>f.ema200)?"20 > 50 > 200":
+        ((f.ema20<f.ema50&&f.ema50<f.ema200)?"20 < 50 < 200":"MIXED");
+      html+='<div class="mtfMiniCard">'+
+        '<div class="mtfMiniHead"><strong>'+esc(order[i])+'</strong><span>'+esc(stack)+'</span></div>'+
+        '<div class="mtfMiniChart">'+mtfMiniSvg(f.maMini||[])+'</div>'+
+        '<div class="mtfMiniLegend"><span class="e20"><i></i>20</span><span class="e50"><i></i>50</span><span class="e200"><i></i>200</span></div>'+
+        '</div>';
+    }
+    grid.innerHTML=html||'<div class="mtfMiniCard"><div class="mtfMiniEmpty">MAデータなし</div></div>';
+  }
+
+  function renderMtfDashboard(){
+    if(!el("mtfTable"))return;
+    var c=getMtfCache(),tbody=el("mtfTable").getElementsByTagName("tbody")[0],
+      html="",order=["M1","M3","M5","M15","M30","H1","H4","D1"],i,f,
+      S=SYMBOLS[value("symbol")],
+      digits=S.customSpec?(n("customDigits")==null?S.digits:Math.max(0,Math.round(n("customDigits")))):S.digits;
+
+    if(c.symbol!==value("symbol")){
+      tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#77818c">現在銘柄のMTFデータなし</td></tr>';
+      renderMtfMiniCharts(c,order);
+      if(el("navMtf"))el("navMtf").innerHTML="—";
+      return;
+    }
+
+    for(i=0;i<order.length;i++){
+      f=c.frames[order[i]];if(!f)continue;
+      html+='<tr><td>'+order[i]+'</td><td>'+Number(f.close).toFixed(digits)+'</td>'+
+        '<td>'+rel(f.close,f.ema20)+'</td><td>'+rel(f.close,f.ema50)+'</td><td>'+rel(f.close,f.ema200)+'</td>'+
+        '<td>'+rel(f.ema20,f.ema50)+'</td><td>'+rel(f.ema50,f.ema200)+'</td>'+
+        '<td>'+Number(f.rsi13).toFixed(1)+'</td><td>'+Number(f.atr14).toFixed(Math.max(digits,4))+'</td>'+
+        '<td>'+Number(f.rangePos).toFixed(0)+'%</td></tr>';
+    }
+    tbody.innerHTML=html||'<tr><td colspan="10" style="text-align:center;color:#77818c">データなし</td></tr>';
+    renderMtfMiniCharts(c,order);
+    if(el("navMtf"))el("navMtf").innerHTML=Object.keys(c.frames).length+" TF";
+  }
 
   /* ---------- SCENARIO STRESS TEST ---------- */
 
@@ -9240,7 +9547,7 @@ textarea.journalNotes{
 
   function depaStorageKeys(){var out=[],i,k;if(!storageAvailable())return out;for(i=0;i<window.localStorage.length;i++){k=window.localStorage.key(i);if(k&&k.indexOf("depaFX.")===0)out.push(k);}out.sort();return out;}
 
-  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===BACKUP_META_KEY)continue;if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"4.0",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";storageWrite(BACKUP_META_KEY,{schema:1,exportedAt:new Date().getTime(),journalCount:getJournal().items.length,tradeCount:getTrades().items.length,portfolioCount:getPortfolio().items.length});renderBackupReadiness();el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
+  function exportDepaBackup(){if(!storageAvailable()){el("backupStatus").className="opsStatus error";el("backupStatus").innerHTML="<strong>ERROR</strong><br>localStorageを利用できません。";return;}var include=!!el("backupIncludeApiKey").checked,keys=depaStorageKeys(),data={},i,k,secret=false;for(i=0;i<keys.length;i++){k=keys[i];if(k===BACKUP_META_KEY)continue;if(k===MARKET_DATA_API_KEY&&!include)continue;data[k]=window.localStorage.getItem(k);if(k===MARKET_DATA_API_KEY)secret=true;}var payload={format:"DEPA_FX_BACKUP",backupVersion:1,appVersion:"4.1",exportedAt:new Date().getTime(),secretIncluded:secret,keys:data};var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a"),d=new Date(),name="depa-fx-backup-"+d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+".json";a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);window.setTimeout(function(){URL.revokeObjectURL(url);},1000);el("backupStatus").className="opsStatus ok";storageWrite(BACKUP_META_KEY,{schema:1,exportedAt:new Date().getTime(),journalCount:getJournal().items.length,tradeCount:getTrades().items.length,portfolioCount:getPortfolio().items.length});renderBackupReadiness();el("backupStatus").innerHTML="<strong>EXPORTED</strong><br>"+Object.keys(data).length+" keys / API Key "+(secret?"含む":"除外");}
 
   function validateBackupPayload(p){if(!p||p.format!=="DEPA_FX_BACKUP"||!p.keys||typeof p.keys!=="object")return false;var k;for(k in p.keys){if(!Object.prototype.hasOwnProperty.call(p.keys,k))continue;if(k.indexOf("depaFX.")!==0||typeof p.keys[k]!=="string")return false;try{JSON.parse(p.keys[k]);}catch(e){return false;}}return true;}
 
@@ -9278,6 +9585,7 @@ textarea.journalNotes{
     "symbol", "tf", "d1bias", "entryType", "entryBasis", "depth",
     "counterDir", "gridDir", "nanpinDir", "slFloorAtr", "counterSlAtr",
     "acctCcy", "balance", "riskPct", "leverage",
+    "leverageFx", "leverageMetals", "leverageIndex", "leverageEnergy", "leverageCrypto",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
     "minLot", "maxLot", "lotStep", "marginCapPct",
@@ -12997,6 +13305,10 @@ textarea.journalNotes{
         plannedRR:null,
         risk:R.worstLoss,
         acctCcy:R.acctCcy,
+        leverageUsed:R.leverage,
+        leverageSource:R.leverageSource,
+        assetClass:R.assetClass,
+        marginModel:"LEVERAGE_ESTIMATE",
         digits:digits,
         pipSize:R.S && R.S.pip != null ? R.S.pip : null,
         pipValuePerLot:R.pipVal != null ? R.pipVal : null,
@@ -13005,7 +13317,7 @@ textarea.journalNotes{
         actualEntry:null, actualEntryAt:null,
         actualExit:null, actualExitAt:null,
         actualAmount:null,
-        numericEvidenceVersion:4,
+        numericEvidenceVersion:5,
         numericSnapshot:edgeNumericSnapshot(R),
         edgeEvidenceVersion:2,
         edgeStates:null,
@@ -13072,6 +13384,10 @@ textarea.journalNotes{
         plannedRR:null,
         risk:R.worstLoss,
         acctCcy:R.acctCcy,
+        leverageUsed:R.leverage,
+        leverageSource:R.leverageSource,
+        assetClass:R.assetClass,
+        marginModel:"LEVERAGE_ESTIMATE",
         digits:digits,
         pipSize:R.S && R.S.pip != null ? R.S.pip : null,
         pipValuePerLot:R.pipVal != null ? R.pipVal : null,
@@ -13080,7 +13396,7 @@ textarea.journalNotes{
         actualEntry:null, actualEntryAt:null,
         actualExit:null, actualExitAt:null,
         actualAmount:null,
-        numericEvidenceVersion:4,
+        numericEvidenceVersion:5,
         numericSnapshot:edgeNumericSnapshot(R),
         edgeEvidenceVersion:2,
         edgeStates:null,
@@ -13095,7 +13411,7 @@ textarea.journalNotes{
     if (!R.lot || R.lot <= 0 || !R.riskReal || R.riskReal <= 0) return null;
 
     return {
-      numericEvidenceVersion:4,
+      numericEvidenceVersion:5,
       numericSnapshot:edgeNumericSnapshot(R),
       edgeEvidenceVersion:2,
       edgeStates:edgeStateSnapshot(R.edge),
@@ -13143,6 +13459,10 @@ textarea.journalNotes{
       plannedRR:R.netRR,
       risk:R.riskReal,
       acctCcy:R.acctCcy,
+        leverageUsed:R.leverage,
+        leverageSource:R.leverageSource,
+        assetClass:R.assetClass,
+        marginModel:"LEVERAGE_ESTIMATE",
       digits:digits,
       pipSize:R.S && R.S.pip != null ? R.S.pip : null,
       pipValuePerLot:R.pipVal != null ? R.pipVal : null,
@@ -13813,6 +14133,10 @@ textarea.journalNotes{
         risk:R.worstLoss,
         margin:R.marginReq,
         acctCcy:R.acctCcy,
+        leverageUsed:R.leverage,
+        leverageSource:R.leverageSource,
+        assetClass:R.assetClass,
+        marginModel:"LEVERAGE_ESTIMATE",
         riskUsage:R.riskUsage,
         digits:digits,
         basketBreakEven:R.costBe,
@@ -13839,6 +14163,10 @@ textarea.journalNotes{
         risk:R.worstLoss,
         margin:R.marginReq,
         acctCcy:R.acctCcy,
+        leverageUsed:R.leverage,
+        leverageSource:R.leverageSource,
+        assetClass:R.assetClass,
+        marginModel:"LEVERAGE_ESTIMATE",
         riskUsage:R.riskUsage,
         digits:digits
       };
@@ -13863,6 +14191,10 @@ textarea.journalNotes{
       risk:R.riskReal,
       margin:R.marginReq,
       acctCcy:R.acctCcy,
+        leverageUsed:R.leverage,
+        leverageSource:R.leverageSource,
+        assetClass:R.assetClass,
+        marginModel:"LEVERAGE_ESTIMATE",
       riskUsage:R.riskUsage,
       digits:digits
     };
@@ -14083,6 +14415,7 @@ textarea.journalNotes{
 
   var WORKSPACE_KEY = "depaFX.workspace.v2";
   var PRESET_KEY = "depaFX.brokerPresets.v2";
+  var SYMBOL_LEVERAGE_KEY = "depaFX.symbolLeverageOverrides.v1";
   var workspaceTimer = null;
   var suppressWorkspaceSave = false;
 
@@ -14090,6 +14423,7 @@ textarea.journalNotes{
     "symbol", "tf", "d1bias", "entryType", "entryBasis", "preDecisionConfidence", "preDecisionFalsifier", "depth",
     "counterDir", "gridDir", "nanpinDir", "slFloorAtr", "counterSlAtr",
     "acctCcy", "balance", "riskPct", "leverage",
+    "leverageFx", "leverageMetals", "leverageIndex", "leverageEnergy", "leverageCrypto",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
     "minLot", "maxLot", "lotStep", "marginCapPct",
@@ -14106,6 +14440,7 @@ textarea.journalNotes{
 
   var BROKER_PRESET_IDS = [
     "symbol", "acctCcy", "leverage",
+    "leverageFx", "leverageMetals", "leverageIndex", "leverageEnergy", "leverageCrypto",
     "spreadPips", "slippagePips", "commission",
     "stopLevelPips", "freezeLevelPips",
     "minLot", "maxLot", "lotStep", "marginCapPct",
@@ -14320,7 +14655,8 @@ textarea.journalNotes{
     data.items[name] = {
       name: name,
       savedAt: new Date().getTime(),
-      values: collectValues(BROKER_PRESET_IDS)
+      values: collectValues(BROKER_PRESET_IDS),
+      symbolLeverageOverrides: researchClone(getSymbolLeverageOverrides().items)
     };
 
     if (!savePresets(data)) {
@@ -14350,6 +14686,9 @@ textarea.journalNotes{
     }
 
     applyValues(item.values);
+    if (item.symbolLeverageOverrides && typeof item.symbolLeverageOverrides === "object") {
+      saveSymbolLeverageOverrides({schema:1,items:researchClone(item.symbolLeverageOverrides)});
+    }
 
     var nameNode = el("brokerPresetName");
     if (nameNode) nameNode.value = name;
@@ -14421,6 +14760,8 @@ textarea.journalNotes{
     var deleteBtn = el("deleteBrokerPreset");
     var clearMarketBtn = el("clearMarketInputs");
     var clearWorkspaceBtn = el("clearWorkspace");
+    var saveSymbolLevBtn = el("saveLeverageSymbolOverride");
+    var clearSymbolLevBtn = el("clearLeverageSymbolOverride");
     var presetSelect = el("brokerPresetSelect");
 
     if (saveBtn) saveBtn.onclick = saveCurrentBrokerPreset;
@@ -14428,6 +14769,8 @@ textarea.journalNotes{
     if (deleteBtn) deleteBtn.onclick = deleteSelectedBrokerPreset;
     if (clearMarketBtn) clearMarketBtn.onclick = clearMarketOnly;
     if (clearWorkspaceBtn) clearWorkspaceBtn.onclick = resetWorkspaceOnly;
+    if (saveSymbolLevBtn) saveSymbolLevBtn.onclick = saveCurrentSymbolLeverageOverride;
+    if (clearSymbolLevBtn) clearSymbolLevBtn.onclick = clearCurrentSymbolLeverageOverride;
 
     if (presetSelect) {
       presetSelect.onchange = function () {
@@ -14511,7 +14854,8 @@ textarea.journalNotes{
 
   function hookInputs() {
     var ids = [
-      "symbol", "tf", "acctCcy", "balance", "riskPct", "leverage", "usdjpy",
+      "symbol", "tf", "acctCcy", "balance", "riskPct", "leverage",
+      "leverageFx", "leverageMetals", "leverageIndex", "leverageEnergy", "leverageCrypto", "usdjpy",
       "eurusdConv", "gbpusdConv", "audusdConv", "nzdusdConv", "usdcadConv", "usdchfConv",
       "spreadPips", "slippagePips", "commission", "stopLevelPips", "freezeLevelPips",
       "minLot", "maxLot", "lotStep", "marginCapPct",
@@ -14613,7 +14957,7 @@ textarea.journalNotes{
 
   <!-- HOME -->
   <ul id="home" title="DEPA FX" selected="true">
-    <li class="group">ENTRY CONSOLE v4.0</li>
+    <li class="group">ENTRY CONSOLE v4.1</li>
     <li class="verdictCell">
       <div id="homeVerdict" class="verdict invalid">判定不能</div>
       <div id="homeVerdictSub" class="smallText">入力不足</div>
@@ -14634,7 +14978,7 @@ textarea.journalNotes{
     <li><a href="#trades">Trade Lifecycle <span id="navTrades" class="navValue">0</span></a></li>
     <li><a href="#analytics">Journal Analytics <span id="navAnalytics" class="navValue">—</span></a></li>
     <li><a href="#intuition">Intuition Lab <span id="navIntuition" class="navValue">0</span></a></li>
-    <li class="group">EA RESEARCH v4.0</li>
+    <li class="group">EA RESEARCH v4.1</li>
     <li><a href="#research">Research Pipeline <span id="navResearch" class="navValue">0</span></a></li>
     <li><a href="#plboard">損益ボード <span id="navPlBoard" class="navValue">—</span></a></li>
     <li><a href="#discovery">Edge Discovery <span id="navDiscovery" class="navValue">—</span></a></li>
@@ -14871,7 +15215,30 @@ textarea.journalNotes{
       </div>
       <div class="row"><label for="balance">残高</label><input id="balance" type="number" step="any" placeholder="1000000"></div>
       <div class="row"><label for="riskPct">許容リスク %</label><input id="riskPct" type="number" step="any" value="1.0"></div>
-      <div class="row"><label for="leverage">レバレッジ</label><input id="leverage" type="number" step="1" value="500"></div>
+      <div class="row"><label for="leverage">共通レバレッジ / fallback</label><input id="leverage" type="number" min="1" step="1" value="500"></div>
+      <div class="sech">資産クラス別レバレッジ</div>
+      <div class="panelNote">
+        同じBrokerでもFX・貴金属・指数・Energy・Cryptoで最大レバレッジが異なる場合があります。
+        同じ資産クラス内でも銘柄・口座種別・建玉量・規制条件で異なる場合があります。
+        空欄は「共通レバレッジ」を使います。自動推定せず、Brokerの実際の契約条件を入力してください。
+      </div>
+      <div class="row"><label for="leverageFx">FX</label><input id="leverageFx" type="number" min="1" step="1" placeholder="空欄=共通"></div>
+      <div class="row"><label for="leverageMetals">貴金属</label><input id="leverageMetals" type="number" min="1" step="1" placeholder="空欄=共通"></div>
+      <div class="row"><label for="leverageIndex">Index</label><input id="leverageIndex" type="number" min="1" step="1" placeholder="空欄=共通"></div>
+      <div class="row"><label for="leverageEnergy">Energy / WTI</label><input id="leverageEnergy" type="number" min="1" step="1" placeholder="空欄=共通"></div>
+      <div class="row"><label for="leverageCrypto">Crypto</label><input id="leverageCrypto" type="number" min="1" step="1" placeholder="空欄=共通"></div>
+      <div id="effectiveLeverageStatus" class="statusBox"><strong>適用レバレッジ</strong><br>銘柄を選ぶと表示します。</div>
+      <div class="sech">選択銘柄の個別上書き</div>
+      <div class="row"><label for="leverageSymbolOverride">現在銘柄</label><input id="leverageSymbolOverride" type="number" min="1" step="1" placeholder="空欄=資産クラス"></div>
+      <div class="actionPanel">
+        <button id="saveLeverageSymbolOverride" class="actionButton" type="button">この銘柄へ保存</button>
+        <button id="clearLeverageSymbolOverride" class="actionButton danger" type="button">この銘柄の上書きを解除</button>
+      </div>
+      <div id="symbolLeverageStatus" class="panelNote">銘柄個別 > 資産クラス > 共通fallback の順で適用します。</div>
+      <div class="warning">
+        証拠金は「契約サイズ × 価格 × 換算 ÷ 適用レバレッジ」の概算です。
+        Brokerが銘柄別の固定証拠金、Margin Rate、Notional tierなどを使う場合は一致しないことがあります。
+      </div>
       <div class="row"><label for="spreadPips">スプレッド pips</label><input id="spreadPips" type="number" step="any" value="0.8"></div>
       <div class="row"><label for="slippagePips">想定スリッページ pips</label><input id="slippagePips" type="number" step="any" value="0"></div>
       <div class="row"><label for="commission">手数料 /lot 往復</label><input id="commission" type="number" step="any" value="0"></div>
@@ -16103,6 +16470,9 @@ textarea.journalNotes{
       <label><input id="mtfM1" type="checkbox"> M1</label><label><input id="mtfM3" type="checkbox"> M3</label><label><input id="mtfM5" type="checkbox" checked> M5</label><label><input id="mtfM15" type="checkbox" checked> M15</label><label><input id="mtfM30" type="checkbox"> M30</label><label><input id="mtfH1" type="checkbox" checked> H1</label><label><input id="mtfH4" type="checkbox" checked> H4</label><label><input id="mtfD1" type="checkbox" checked> D1</label>
     </div>
     <div class="actionPanel"><button id="fetchMtf" class="actionButton primary" type="button">選択時間足を取得</button></div>
+    <div class="sech">MA Mini Charts</div>
+    <div id="mtfMiniGrid" class="mtfMiniGrid"></div>
+    <div class="panelNote">同じ取得データからEMA20 / EMA50 / EMA200だけを小さく描画します。ローソク足・価格線は表示しません。追加API取得は行いません。</div>
     <div class="opsTableWrap"><table id="mtfTable" class="opsTable"><thead><tr><th>TF</th><th>Close</th><th>P/E20</th><th>P/E50</th><th>P/E200</th><th>E20/E50</th><th>E50/E200</th><th>RSI13</th><th>ATR14</th><th>Range%</th></tr></thead><tbody></tbody></table></div>
     <div class="panelNote">Confluence表示は観測値の比較です。複数時間足の一致を売買Edgeや勝率へ自動変換しません。取得はAPIクレジット消費を避けるため手動です。</div>
   </div>
@@ -16137,7 +16507,7 @@ textarea.journalNotes{
   <div id="about" title="仕様 / 注意事項">
     <div class="aboutBox">
       <h2>DEPA FX SYSTEM</h2>
-      <p>ENTRY CONSOLE v4.0 — 建玉設計コンソール。</p>
+      <p>ENTRY CONSOLE v4.1 — 建玉設計コンソール。</p>
       <p>v3.1.1では、銘柄/時間足変更直後の再計算、Edge Factorのtrue/false/null全状態保存、同一Evidence母集団でのON/OFF比較、MTF Edgeの鮮度確認、Stress仮定のWATCH Signature除外を追加しています。旧v3.1 Journalの発火ID欠落はOFFへ推定せずUnknownとして扱います。</p>
       <p>v3.1.2では、LONG/SHORT別の勝率・負率、本日/トータルの獲得pips・獲得金額、Entry時間帯別の獲得pips・金額をJournal Analyticsへ追加しています。pipsは実約定価格差、金額は実現金額入力を優先し未入力時のみ実現R×保存Riskを使用します。本日はExit日時、時間別はEntry日時で判定します。</p>
       <p>v3.2では、Edge Discoveryとして単独Factorと2/3 Factor組み合わせのON/OFF比較・前半/後半Δ、Journal保存時の数値スナップショット、Observed Playbookの自動言語化、Declared Methodの構造化保存、Declared vs Observed一致率を追加しています。組み合わせランキングは探索用で、自動Edge採用や因果推論は行いません。</p>
@@ -16146,6 +16516,7 @@ textarea.journalNotes{
       <p>v3.4.1では、iPhone Safariで損益カレンダーに全体tableの最小幅が継承されて横にはみ出す表示不具合を修正しました。カレンダーだけmin-widthを解除し、7列をカード幅へ固定しています。</p>
       <p>v3.5では、ミニチャートへBB20 ±2σとParabolic SARを追加し、下段へATR/ATR%、MACD（Line + Signalのみ）、ADX14 +DI/-DI、平均足の独立パネルを追加しました。追加表示は個別ON/OFFできますが、計算とJournalのPLANログは常時保存し、OPEN遷移時には現在Market Dataが同一銘柄・時間足ならENTRYテクニカルログも別保存します。追加指標は現段階ではGate/Edge判定には使いません。</p>
       <p>v3.6では、市場構造としてDonchian20、前日/前週High-Low、Kaufman ER10を追加しました。さらにログ専用特徴量としてROC 1/3/5/20、Z-Score20、実ローソク足のBody/Wick/Range、EMA20/50/200の1本・5本Slope、EMA間隔とCompression、UTC Sessionラベルを保存します。前日/前週レベルは日足コンテキストを別取得し、Session境界はユーザー変更可能な暫定UTC区分です。これらはv3.6時点では観測用で、Gate/Edge Scoreを自動変更しません。</p>
+      <p><strong>v4.1:</strong> Multi-TimeframeへEMA20 / EMA50 / EMA200だけを描くMA Mini Chartsを追加しました。既存の数値表は残し、同じAPI取得データの直近60点を使うため追加リクエストは行いません。口座設定では共通レバレッジをfallbackとして残し、FX / 貴金属 / Index / Energy / Cryptoの資産クラス別レバレッジと、選択銘柄ごとの個別overrideを任意設定できるようにしました。適用順は「銘柄個別 > 資産クラス > 共通fallback」です。証拠金計算・Gate・Risk表示・Evidenceには現在銘柄へ実際に適用したレバレッジとその取得元を保存します。値はBroker仕様からユーザーが入力し、自動推定しません。</p>
       <p><strong>v4.0:</strong> GRIDとは別にNANPIN / MARTINGALE計画を追加しました。初期Lot、加算/乗算、予定段数、ATR基準の各段Entry・個別SL・個別TP、累計Lot、Basket平均、コスト後BEを表示します。各段SL損失の累積計画値と全段同時保有の証拠金上限をRisk Engineへ接続し、Portfolio / Journal / Trade Lifecycle / WATCH / Evidenceへ保存できます。BEは先行ポジションが未決済という仮定値で、個別SLの成立順によって実際のBEは変わります。自動発注やLot自動増加は行いません。</p>
       <p><strong>v3.9:</strong> Research PipelineをP3-P6まで拡張しました。固定Rule Specに対する記録済みEvidence/JournalsのValidation Run、探索/確認期間分離、境界をまたぐ保有のpurge、任意Embargo、コスト摂動、条件感度、任意Moving Block Bootstrap、Regime別集計、Run cacheを追加しています。Parity Testでは凍結Featureに対するResearch EngineのMATCH / NO_MATCH / UNKNOWNと外部EA/アダプタ結果をcase IDで比較します。Shadowは注文を出さず、アプリ起動中のForward判定と想定執行を保存します。Limited ReleaseはValidation / Parity / Shadow証跡とユーザー定義のRisk・Lot・Spread・日次損失・DD・連敗・DQ制約を固定し、Monitor EventからAPP STOP条件を評価します。APP STOPはブローカー側注文を停止しません。Trade Journalには事前Confidence / 反証条件、Rule Adherence、裁量介入、執行品質、ニュース回避、例外理由を追加しました。</p>
       <p><strong>v3.8:</strong> Research Governanceを追加しました。Evidence Bundle v1、Hypothesis Card、Candidate Ledger、Rule Spec Draftを同じ研究パイプラインで管理します。新規PLAN、Intuition Snapshot、ENTRY、EXITではEvidenceを自動凍結し、NO-TRADE/OBSERVATIONは手動保存できます。HypothesisとRule Specは旧版を上書きせず新版として分岐します。Candidateはv3.8ではREGISTERED→SPECIFIEDまでを扱い、Validation以降へ自動昇格しません。Discovery順位、中央値、成績差をEA条件へ自動採用する機能はありません。</p>

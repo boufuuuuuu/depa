@@ -1,7 +1,7 @@
 {
   "name": "DEPA FX SYSTEM",
   "short_name": "DEPA FX",
-  "description": "FX / CFD risk, journal, intuition, research governance and multi-position planning console",
+  "description": "FX / CFD risk, journal, intuition, MTF EMA observation, research governance and asset-class leverage console",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
